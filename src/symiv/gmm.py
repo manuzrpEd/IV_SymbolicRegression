@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-from scipy.optimize import least_squares
 
+from symiv._lsq import robust_least_squares
 from symiv.criteria import MomentCriterion
 from symiv.expressions import ParametricForm
 
@@ -87,14 +87,17 @@ def fit_gmm(
     starts = [np.clip(s, lo + eps, hi - eps) for s in starts]
 
     identity = np.eye(crit.K) / np.sqrt(n)  # step 1: ||A'r / sqrt(n)||^2 = Q_n
-    step1 = min(
-        (least_squares(scaled_moments, s, args=(identity,), bounds=(lo, hi)) for s in starts),
-        key=lambda res: res.cost,
-    )
+    fits = [robust_least_squares(scaled_moments, s, args=(identity,), bounds=(lo, hi)) for s in starts]
+    fits = [f for f in fits if f is not None]
+    if not fits:
+        return GMMFit(starts[0], np.inf, np.inf, crit.K, p)
+    step1 = min(fits, key=lambda res: res.cost)
     r1 = residuals(step1.x)
     if r1 is None:
         return GMMFit(step1.x, np.inf, np.inf, crit.K, p)
 
     W_sqrt = efficient_weight_sqrt(crit, r1)
-    step2 = least_squares(scaled_moments, np.clip(step1.x, lo + eps, hi - eps), args=(W_sqrt,), bounds=(lo, hi))
+    step2 = robust_least_squares(scaled_moments, np.clip(step1.x, lo + eps, hi - eps), args=(W_sqrt,), bounds=(lo, hi))
+    if step2 is None:  # keep the first-step estimate, with J evaluated there
+        return GMMFit(step1.x, 2 * step1.cost, hansen_j(crit, r1, W_sqrt), crit.K, p)
     return GMMFit(step2.x, 2 * step1.cost, 2 * step2.cost, crit.K, p)

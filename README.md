@@ -2,7 +2,7 @@
 
 Symbolic regression that recovers the **structural** relation $f(X)$ rather than the conditional mean $E[y \mid X]$, by scoring the formula search with instrumental-variable moment conditions.
 
-Code layout and setup: §12.
+Results so far: §12 (Phase 2 Monte Carlo). Code layout and setup: §13.
 
 ---
 
@@ -139,6 +139,7 @@ PySR returns a Pareto front (the best criterion at each complexity). Select from
 - Refit the constants of each front member by efficient GMM and compute $\mathrm{MMSC}_n(s) = J_n(s) - (K - p_s)\ln n$ ([Andrews & Lu 2001](https://doi.org/10.1016/S0304-4076(00)00077-4)), where $J_n$ is Hansen's statistic and $p_s$ is the **number of free constants**, not the node count (nodes only break ties). With $K$ fixed across candidates this is $J_n(s) + p_s \ln n$ up to a constant.
 - For MMR: $n\,Q_n(s) + c\, p_s \ln n$, with $c$ calibrated by simulation.
 - Cross-check: the moment criterion on held-out data (not held-out MSE, which favours $E[y \mid X]$).
+- Phase 2 (§12): BIC recovered the true form most often (66–92%), then HQIC (52–68%), then AIC (28–40%). Even BIC lets contrived formulas with one extra constant through, because it does not account for the search over formula structures (§7).
 
 ### 6.4 Inference after selection
 
@@ -184,6 +185,10 @@ Let $T h = E[h(X) \mid Z]$.
 
 - Guarantees for the genetic-programming search itself. The theorems concern the global minimizer, or any near-minimizer within $o_p(\mathrm{pen}_n)$. The Monte Carlo separates **search failures** (the true formula has a lower penalized criterion than the one found) from **statistical failures** (the estimator itself prefers a wrong formula).
 - Uniformly valid inference after selection without sample splitting.
+
+**Phase 2 evidence (§12).** Failures were statistical, not search failures (2 of 200 runs). Both kinds of error that Theorem 2 has to cover appeared:
+- a simpler wrong formula winning when separation is small ($x + c$ against $2x^{0.7}$ with $\pi = 0.7$, $n = 2000$);
+- a contrived formula with one extra constant winning because it fits the moments slightly better. The best of many structures beats a per-constant $\ln n$ penalty, which is why the bound carries a $\log\lvert\mathcal S_L\rvert$ term.
 
 ## 8. Experiments
 
@@ -270,7 +275,8 @@ The econometrician sees only $(y, X, Z)$.
 | Weak instruments; identification failure (completeness not holding) | Designs D4–D5; weak-ID-robust confidence sets; report the criterion gap to the runner-up; Angrist–Krueger stress test |
 | Oscillatory formulas exploit ill-posedness | Bounded constants, restricted operators, nesting constraints (§6.1) |
 | Criterion ties at zero with finite $K$ | $K$ much larger than the number of constants and growing with $n$, or MMR (§6.2) |
-| Noisier, non-convex search (the moment criterion is flatter than MSE) | Several restarts; seed with the plain-SR front; report search failures separately (§7) |
+| Noisier, non-convex search (the moment criterion is flatter than MSE) | Several restarts; seed with the plain-SR front; report search failures separately (§7). Phase 2: only 2 of 200 failures were search failures at $n = 2000$ |
+| Selection, not search, is the bottleneck: a penalty too weak for the size of the search space (contrived formulas win) or too strong for weak separation (simpler wrong formulas win) | Structure-aware penalty; cross-fitted moment criterion; larger $n$ and $K$; operator-set ablation (Phase 4). Evidence in §12 |
 | Library IV or NPIV → distillation match the method | Laws outside any finite library; if the one-step method does not win, reposition (§3.2) |
 | Misspecification on real data | Stability across instrument bases and weights (§6.5) |
 | Additive-error assumption fails | Out of scope for v1; IV quantile extension (§5) |
@@ -292,7 +298,7 @@ The econometrician sees only $(y, X, Z)$.
 - [ ] Verify the 2026 references (Kuang & Lin; Zeiringer et al.; Li et al.)
 - [ ] Optional: ask one nonparametric-IV researcher whether they know of related work
 
-### Phase 1: infrastructure (done 2026-09-30; §12)
+### Phase 1: infrastructure (done 2026-09-30; §13)
 - [x] Repository skeleton: `src/symiv/{dgp, criteria, baselines}`, `experiments/`, `tests/`
 - [x] DGPs D1–D5 with seeds, returning $(y, X, Z)$, the true $f_0$, and the hidden errors for checks
 - [x] Criterion matrix $A$: B-spline (or polynomial) basis, orthonormalized by SVD so discrete instruments drop collinear columns, for (b); Nyström features for (c). $K$ defaults to about $n^{1/3}$
@@ -303,13 +309,13 @@ The econometrician sees only $(y, X, Z)$.
 - [x] Search-failure vs. statistical-failure diagnostic (tested on a search failure and on an unidentified design with $\pi = 0$)
 - [x] End-to-end smoke run (`experiments/smoke_pysr.py`, D1, power law, $n = 2000$): symbolic IV selected $2.02\,x^{0.693}$ (outcome: success); relative function error 0.014 vs. 0.091 for plain PySR
 
-### Phase 2: first Monte Carlo (one design, two laws)
-- [ ] D1 with the power law $x^{0.7}$ and the log law
-- [ ] Plain PySR's bias: at the D1 defaults the smoke run gave the right power form with biased constants ($2.09\,x^{0.709}$), not a spurious $\log X$ term. Report function error and constant bias, not only form recovery; add a stronger-endogeneity setting (larger $\rho$, smaller $\pi$) where the conditional mean departs visibly from $f_0$
-- [ ] Select plain SR's formula with a stated rule (e.g. BIC on MSE), not PySR's default score, so both methods use comparable selection
-- [ ] Symbolic IV (b) recovers $f_0$; recovery rate over 50–100 seeds
-- [ ] Track the MMSC gap between the selected formula and the runner-up: in one smoke run a contrived three-constant formula came within 0.7 of the true form (a first sign of the flat criterion in §10)
-- [ ] Sensitivity to $C$ and $K$
+### Phase 2: first Monte Carlo (done 2026-09-30; results in §12)
+- [x] D1 with the power law $2x^{0.7}$ and the log law $1 + 2\log x$, $n = 2000$, 50 seeds, in a default setting ($\pi = 1$, $\rho = 0.8$) and a strong-endogeneity setting ($\pi = 0.7$, $\rho = 1.2$)
+- [x] Plain PySR's bias measured as function error, extrapolation error, elasticity and implied constants, not only form recovery. Its slope bias matches $\rho/(1+\pi^2)$ to two decimals
+- [x] Plain SR selected with a stated rule: least-squares refit, then $n\log(\mathrm{RSS}/n) + p\,\kappa_n$ with the same $\kappa_n$ as MMSC; PySR's own pick reported alongside
+- [x] Symbolic IV recovery rate over 50 seeds: 66–92% with BIC; errors within about 1.5× of the true-form IV fit
+- [x] MMSC gap to the runner-up tracked: median 2.2–4.7 under BIC, 0.8–0.9 under AIC
+- [x] Sensitivity to $C$ and $K$ (20 seeds, power law, strong setting): $K$ matters (30% at $K = 8$, 70% at $K = 25$); $C$ does not, with this operator set
 
 ### Phase 3: baselines
 - [ ] Oracle 2SLS and wrong-form 2SLS (both are `symiv.gmm.fit_gmm` on a fixed form; needs a wrapper and reporting)
@@ -321,6 +327,10 @@ The econometrician sees only $(y, X, Z)$.
 
 ### Phase 4: full grid
 - [ ] All laws × D1–D5; vary $\pi$, $n$, $\rho$, noise, $J$, $C$, $K$
+- [ ] Recovery as $n$ grows ($2\,000 \to 50\,000$) in the Phase 2 strong setting: Theorem 1 predicts it goes to one; the $x + c$ failures should disappear first
+- [ ] Selection rules aimed at the Phase 2 failures: a penalty with a structure term (Theorem 2's $\log\lvert\mathcal S_L\rvert$, e.g. by tree size); the cross-fitted moment criterion of §6.3
+- [ ] Default $K$: $n^{1/3}$ gave $K = 13$ at $n = 2000$, and $K = 25$ did better; test faster-growing rules
+- [ ] Operator-set ablation: without `max` (only the kink law needs it), since many contrived winners in Phase 2 used it
 - [ ] Criterion (c) vs. (b)
 - [ ] Compute $\delta_L$ numerically per design; plot recovery against $n\,\delta_L^2$
 - [ ] Write up the first results
@@ -343,19 +353,53 @@ The econometrician sees only $(y, X, Z)$.
 - [ ] Package API and documentation; release the benchmark suite
 - [ ] Paper draft; choose the venue after Phase 4 and Theorem 2
 
-## 12. Code
+## 12. Results: Phase 2 Monte Carlo
+
+Design D1, $n = 2000$, 50 seeds per cell; the same PySR budget and operators for both methods; formulas selected by BIC-type rules after refitting constants (§6.3). Full tables, including HQIC and AIC, oracle fits and outcome counts: [`experiments/phase2/summary.md`](experiments/phase2/summary.md). Errors are RMS$(\hat f - f_0)$ in units of the in-sample sd of $f_0$; extrapolation is on $[q_{99}, 3q_{99}]$ of $X$.
+
+| Law, setting | True form recovered: plain PySR (own pick / BIC) | True form recovered: symbolic IV (BIC), 95% CI | In-sample error: plain / symbolic IV / oracle IV | Extrapolation error: plain / symbolic IV | Constant (truth): plain / symbolic IV |
+|---|---|---|---|---|---|
+| $2x^{0.7}$, default | 100% / 10% | 86% (74–93) | 0.088 / 0.013 / 0.013 | 0.55 / 0.09 | $a$ (2): 2.12 / 2.00 |
+| $2x^{0.7}$, strong | 0% / 6% | 66% (52–78) | 0.330 / 0.039 / 0.027 | 0.74 / 0.30 | $a$ (2): 2.15 / 1.98 |
+| $1 + 2\log x$, default | 100% / 88% | 92% (81–97) | 0.202 / 0.020 / 0.012 | 0.55 / 0.03 | $b$ (2): 2.40 / 2.00 |
+| $1 + 2\log x$, strong | 100% / 88% | 80% (67–89) | 0.406 / 0.033 / 0.023 | 1.12 / 0.06 | $b$ (2): 2.81 / 2.01 |
+
+"Plain" errors and constants are for PySR's own pick; constants are medians of those implied in the true form. Default: $\pi = 1$, $\rho = 0.8$; strong: $\pi = 0.7$, $\rho = 1.2$.
+
+**Findings**
+
+1. **Plain SR estimates the conditional mean, as §5 predicts, and quantitatively so.**
+   - Its log-law slope is 2.40 and 2.81, against $2 + \rho/(1+\pi^2) = 2.40$ and $2.81$.
+   - For the power law, the BIC pick has the conditional-mean shape (e.g. $2.06\,x^{0.69} + 0.39\log x$ against $E[y \mid X] = 2x^{0.7} + 0.40\log X$). PySR's default pick drops the small term, which is why it "recovers" the form with $a$ biased by 6%.
+   - Under strong endogeneity PySR's default pick never finds the form (0/50).
+   - Form recovery alone would have hidden this bias.
+2. **Symbolic IV is close to the oracle IV fit of the true form.** Its errors are within about 1.5× of that fit and its constants are unbiased. Its errors are 7–12× smaller than plain SR in sample and 2.5–18× smaller in extrapolation.
+3. **Symbolic IV recovers the true form in 66–92% of runs. The failures come from selection, not search:** only 2 of 200 were search failures. The rest are of two opposite kinds:
+   - a simpler wrong formula when separation is weak (7 of the 17 power-law failures in the strong setting are $x + c$);
+   - a contrived formula, often built with `max`, whose extra constant fits the moments slightly better.
+4. **The penalty matters.** Recovery was 66–92% with BIC, 52–68% with HQIC and 28–40% with AIC; the median MMSC gap to the runner-up shrinks from 2–5 to below 1. Even BIC ignores the search over structures (§7), so the next step is a structure-aware penalty (Phase 4).
+5. **Sensitivity** (power law, strong setting, 20 seeds):
+   - More instruments help: recovery was 30% at $K = 8$, 60% at $K = 13$ and 70% at $K = 25$ (Fisher $p = 0.03$ for 8 vs. 25, one comparison of several).
+   - The bound $C \in \{3, 10, 100\}$ made no detectable difference ($p = 0.75$), as expected without oscillatory operators.
+6. **Cost:** median 26 s per symbolic-IV search against 4 s for plain PySR ($n = 2000$, 8 threads).
+
+## 13. Code
 
 ```
 src/symiv/
   dgp/            laws and designs D1-D5 (§8.1)
   criteria/       instrument bases, Nystrom features, the criterion ||A'r||^2 / n (§6.2)
   gmm.py          two-step GMM refit with bounded constants; Hansen's J (§6.3)
-  selection.py    MMSC selection over the Pareto front (§6.3)
+  selection.py    MMSC selection over the Pareto front; least-squares selection for plain SR (§6.3)
   recovery.py     form recovery and SRBench's SymPy check (§8.1)
+  metrics.py      function, extrapolation and elasticity errors; implied constants (§8.1)
   diagnostics.py  success / search failure / statistical failure (§7)
   search.py       PySR wrappers; the loss is julia/moment_loss.jl (§6.6)
   baselines/      Phase 3
-experiments/      smoke_pysr.py: one end-to-end run, plain PySR vs. symbolic IV
+experiments/
+  smoke_pysr.py   one end-to-end run, plain PySR vs. symbolic IV
+  phase2.py       Phase 2 Monte Carlo (resumable); phase2_report.py writes phase2/summary.md
+  phase2/         runs.jsonl (one record per run) and summary.md
 tests/            pytest; `pytest -m julia` runs the PySR tests
 ```
 
@@ -369,6 +413,8 @@ python -c "import pysr"           # first run installs Julia and SymbolicRegress
 pytest                            # pure-Python tests, seconds
 pytest -m julia                   # PySR integration, about a minute
 python experiments/smoke_pysr.py --design D1 --law power --n 2000
+python experiments/phase2.py --part main          # about 2 hours; then --part sensitivity (about 45 min)
+python experiments/phase2_report.py
 ```
 
 If the Julia install fails with `GitError ... could not find repository at ...\.julia\registries\General`, the user-wide Julia registry is corrupt. Move that folder **outside** `registries/` (Julia reads every folder in it) and rerun; a fresh registry is downloaded.

@@ -11,20 +11,13 @@ from __future__ import annotations
 import argparse
 import time
 
-import numpy as np
-
 from symiv.criteria import gmm_criterion
 from symiv.diagnostics import diagnose
-from symiv.dgp import Sample, simulate
-from symiv.expressions import parametrize
+from symiv.dgp import simulate
+from symiv.metrics import relative_error
 from symiv.recovery import form_recovered
 from symiv.search import fit_symbolic_iv, pareto_front, plain_regressor
 from symiv.selection import select_mmsc
-
-
-def relative_error(expr, s: Sample) -> float:
-    """||f_hat - f0|| / sd(f0) on the sample."""
-    return float(np.sqrt(np.mean((parametrize(expr, s.X.shape[1])(s.X) - s.f0) ** 2)) / s.f0.std())
 
 
 def main() -> None:
@@ -49,7 +42,7 @@ def main() -> None:
     print(f"Plain PySR ({time.time() - t:.0f}s), PySR's own pick: {best_mse}")
     print(
         f"  recovers the form of f0: {form_recovered(best_mse, s.law, s.X).recovered}; "
-        f"||f_hat - f0|| / sd(f0) = {relative_error(best_mse, s):.3f}\n"
+        f"||f_hat - f0|| / sd(f0) = {relative_error(best_mse, s.law, s.X):.3f}\n"
     )
 
     t = time.time()
@@ -61,7 +54,7 @@ def main() -> None:
         print(f"  MMSC {c.mmsc:9.2f}  J {c.fit.J:8.2f}  p {c.n_constants}  {c.fitted_expr}")
     d = diagnose(sel.best, s.law, s.X, s.y, crit)
     print(f"\nSelected: {sel.best.fitted_expr}")
-    print(f"  ||f_hat - f0|| / sd(f0) = {relative_error(sel.best.fitted_expr, s):.3f}")
+    print(f"  ||f_hat - f0|| / sd(f0) = {relative_error(sel.best.fitted_expr, s.law, s.X):.3f}")
     print(f"Outcome: {d.outcome}  (MMSC selected {d.mmsc_selected:.2f}, true form {d.mmsc_true:.2f})")
 
 

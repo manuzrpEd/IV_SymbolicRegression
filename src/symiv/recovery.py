@@ -17,8 +17,8 @@ from dataclasses import dataclass
 
 import numpy as np
 import sympy as sp
-from scipy.optimize import least_squares
 
+from symiv._lsq import robust_least_squares
 from symiv.dgp.laws import Law
 from symiv.expressions import canonical, parametrize
 
@@ -54,14 +54,13 @@ def form_recovered(
 
     p = form.n_constants
     if p == 0:
-        best = residuals(np.empty(0))
+        rel_error = float(np.sqrt(np.mean(residuals(np.empty(0)) ** 2)))
     else:
         starts = [form.values] + [
             form.values * (1 + 0.5 * rng.standard_normal(p)) + 0.5 * rng.standard_normal(p) for _ in range(n_starts - 1)
         ]
-        fits = [least_squares(residuals, s) for s in starts]
-        best = min(fits, key=lambda f: f.cost).fun
-    rel_error = float(np.sqrt(np.mean(best**2)))
+        fits = [f for f in (robust_least_squares(residuals, s) for s in starts) if f is not None]
+        rel_error = float(np.sqrt(np.mean(min(fits, key=lambda f: f.cost).fun ** 2))) if fits else np.inf
     return Recovery(
         recovered=rel_error < rtol and p <= law.n_constants,
         rel_error=rel_error,
