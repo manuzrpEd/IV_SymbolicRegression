@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# PySR run artifacts
+outputs/
+hall_of_fame*.csv*
+*.pkl
+
+# Experiment results
+results/
+
+# Third-party papers: keep local, do not redistribute
+*.pdf
