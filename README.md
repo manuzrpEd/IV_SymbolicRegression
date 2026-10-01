@@ -2,7 +2,7 @@
 
 Symbolic regression that recovers the **structural** relation $f(X)$ rather than the conditional mean $E[y \mid X]$, by scoring the formula search with instrumental-variable moment conditions.
 
-Results so far: §12 (Phase 2 Monte Carlo; Phase 3 baselines; Phase 4 full grid). Code layout and setup: §13.
+Results so far: §12 (Phase 2 Monte Carlo; Phase 3 baselines; Phase 4 full grid; Phase 5 simulations of the theory). Theory, with proofs and a review log: [THEORY.md](THEORY.md) (Phase 5). Code layout and setup: §13.
 
 ---
 
@@ -120,7 +120,7 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
 
 ## 5. Model and identification
 
-- **Model:** $y = f_0(X) + u$ with $E[u \mid Z] = 0$; the target is $f_0$. The error is **additive**. Non-separable models (random coefficients, e.g. $y = w \cdot h$ with heterogeneous $w$) violate this and are out of scope for v1; IV quantile regression ([Chernozhukov & Hansen 2005](https://doi.org/10.1111/j.1468-0262.2005.00570.x)) is the route to an extension.
+- **Model:** $y = f_0(X) + u$ with $E[u \mid Z] = 0$; the target is $f_0$. The error is **additive**. Non-separable models (random coefficients, e.g. $y = w \cdot h$ with heterogeneous $w$) violate this and are out of scope for the paper; IV quantile regression ([Chernozhukov & Hansen 2005](https://doi.org/10.1111/j.1468-0262.2005.00570.x)) is the route to an extension *(beyond the paper)*.
 - **Plain SR is biased:** at best it is consistent for $E[y \mid X] = f_0(X) + E[u \mid X]$. In design D1 (§8.1), $E[u \mid X] = \frac{\rho}{1+\pi^2}\log X$: for the log law the conditional mean has the right form with a biased coefficient; for every other law it has an extra $\log X$ term. Whether plain SR shows that term depends on its size relative to $f_0$. At the D1 defaults ($\pi = 1$, $\rho = 0.8$) it is $0.4\log X$, small next to $2x^{0.7}$, and in a smoke run plain PySR returned the right power form with biased constants (§11, Phase 2).
 - **Identification within the class.** Let $\mathcal F_L$ be the formula class (§6.1). We need only **restricted identification**:
 
@@ -168,7 +168,8 @@ Selection and inference use different data:
 
 1. Split the sample: part A for search and selection, part B for everything reported.
 2. On B: refit the selected formula's constants by efficient GMM; standard errors; Hansen $J$ test; weak-identification-robust (Anderson–Rubin type, [Stock & Wright 2000](https://doi.org/10.1111/1468-0262.00151)) confidence sets for the constants; [Horowitz (2006)](https://doi.org/10.1111/j.1468-0262.2006.00670.x) test of the selected formula against the nonparametric alternative.
-3. This is valid conditional on the selected formula. Uniformly valid inference after selection without splitting is not claimed ([Leeb & Pötscher 2005](https://doi.org/10.1017/S0266466605050036); [Berk et al. 2013](https://doi.org/10.1214/12-aos1077)).
+3. This is valid conditional on the selected formula. Uniformly valid inference after selection without splitting is not claimed ([Leeb & Pötscher 2005](https://doi.org/10.1017/S0266466605050036); [Berk et al. 2013](https://doi.org/10.1214/12-aos1077)) *(beyond the paper)*.
+4. **Identification diagnostic** (Phase 5; `symiv.identification`; [THEORY.md](THEORY.md) Proposition 5). After selection, report the first-stage $F$ of $X$ on the instruments, Anderson–Rubin intervals for the constants, and the **formula confidence set**: the candidate formulas whose Stock–Wright $S$ statistic the data do not reject. It contains the true form with probability at least $1 - \alpha$ whatever the instrument strength, so when a wrong formula is selected while the true form was a candidate, the set shows a second formula with probability at least $1 - \alpha$. The verdict is "identified", "weakly identified" (listing the formulas the data also allow) or "rejected" (no candidate of the selected form fits the moments). Under the weak instrument (D5) the method then reports weak identification instead of a formula (§12.4).
 
 ### 6.5 Interpretation on real data
 
@@ -183,9 +184,22 @@ Real laws are rarely exactly in $\mathcal F_L$. Under misspecification, the GMM 
 - PySR's constant optimizer minimizes the same custom loss, so constants are fitted by the moment criterion with no extra code.
 - Enforce $\lvert\theta_j\rvert \le C$ inside the loss (return a large loss otherwise); use `nested_constraints` for §6.1.
 - Control function (a): `TemplateExpressionSpec(expressions=["f", "g"], variable_names=["x", "v"], combine="f(x) + g(v)")`.
-- **Optional RL version:** Deep Symbolic Regression ([Petersen et al. 2021](https://arxiv.org/abs/1912.04871)), with reward $= -$ criterion.
+- **Optional RL version** *(beyond the paper)*: Deep Symbolic Regression ([Petersen et al. 2021](https://arxiv.org/abs/1912.04871)), with reward $= -$ criterion.
 
 ## 7. Theory plan
+
+> **Phase 5 status ([THEORY.md](THEORY.md); second pass, with a review log of what the first pass got wrong).**
+> - **Theorem 1 (i)–(iii) is proved.** It holds for any candidate generator whose candidates contain a minimal true formula. Corollary 1.1 gives the parametric rate when the law is in the class. The split-sample intervals, $J$ test and AR sets of (iii) were simulated (§12.4): nominal on fresh samples, distorted on the selection sample, and only the AR sets survive the weak instrument.
+> - **Theorem 2 is proved with explicit constants**, for GMM with orthonormal instruments, sub-Gaussian errors and a bounded Lipschitz class, with two failure channels:
+>   - a separation margin $n\delta_s/\sigma^2 - (p_0 - p_s)\kappa_n$, plus deviation terms of the same order $\log n$, for wrong formulas;
+>   - a complexity condition for longer or more heavily parameterized formulas.
+>
+>   A per-node structure penalty makes the bound uniform in $L$ (Corollary 2.2; the theory's $w \approx 5$ is conservative against the empirical $0.5$). Proposition 2.4 extends the bound to the code's sample-orthonormalized criterion and an estimated scale. Corollary 2.3 (candidates from an independent sample) was simulated: the mechanism holds, but the structure term on the full sample does better (§12.4).
+> - **Proposition 5** (new): an Anderson–Rubin confidence set for the formula, valid whatever the instrument strength, is the identification diagnostic of §6.4. On the Phase 4 runs it flags every weak-instrument run and 5% of the strong-instrument runs whose selection was right, and covers the true form in 99% of the runs where it was a candidate (§12.4).
+> - **Discrete instruments** (Proposition 4, parts (a)–(b)): formulas with $J$ or more constants can zero the criterion. Part (c) is a conjecture with its transversality hypothesis stated.
+> - **Theorem 3(a)** (fixed $L$, misspecified) and **Theorem 3(b)** (growing $L$, compact support, any number of regressors) are proved; `max` gives a spline sieve for one regressor and Bernstein polynomials give one for several. Proposition 3.3 reduces rates to a modulus of continuity on the formula sieve; bounding it is open.
+>
+> The plan below is kept as written.
 
 **Setting.** $\mathcal S_L$ is the finite set of expression trees with at most $L$ nodes over the operator set. Tree $s$ has $p_s$ constants in $\Theta_s = [-C, C]^{p_s}$, and $\mathcal F_L = \{f_s(\cdot\,;\theta)\}$. The estimator is
 
@@ -199,8 +213,8 @@ Let $T h = E[h(X) \mid Z]$.
 |---|---|---|---|
 | **Theorem 1: consistency and selection (well-specified)** | If $f_0 \in \mathcal F_L$ with $L$ fixed, $\mathrm{pen}_n \to 0$ and $n\,\mathrm{pen}_n \to \infty$: (i) $\lVert \hat f - f_0\rVert_{L^2} \to_p 0$; (ii) with probability $\to 1$, the selected tree represents $f_0$ with the fewest constants; (iii) on the split sample, $\sqrt n(\hat\theta - \theta_0)$ is asymptotically normal under the usual rank condition (pointwise, not uniform) | Extremum-estimator consistency ([Newey & McFadden 1994](https://doi.org/10.1016/S1573-4412(05)80005-4)); consistent GMM model selection (Andrews & Lu 2001); degenerate $U$-statistics for MMR at the truth; [Andrews & Cheng (2012)](https://doi.org/10.3982/ECTA9456) for over-parameterized trees whose extra constants are unidentified | **High.** Mostly known tools; the work is careful bookkeeping (trees that represent the same function, nested trees) |
 | **Theorem 2: finite-sample selection bound** (the "short formulas regularize" claim, made precise) | Separation $\delta_L = \min_{s:\, f_0 \notin f_s(\cdot;\Theta_s)}\ \min_{\theta}\ \lVert T(f_s(\cdot\,;\theta) - f_0)\rVert^2$. By (A2) and compactness, $\delta_L > 0$ even though $T^{-1}$ is unbounded. Target form: $P(\text{wrong tree}) \le \exp\{\log\lvert\mathcal S_L\rvert + p_{\max}\ln n - c\,n\,\delta_L^2\}$ | Uniform concentration over a finite union of Lipschitz-parameterized classes (bounded kernel or envelope); covering numbers | **Medium-high.** The main new result. It predicts that recovery tracks $n\,\delta_L^2$, and that $\delta_L$ shrinks with weaker instruments, larger $C$ and larger $L$. These predictions are testable in the Monte Carlo, where $\delta_L$ can be computed |
-| **Theorem 3: misspecified, growing $L_n$** | $\bigcup_L \mathcal F_L$ as a nonlinear sieve in penalized sieve minimum distance (Chen & Pouzo 2012; Chen 2007): consistency of $\hat f$ when $f_0 \notin \mathcal F_L$ for every fixed $L$ | Nested classes ($\mathcal F_L \subseteq \mathcal F_{L+1}$); lower-semicompact penalty from bounded constants; approximation inherited from the polynomial sub-sieve contained in $\mathcal F_L$ | **Consistency: medium. Rates: low.** The ill-posedness measure of a nonlinear, non-convex sieve is not standard; possibly a separate paper |
-| Proposition (conjecture): discrete instruments | With $Z$ taking $J$ values, restricted identification holds generically in the distribution of $X \mid Z$ when $J > p_{\max}$ | Transversality for analytic families | Speculative; only after Theorems 1–2 |
+| **Theorem 3: misspecified, growing $L_n$** (consistency proved in THEORY.md on a compact support; rates and unbounded supports *beyond the paper*) | $\bigcup_L \mathcal F_L$ as a nonlinear sieve in penalized sieve minimum distance (Chen & Pouzo 2012; Chen 2007): consistency of $\hat f$ when $f_0 \notin \mathcal F_L$ for every fixed $L$ | Nested classes ($\mathcal F_L \subseteq \mathcal F_{L+1}$); lower-semicompact penalty from bounded constants; approximation inherited from the polynomial sub-sieve contained in $\mathcal F_L$ | **Consistency: medium. Rates: low.** The ill-posedness measure of a nonlinear, non-convex sieve is not standard; possibly a separate paper |
+| Proposition (conjecture): discrete instruments | With $Z$ taking $J$ values, restricted identification holds generically in the distribution of $X \mid Z$ when $J > p_{\max}$ | Transversality for analytic families | Parts (a)–(b) proved in THEORY.md (formulas with $\ge J$ constants can zero the criterion); the generic part is Conjecture 4 (c), *beyond the paper* |
 
 **Not claimed:**
 
@@ -291,7 +305,7 @@ The econometrician sees only $(y, X, Z)$.
   - It gives the lowest errors on D1; on D2 its form recovery falls to 0% (power law) and 42% (log law).
   - Raising $\gamma$ did not make it fail more, because $\gamma$ also strengthens the first stage (§12.3).
 - Recovery tracks $n\,\delta_L^2$. **Supported in a corrected form (§7, §12.3):** recovery tracks a penalty-adjusted margin over wrong formulas with at most $p_0$ constants, not $\delta_L$ over all trees.
-- Degradation under weak instruments is documented as part of the contribution. **Documented.** With $\pi = 0.1$ (D5), recovery is 0% for every law, and selected formulas err by 0.2–1.2 sd in sample. The method does not yet report weak identification by itself (§6.4; Phase 6).
+- Degradation under weak instruments is documented as part of the contribution. **Documented.** With $\pi = 0.1$ (D5), recovery is 0% for every law, and selected formulas err by 0.2–1.2 sd in sample. Since Phase 5 the identification diagnostic (§6.4) flags every D5 run, so the method reports weak identification there instead of a formula (§12.4).
 
 ### 8.2 Simulated economic environments
 
@@ -313,11 +327,25 @@ The econometrician sees only $(y, X, Z)$.
 - **Paper:** an ML venue (NeurIPS / ICML causality tracks) needs §8 plus Theorems 1–2. An econometrics journal (*Journal of Econometrics*, *The Econometrics Journal*) needs full proofs of Theorems 1–2, and ideally the consistency part of Theorem 3.
 - **Data:** no confidential data. The Engel-curve application needs a free UK Data Service registration.
 
+### 9.1 Scope of the paper
+
+**In the paper:** the selection rule with the structure term and its diagnostics (§6.3–§6.4); Theorems 1 and 2 with their corollaries, Proposition 5, Theorem 3 (a) and (b) on a compact support, and Proposition 4 (a)–(b) ([THEORY.md](THEORY.md)); the Monte Carlo of Phases 2–5 (§12); one application with a known answer (Phase 6).
+
+**Beyond the paper**, stated there as open problems or future work and marked *(beyond the paper)* wherever they appear in this file and in THEORY.md:
+- rates of convergence for growing formula size (THEORY.md Proposition 3.3 reduces them to a sieve modulus; bounding it is open);
+- Theorem 3 (b) on an unbounded support;
+- Theorem 2 for the exact kernel criterion, and for the estimation error of an efficient weight under heteroskedasticity;
+- Conjecture 4 (c), generic identification with fewer constants than instrument support points;
+- the reinforcement-learning search variant (§6.6);
+- non-separable models and the IV-quantile extension (§5, §10);
+- uniformly valid inference after selection without sample splitting (§6.4);
+- the remaining Phase 4 variations ($\rho$, the noise level, $J$ in D4, the bound $C$): a robustness appendix if cheap, not a requirement.
+
 ## 10. Risks
 
 | Risk | Mitigation |
 |---|---|
-| Weak instruments; identification failure (completeness not holding) | Designs D4–D5; weak-ID-robust confidence sets; report the criterion gap to the runner-up; Angrist–Krueger stress test |
+| Weak instruments; identification failure (completeness not holding) | Designs D4–D5; weak-ID-robust confidence sets; report the criterion gap to the runner-up; Angrist–Krueger stress test. **Phase 5:** the identification diagnostic of §6.4 flags every D5 run and 5% of the strong-instrument runs whose selection was right (§12.4) |
 | Oscillatory formulas exploit ill-posedness | Bounded constants, restricted operators, nesting constraints (§6.1) |
 | Criterion ties at zero with finite $K$ | $K$ much larger than the number of constants and growing with $n$, or MMR (§6.2) |
 | Noisier, non-convex search (the moment criterion is flatter than MSE) | Several restarts; seed with the plain-SR front; report search failures separately (§7). Phase 2: only 2 of 200 failures were search failures at $n = 2000$ |
@@ -325,7 +353,7 @@ The econometrician sees only $(y, X, Z)$.
 | The search never proposes the law (laws with a threshold or a ratio) | **Realized in Phase 4:** no generator produced the kink law in more than 33% of runs, and the saturation law appeared in 8–58% of runs. Next steps: templates such as $a x + b\max(x - c, 0)$, a larger search budget, and reporting a search failure (§7) instead of a wrong formula |
 | Library IV or NPIV → distillation match the method | Laws outside any finite library; if the one-step method does not win, reposition (§3.2). **Realized for distillation (Phase 3):** distillation + MMSC beat the one-step search, so the contribution was repositioned to IV-scored selection over candidates (§4) |
 | Misspecification on real data | Stability across instrument bases and weights (§6.5) |
-| Additive-error assumption fails | Out of scope for v1; IV quantile extension (§5) |
+| Additive-error assumption fails | Out of scope for the paper; IV quantile extension (§5) *(beyond the paper)* |
 | Inference after the search has selected the formula ([Berk et al. 2013](https://doi.org/10.1214/12-aos1077); [Belloni et al. 2012](https://doi.org/10.3982/ecta9626); [Chernozhukov et al. 2018](https://doi.org/10.1111/ectj.12097)) | Sample splitting (§6.4) |
 | Compute: exact MMR is $O(n^2)$ per evaluation | Low-rank factor (§6.2) |
 
@@ -389,15 +417,35 @@ The econometrician sees only $(y, X, Z)$.
 - [ ] Control function: a design that breaks its assumption without strengthening the instrument (e.g. vary $\gamma$ at a fixed variance of $X$ given $Z$)
 - [ ] Search coverage for the kink and saturation laws: templates, a larger budget, more restarts
 - [ ] Structure term: tune $w$ and the per-node cost; check the loss on long true forms (saturation)
-- [ ] Weak-identification warning: report weak instruments (first-stage strength, Anderson–Rubin set) instead of a confident formula, as D5 requires
+- [x] Weak-identification warning: done in Phase 5 (`symiv.identification`, §6.4, §12.4): first-stage strength, AR intervals and the formula confidence set
 
-### Phase 5: theory
-- [ ] Formal setup and assumptions (A1)–(A4); treatment of trees that represent the same function
-- [ ] Theorem 1 (i): consistency
-- [ ] Theorem 1 (ii)–(iii): selection consistency; split-sample asymptotic normality
-- [ ] Theorem 2: finite-sample selection bound in terms of $\delta_L$. Phase 4 suggests two terms (§7): a penalty-adjusted separation margin over wrong trees with $p_s \le p_0$, and a complexity term for trees with more constants. Near-duplicates call for a structure penalty in the estimator
-- [ ] Theorem 3 (stretch): check the Chen–Pouzo conditions for bounded-constant formula classes
-- [ ] Discrete-instrument proposition (only if time allows)
+### Phase 5: theory (two passes done 2026-10-01; [THEORY.md](THEORY.md), simulations in §12.4)
+- [x] Formal setup and assumptions: (A0)–(A3), (A2$_K$) and (A5). Trees that represent the same function are handled through the set of minimal true trees $\mathcal S_0^{\min}$; recovering the form means selecting any of them. Second pass: parameter sets made compact where a formula can be undefined
+- [x] Theorem 1 (i): consistency, for any generator whose candidates contain a true tree; Corollary 1.1: parametric rate when the law is in the class
+- [x] Theorem 1 (ii)–(iii): selection consistency (needs only $nQ_n(f_0) = O_p(1)$ and $\kappa_n \to \infty$); split-sample normality, $J$, and Anderson–Rubin sets
+- [x] Theorem 2: finite-sample bound with a separation channel and a complexity channel, **all constants explicit** (second pass: the chaining step with an unknown constant was replaced by a projection bound). Corollary 2.2: a per-node structure penalty makes it uniform in $L$; the condition on $w$ is explicit
+- [x] Theorem 2 extensions: the code's sample-orthonormalized criterion and an estimated scale (Proposition 2.4, Corollary 2.5); general weights and the Nyström kernel criterion by a substitution rule
+- [x] Discrete-instrument proposition: parts (a)–(b) proved (formulas with $\ge J$ constants can zero the criterion; checked numerically on D4); part (c) is a conjecture with its transversality hypothesis stated
+- [x] Theorem 3 (a): fixed $L$, misspecified law, convergence to the pseudo-true set
+- [x] Theorem 3 (b): consistency as $L$ grows, proved directly on a compact support; approximation within a Lipschitz ball by `max` hinges (one regressor) and by Bernstein polynomials (any number of regressors)
+- [x] Simulated Theorem 1 (iii) on the Phase 4 fronts: nominal coverage on fresh samples; 83–90% on the selection sample; under the weak instrument only AR sets keep their coverage
+- [x] Tested Corollary 2.3: fewer wrong candidates beat the truth when selection uses an independent sample, but full-sample selection with the structure term recovers more
+- [x] Proposition 5: an identification-robust confidence set for the formula, the diagnostic built on it (`symiv.identification`, §6.4), and its evaluation on all 288 Phase 4 breadth runs: every D5 run flagged, 5% false alarms, 99% coverage of the true form
+- [x] Rates: parametric when the law is in the class (Corollary 1.1); for growing $L$, reduced to a modulus of continuity on the formula sieve (Proposition 3.3)
+- [ ] Bound that modulus for formula sieves (the open rate problem; $\mathcal F_L - f_0$ is not a linear space)
+- [ ] Theorem 3 (b) on unbounded supports: envelope-respecting approximants and a deviation bound with an unbounded envelope
+- [ ] Theorem 2 for the exact kernel criterion (degenerate U-processes) and for the estimated efficient weight under heteroskedasticity
+- [ ] Conjecture 4 (c): a design family of dimension $\ge J - p_s$ for which the regular-value condition can be verified
+- [ ] Independent reading of the proofs before they go into a paper (both passes are the author's own)
+
+### Before the paper (required)
+- [x] Weak-identification diagnostic (2026-10-01): first-stage $F$, AR intervals for the constants and the formula confidence set of THEORY.md Proposition 5, in `symiv.identification`; evaluated on every Phase 4 breadth run (§12.4)
+- [ ] **More seeds in the headline cells.** Twelve seeds give recovery rates with intervals about 25 points wide, too wide for the comparisons the paper rests on (pooled vs. distilled candidates, BIC vs. BIC + structure, recovery as $n$ grows). Raise the cells the paper leans on to 50 seeds, as in Phase 2: D1 default and strong × log and power; D3 × log and power; D5 × all five laws; the $n$-scaling cells at $n \in \{1000, 2000, 5000\}$. About 650 extra searches, roughly a day of compute at the Phase 4 rates; the scripts resume, so this can run in the background
+- [ ] One application with a known answer (Phase 6: Engel curves), or at least the simulated supply-and-demand environment
+- [ ] Independent reading of the proofs in THEORY.md
+
+### Beyond the paper
+See §9.1: listed there so they do not read as blockers, and marked *(beyond the paper)* in place.
 
 ### Phase 6: applications
 - [ ] Simulated demand and labour-supply environments (§8.2)
@@ -567,6 +615,38 @@ The columns cover different runs: the plain front exists only up to $n = 10\,000
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="experiments/phase4/fig_separation_dark.png"><img alt="Recovery given coverage against the penalty-adjusted separation margin, one point per cell. Cells with a positive margin mostly recover the law; cells with a negative margin mostly do not. The numbers are in experiments/phase4/summary.md, section 7." src="experiments/phase4/fig_separation_light.png"></picture>
 
+### 12.4 Phase 5: simulations of the theory
+
+Three experiments on the saved Phase 4 fronts, no new searches. Full tables: [`experiments/phase5/summary.md`](experiments/phase5/summary.md); details and interpretation: [THEORY.md §7.1](THEORY.md).
+
+**Inference after selection (Theorem 1 (iii)).** For each breadth run, the law's own form and the formula selected by pooled candidates + BIC + structure (when it has the true form) were estimated by two-step GMM on 10 fresh samples and on the selection sample itself; 4,500 fits.
+
+| | Constants covered (95% nominal) | $f$(median) | Elasticity | $J$ rejects (5%) | AR covers |
+|---|---|---|---|---|---|
+| D1–D4, selected tree, fresh samples | 92–98% | 94–95% | 92–94% | 3–7% | 93–97% |
+| D1–D4, selected tree, same sample | 83–94% | 87–100% | 88–96% | 0–6% | 94–97% |
+| D5 weak $Z$, true form, fresh samples | 76% | 68% | 64% | 10% | 97% |
+
+- On independent samples, intervals, $J$ and AR sets are nominal, and the standard errors are calibrated.
+- On the selection sample, coverage of the constants drops to 83–90% in D1–D3: the post-selection distortion that splitting avoids.
+- Under the weak instrument, Wald intervals fail and AR sets do not, as the theorem says.
+
+**Candidates from one sample, selection on another (Corollary 2.3).** D1 strong, the $n = 1000$ fronts, 12 seeds: wrong candidates that outscore the truth fall from 1.9 to 1.4 per run (power law) and from 0.4 to 0.1 (log law), and recovery at equal selection size rises by 10–25 points. But same-sample selection on the full $n = 2000$ with the structure term recovers more (67% vs. 47% for the power law, pooled), because halving the sample halves the separation. Splitting is the right tool for inference, not for selection.
+
+**The identification diagnostic (THEORY.md Proposition 5; `symiv.identification`).** On every breadth run, with the pooled candidates and the BIC + structure selection, on the run's own data ($\tau = 0.2$):
+
+| | Runs | Flagged as weakly identified or rejected | True form in the confidence set |
+|---|---|---|---|
+| D5 weak instrument, all runs | 60 | **100%** | 100% |
+| D1–D4, form recovered | 123 | 5% | 99% |
+| D1–D4, statistical failure | 29 | 45% | 100% |
+| D1–D4, search failure | 76 | 53% | – |
+
+- The method now reports weak identification on every D5 run instead of a formula: the median first-stage $F$ is 2, and the data allow formulas a full standard deviation away from the selected one.
+- Where the instrument is strong and the selection right, 5% of runs are flagged: the AR level.
+- The confidence set covers the true form in 99% of the runs where it was a candidate (nominal $\ge 95\%$).
+- It cannot detect a search failure whose wrong formula fits the moments: 47% of the search failures pass as identified, mostly D3 with the kink and saturation laws.
+
 ## 13. Code
 
 ```
@@ -578,6 +658,7 @@ src/symiv/
   recovery.py     form recovery and SRBench's SymPy check (§8.1)
   metrics.py      function, extrapolation and elasticity errors; implied constants (§8.1)
   diagnostics.py  success / search failure / statistical failure (§7)
+  identification.py  after selection: first-stage F, AR intervals, the formula confidence set and a verdict (§6.4)
   search.py       PySR wrappers; the loss is julia/moment_loss.jl (§6.6)
   baselines/      Phase 3: fixed_form (oracle and wrong-form IV), npiv (sieve 2SLS, KIV), deepiv (torch),
                   library_iv, distill (NPIV -> PySR), control_function (template SR), srit (SRIT-style)
@@ -588,8 +669,13 @@ experiments/
   phase4.py       Phase 4 searches: saves every Pareto front (grids breadth, nscale, nomax, cf; resumable, shardable)
   phase4_analysis.py  selection rules and metrics on the saved fronts (pure Python, parallel); --separation for §7
   phase4_report.py    phase4/summary.md and figures (matplotlib, light and dark)
-  phase2/, phase3/, phase4/  one JSON record per run, and summary.md
+  phase5_inference.py Phase 5: inference after selection on fresh samples (Theorem 1 (iii)); reuses the Phase 4 fronts
+  phase5_split.py     Phase 5: candidates from one sample, selection on another (Corollary 2.3)
+  phase5_identification.py  Phase 5: the identification diagnostic on every Phase 4 breadth run (Proposition 5)
+  phase5_report.py    phase5/summary.md
+  phase2/ ... phase5/  one JSON record per run, and summary.md
 tests/            pytest; `pytest -m julia` runs the PySR tests, `pytest -m slow` the DeepIV test
+THEORY.md         Phase 5: assumptions, theorems and proofs (§7)
 ```
 
 **Setup** (tested with Python 3.12, PySR 2.6.0, SymbolicRegression.jl 2.5.1, Julia 1.11.9, Windows 11):
@@ -612,6 +698,7 @@ python experiments/phase4.py --grid breadth nscale nomax cf --shard 0 --of 2   #
 python experiments/phase4_analysis.py --workers 8               # about 1 hour
 python experiments/phase4_analysis.py --separation --workers 8  # about 10 minutes
 python experiments/phase4_report.py
+python experiments/phase5_inference.py --workers 8  # minutes; then phase5_split.py and phase5_report.py
 ```
 
 Phase 4 runs for longer than a terminal session should be trusted with. On Windows, start each search as a detached process with logs, e.g. `Start-Process .venv\Scripts\python.exe -ArgumentList "-u","experiments\phase4.py",... -WindowStyle Hidden -RedirectStandardOutput experiments\phase4\logs\search-0.out.log -RedirectStandardError experiments\phase4\logs\search-0.err.log`; elsewhere use `nohup ... &`. Every script skips finished runs, so an interrupted job resumes where it stopped. `logs/` is git-ignored.
