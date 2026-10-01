@@ -15,3 +15,6 @@ results/
 
 # Third-party papers: keep local, do not redistribute
 *.pdf
+
+# Logs of detached long-running jobs
+logs/

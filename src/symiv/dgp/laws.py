@@ -43,12 +43,13 @@ _a, _b, _c, _theta, _A, _alpha, _beta = sp.symbols("a b c theta A alpha beta")
 LAWS: dict[str, Law] = {
     # In any finite library: library-based sparse IV should also succeed.
     "log": Law("log", 1, _a + _b * sp.log(_x0), (_a, _b), (1.0, 2.0)),
-    # Outside any finite library (nonlinear in a parameter).
+    # Outside any finite library (nonlinear in a parameter). Constants avoid coincidences (e.g. beta = 2 alpha, A = 1)
+    # that would let a simpler formula reproduce the law exactly.
     "power": Law("power", 1, _a * _x0**_theta, (_a, _theta), (2.0, 0.7)),
     "kink": Law("kink", 1, _a * _x0 + _b * sp.Max(_x0 - _c, 0), (_a, _b, _c), (1.0, -0.8, 1.5)),
     "saturation": Law("saturation", 1, _a * _x0 / (_b + _x0), (_a, _b), (3.0, 1.0)),
     "cobb_douglas": Law(
-        "cobb_douglas", 2, _A * _x0**_alpha * _x1**_beta, (_A, _alpha, _beta), (1.0, 0.3, 0.6)
+        "cobb_douglas", 2, _A * _x0**_alpha * _x1**_beta, (_A, _alpha, _beta), (1.5, 0.3, 0.5)
     ),
 }
 

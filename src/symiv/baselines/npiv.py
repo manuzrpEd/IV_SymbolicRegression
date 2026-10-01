@@ -1,4 +1,4 @@
-"""Nonparametric IV baselines for one positive regressor: sieve 2SLS and kernel IV (README §8.1).
+"""Nonparametric IV baselines for positive regressors: sieve 2SLS (any number) and kernel IV (one) (README §8.1).
 
 Both return a callable f_hat(X) and no formula.
 """
@@ -7,10 +7,12 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass
+from math import comb
 
 import numpy as np
 from scipy.linalg import LinAlgWarning, solve
-from sklearn.preprocessing import SplineTransformer
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures, SplineTransformer, StandardScaler
 
 from symiv.criteria import MomentCriterion
 from symiv.criteria.instruments import as_2d, gaussian_kernel, median_bandwidth
@@ -19,16 +21,23 @@ from symiv.criteria.instruments import as_2d, gaussian_kernel, median_bandwidth
 def _log_regressor(X: np.ndarray) -> np.ndarray:
     X = as_2d(X)
     if X.shape[1] != 1:
-        raise ValueError("these NPIV baselines take one regressor")
+        raise ValueError("kernel IV here takes one regressor")
     return np.log(X)
 
 
 # ----------------------------------------------------------------- sieve 2SLS
 
 
-def _spline(J: int) -> SplineTransformer:
-    """Cubic B-splines in log x with J columns, continued linearly outside the data."""
-    return SplineTransformer(n_knots=J - 2, degree=3, knots="quantile", extrapolation="linear", include_bias=True)
+def _basis(J: int, d: int):
+    """One regressor: J cubic B-splines in log x, continued linearly outside the data.
+    Several: all monomials of standardized log x up to total degree J (a product law needs interactions)."""
+    if d == 1:
+        return SplineTransformer(n_knots=J - 2, degree=3, knots="quantile", extrapolation="linear", include_bias=True)
+    return make_pipeline(StandardScaler(), PolynomialFeatures(degree=J, include_bias=True))
+
+
+def _n_columns(J: int, d: int) -> int:
+    return J if d == 1 else comb(J + d, d)
 
 
 def _sieve_2sls(Psi: np.ndarray, y: np.ndarray, A: np.ndarray) -> np.ndarray:
@@ -38,12 +47,12 @@ def _sieve_2sls(Psi: np.ndarray, y: np.ndarray, A: np.ndarray) -> np.ndarray:
 
 @dataclass
 class SieveIV:
-    spline: SplineTransformer
+    basis: object  # fitted transformer of log x
     beta: np.ndarray
-    J: int
+    J: int  # number of splines (one regressor) or polynomial degree (several)
 
     def __call__(self, X: np.ndarray) -> np.ndarray:
-        return self.spline.transform(_log_regressor(X)) @ self.beta
+        return self.basis.transform(np.log(as_2d(X))) @ self.beta
 
 
 def fit_sieve_iv(
@@ -51,21 +60,23 @@ def fit_sieve_iv(
     y: np.ndarray,
     crit: MomentCriterion,
     J: int | None = None,
-    J_grid=range(4, 11),
+    J_grid=None,
     folds: int = 5,
     seed: int = 0,
 ) -> SieveIV:
-    """Series 2SLS with J B-splines in log x and the criterion's instruments.
+    """Series 2SLS in log x with the criterion's instruments.
 
-    J (at most the number of instruments) is chosen by the moment criterion on
-    held-out folds when not given.
+    J (with no more sieve terms than instruments) is chosen by the moment
+    criterion on held-out folds when not given. Default grid: 4-10 splines for
+    one regressor, total degree 1-4 for several.
     """
-    t = _log_regressor(X)
-    grid = [j for j in J_grid if j <= crit.K]
+    t = np.log(as_2d(X))
+    d = t.shape[1]
+    grid = [j for j in (J_grid or (range(4, 11) if d == 1 else range(1, 5))) if _n_columns(j, d) <= crit.K]
     if J is None:
         J = min(grid, key=lambda j: _cv_moment_loss(t, y, crit.A, j, folds, seed))
-    spline = _spline(J).fit(t)
-    return SieveIV(spline, _sieve_2sls(spline.transform(t), y, crit.A), J)
+    basis = _basis(J, d).fit(t)
+    return SieveIV(basis, _sieve_2sls(basis.transform(t), y, crit.A), J)
 
 
 def _cv_moment_loss(t, y, A, J, folds, seed) -> float:
@@ -73,9 +84,9 @@ def _cv_moment_loss(t, y, A, J, folds, seed) -> float:
     total = 0.0
     for k in range(folds):
         train, val = fold != k, fold == k
-        spline = _spline(J).fit(t[train])
-        beta = _sieve_2sls(spline.transform(t[train]), y[train], A[train])
-        g = A[val].T @ (y[val] - spline.transform(t[val]) @ beta)
+        basis = _basis(J, t.shape[1]).fit(t[train])
+        beta = _sieve_2sls(basis.transform(t[train]), y[train], A[train])
+        g = A[val].T @ (y[val] - basis.transform(t[val]) @ beta)
         total += g @ g / val.sum()
     return total
 

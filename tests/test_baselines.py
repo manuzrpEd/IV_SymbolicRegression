@@ -85,3 +85,20 @@ def test_deepiv_is_close_to_f0():
     fit = fit_deepiv(s.X, s.y, s.Z, max_epochs=100)
     cm_error = np.sqrt(np.mean((conditional_mean(s) - s.f0) ** 2)) / s.f0.std()
     assert rms_error(fit, s) < cm_error
+
+
+def test_sieve_iv_with_two_regressors():
+    s = simulate("D1", "cobb_douglas", n=3000, seed=0)
+    crit = gmm_criterion(s.Z, basis="poly", degree=4)
+    fit = fit_sieve_iv(s.X, s.y, crit)
+    assert 1 <= fit.J <= 4
+    assert rms_error(fit, s) < 0.3
+
+
+def test_library_path_contains_the_log_law(log_d1):
+    from symiv.baselines.library_iv import library_path_candidates
+
+    s, crit = log_d1
+    cands = library_path_candidates(s.X, s.y, crit)
+    assert len(cands) >= 3
+    assert any(form_recovered(c, s.law, s.X).recovered for c in cands)

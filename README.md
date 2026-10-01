@@ -2,7 +2,7 @@
 
 Symbolic regression that recovers the **structural** relation $f(X)$ rather than the conditional mean $E[y \mid X]$, by scoring the formula search with instrumental-variable moment conditions.
 
-Results so far: §12 (Phase 2 Monte Carlo; Phase 3 baselines). Code layout and setup: §13.
+Results so far: §12 (Phase 2 Monte Carlo; Phase 3 baselines; Phase 4 full grid). Code layout and setup: §13.
 
 ---
 
@@ -36,7 +36,7 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
   - with SR's own choice of formula, distillation rarely recovers the law;
   - with the formula chosen by our moment criterion on the original data, it recovers the law more often than the one-step search.
 
-  The missing piece is IV-based *selection* among formulas, and its theory.
+  Phase 4 (§12.3) goes further: even plain SR's own list of candidates, scored by the moment criterion, usually contains and selects the law. The missing piece is IV-based *selection* among formulas, and its theory.
 
 ## 2. Why it matters
 
@@ -112,6 +112,12 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
 - **The method to present:** pool the candidates from several generators and score all of them by MMSC (tested in Phase 4).
 - **Unchanged:** the theorems of §7 are about the selection rule, so they apply to any generator whose candidates include the true form.
 
+**Revised after Phase 4 (§12.3).**
+- **The instrument does its work when formulas are scored, not when they are generated.** Plain PySR's squared-error front, scored by MMSC, recovered the law as often as the IV-specific generators in designs D1, D2 and D4. In the strong-endogeneity power-law cell, PySR's own pick never recovered the form (0/12 at every $n$), yet its front contained the form in every run and MMSC selected it in 67–100% of runs. IV-specific generators matter where endogeneity changes the shape of $E[y \mid X]$ (simultaneity, D3).
+- **Pooling did not beat the distilled front alone.** It adds coverage, but also wrong formulas that outscore the truth.
+- **The selection rule needs a structure term.** Plain BIC lets near-duplicates of the law win even at $n = 50\,000$. Adding $w \cdot \text{nodes} \cdot \ln m$ (a per-node version of Theorem 2's $\log\lvert\mathcal S_L\rvert$) raised recovery from 51% to 60% and gave 100% from $n = 5000$ in the $n$-scaling cells.
+- **The method to present:** generate candidates cheaply (plain PySR, and PySR distilled from a sieve-2SLS curve), then select by MMSC with the structure term. Contribution: the selection rule, its theory (§7) and diagnostics.
+
 ## 5. Model and identification
 
 - **Model:** $y = f_0(X) + u$ with $E[u \mid Z] = 0$; the target is $f_0$. The error is **additive**. Non-separable models (random coefficients, e.g. $y = w \cdot h$ with heterogeneous $w$) violate this and are out of scope for v1; IV quantile regression ([Chernozhukov & Hansen 2005](https://doi.org/10.1111/j.1468-0262.2005.00570.x)) is the route to an extension.
@@ -151,6 +157,10 @@ PySR returns a Pareto front (the best criterion at each complexity). Select from
 - For MMR: $n\,Q_n(s) + c\, p_s \ln n$, with $c$ calibrated by simulation.
 - Cross-check: the moment criterion on held-out data (not held-out MSE, which favours $E[y \mid X]$).
 - Phase 2 (§12): BIC recovered the true form most often (66–92%), then HQIC (52–68%), then AIC (28–40%). Even BIC lets contrived formulas with one extra constant through, because it does not account for the search over formula structures (§7).
+- Phase 4 (§12.3):
+  - **Add a structure term.** BIC plus $w \cdot \text{nodes} \cdot \ln m$, with $m$ the number of symbols and $w = 0.5$, is the best rule tested: 60% recovery against 51% for BIC on the pooled candidates (46 runs won, 8 lost; $p < 0.001$). It removes the near-duplicates that BIC admits at any $n$. It costs recovery on the saturation law, whose true form is long.
+  - **What did not help:** the cross-fitted moment criterion (28%), because over-parameterized formulas that contain the truth tie on held-out moments; doubling $K$ (no change).
+  - **Kernel instruments (criterion (c))** were slightly better than splines (54% vs. 51%, $p = 0.015$).
 
 ### 6.4 Inference after selection
 
@@ -203,6 +213,20 @@ Let $T h = E[h(X) \mid Z]$.
 
 **Phase 3 evidence (§12.2).** The theorems are about the selection rule, not the search. Phase 3 shows that is where the value lies: the same rule applied to candidates from a distilled NPIV fit did better than the one-step search. For the theory, the candidate set can come from any generator; what matters is whether it contains the true form and how many competitors it adds (the $\lvert\mathcal S\rvert$ in Theorem 2).
 
+**Phase 4 evidence (§12.3).**
+- **Theorem 1 holds in the data only with a structure term.**
+  - With BIC + structure, recovery reached 100% from $n = 5000$ to $50\,000$ for every generator in the $n$-scaling cells.
+  - With BIC alone, 1–3 of 12 runs still chose a near-duplicate at every $n$. These formulas have the same number of constants as $f_0$ but more nodes. An example is $(x\,e^{x/\max(c,\,x)})^{\theta}$, which equals $e^{\theta}x^{\theta}$ wherever $x > c$.
+- **The separation that predicts selection is not $\delta_L$ over all wrong trees.** Measured that way it was about 0 in every cell, and unrelated to recovery (Spearman 0.10), for two reasons:
+  - trees with more constants than $f_0$ approximate it arbitrarily well;
+  - with a 4-point instrument (D4), any tree with 4 constants sets the criterion to zero, as the discrete-instrument conjecture predicts.
+- **The quantity that matters is a penalty-adjusted margin:** $\min_s\,[\,n\delta_s/\sigma_u^2 - (p_0 - p_s)\ln n\,]$ over wrong trees with $p_s \le p_0$. Across 32 cells it tracked recovery given coverage (Spearman 0.56, $p < 0.001$): 74% when positive, 23% when not.
+- **Revised target for Theorem 2.** The bound should have two terms:
+  - a separation term over wrong trees with $p_s \le p_0$, using this margin;
+  - a complexity term ($\log\lvert\mathcal S_L\rvert$) for the noise-fitting channel of trees with more constants.
+
+  Near-duplicates make $\delta_s$ arbitrarily small at a fixed size, so the structure penalty belongs in the estimator, not only in the bound.
+
 ## 8. Experiments
 
 ### 8.1 Monte Carlo
@@ -253,14 +277,21 @@ The econometrician sees only $(y, X, Z)$.
 | **Library + sparse IV** (PySR-style term library; Lasso on instrument-projected data; STIV if feasible) | Main competitor for laws linear in parameters (§3.2) |
 | Control-function SR, variant (a) | Cheap alternative; should win on D1 and lose on D2 |
 
-**Expected results** (stated so that they can fail), with outcomes from Phases 2–3 (§12):
+**Expected results** (stated so that they can fail), with outcomes from Phases 2–4 (§12):
 
-- Plain SR returns a wrong formula or the right form with biased constants, depending on how large the endogeneity term is relative to $f_0$. **Confirmed.** Its bias matches $\rho/(1+\pi^2)$.
-- Library IV matches symbolic IV on the log law and fails on power, kink and saturation. **Partly.** It never recovers the power law. Even for the log law, which is in its library, cross-validated Lasso adds terms (28–52% recovery), though its in-sample errors are competitive.
-- One-step symbolic IV beats NPIV → distillation when the NPIV fit is unstable (weak instruments, small $n$, extrapolation). If it does not, the paper is repositioned (§3.2). **Refuted when the distilled candidates are scored by MMSC; repositioned (§4).**
-- Control-function SR wins on D1 and loses on D2 (§8.1 baselines table). **Confirmed.** It gives the lowest errors on D1; on D2 its form recovery falls to 0% (power law) and 42% (log law).
-- Recovery tracks $n\,\delta_L^2$. *Phase 4.*
-- Degradation under weak instruments is documented as part of the contribution. *Phase 4.*
+- Plain SR returns a wrong formula or the right form with biased constants, depending on how large the endogeneity term is relative to $f_0$. **Confirmed.**
+  - Its bias matches $\rho/(1+\pi^2)$.
+  - Phase 4: wherever it finds the log-law form, its slope is 2.38–2.80 against a true value of 2; under simultaneity (D3) it never finds the form.
+- Library IV matches symbolic IV on the log law and fails on power, kink and saturation. **Confirmed once the library is scored by MMSC.**
+  - Its Lasso path scored by MMSC recovers the log law in 75–100% of runs in D1–D4.
+  - Cross-validated Lasso managed only 28–52% (Phase 3).
+  - It never recovers the other laws.
+- One-step symbolic IV beats NPIV → distillation when the NPIV fit is unstable (weak instruments, small $n$, extrapolation). If it does not, the paper is repositioned (§3.2). **Refuted when the distilled candidates are scored by MMSC; repositioned (§4).** In Phase 4, even plain SR's candidates did as well when scored by MMSC.
+- Control-function SR wins on D1 and loses on D2 (§8.1 baselines table). **Confirmed.**
+  - It gives the lowest errors on D1; on D2 its form recovery falls to 0% (power law) and 42% (log law).
+  - Raising $\gamma$ did not make it fail more, because $\gamma$ also strengthens the first stage (§12.3).
+- Recovery tracks $n\,\delta_L^2$. **Supported in a corrected form (§7, §12.3):** recovery tracks a penalty-adjusted margin over wrong formulas with at most $p_0$ constants, not $\delta_L$ over all trees.
+- Degradation under weak instruments is documented as part of the contribution. **Documented.** With $\pi = 0.1$ (D5), recovery is 0% for every law, and selected formulas err by 0.2–1.2 sd in sample. The method does not yet report weak identification by itself (§6.4; Phase 6).
 
 ### 8.2 Simulated economic environments
 
@@ -290,7 +321,8 @@ The econometrician sees only $(y, X, Z)$.
 | Oscillatory formulas exploit ill-posedness | Bounded constants, restricted operators, nesting constraints (§6.1) |
 | Criterion ties at zero with finite $K$ | $K$ much larger than the number of constants and growing with $n$, or MMR (§6.2) |
 | Noisier, non-convex search (the moment criterion is flatter than MSE) | Several restarts; seed with the plain-SR front; report search failures separately (§7). Phase 2: only 2 of 200 failures were search failures at $n = 2000$ |
-| Selection, not search, is the bottleneck: a penalty too weak for the size of the search space (contrived formulas win) or too strong for weak separation (simpler wrong formulas win) | Structure-aware penalty; cross-fitted moment criterion; larger $n$ and $K$; operator-set ablation (Phase 4). Evidence in §12 |
+| Selection, not search, is the bottleneck: a penalty too weak for the size of the search space (contrived formulas win) or too strong for weak separation (simpler wrong formulas win) | **Phase 4:** a structure term fixes the first failure (60% vs. 51% recovery; 100% from $n = 5000$). The cross-fitted criterion, larger $K$ and dropping `max` did not help. The second failure is what the separation margin measures (§12.3) |
+| The search never proposes the law (laws with a threshold or a ratio) | **Realized in Phase 4:** no generator produced the kink law in more than 33% of runs, and the saturation law appeared in 8–58% of runs. Next steps: templates such as $a x + b\max(x - c, 0)$, a larger search budget, and reporting a search failure (§7) instead of a wrong formula |
 | Library IV or NPIV → distillation match the method | Laws outside any finite library; if the one-step method does not win, reposition (§3.2). **Realized for distillation (Phase 3):** distillation + MMSC beat the one-step search, so the contribution was repositioned to IV-scored selection over candidates (§4) |
 | Misspecification on real data | Stability across instrument bases and weights (§6.5) |
 | Additive-error assumption fails | Out of scope for v1; IV quantile extension (§5) |
@@ -340,25 +372,30 @@ The econometrician sees only $(y, X, Z)$.
 - [x] SRIT: the original is not runnable (its code link returned 404 on 2026-09-30; it used the commercial Eureqa engine). Replaced by a simplified SRIT-style reimplementation with PySR and HSIC pruning, clearly labelled
 - [x] Run on the Phase 2 D1 cells (same data) and on D2, 50 seeds each: 300 runs, 0 method errors
 
-### Phase 4: full grid
-- [ ] Pooled candidates: the one-step front plus the distilled fronts, all scored by MMSC. Does pooling beat distillation alone, or does the larger candidate set bring more contrived winners (§7)?
-- [ ] Why distilled candidates select better: count contrived formulas on each front; test the hypothesis that fronts fitted to a smooth NPIV curve contain fewer formulas that fit moment noise
-- [ ] Library + MMSC: score the Lasso path's subsets by MMSC instead of cross-validation (to separate the library's limits from its tuning)
-- [ ] Control-function SR on more D2 settings ($\gamma$) and designs where it should fail more visibly
-- [ ] All laws × D1–D5; vary $\pi$, $n$, $\rho$, noise, $J$, $C$, $K$
-- [ ] Recovery as $n$ grows ($2\,000 \to 50\,000$) in the Phase 2 strong setting: Theorem 1 predicts it goes to one; the $x + c$ failures should disappear first
-- [ ] Selection rules aimed at the Phase 2 failures: a penalty with a structure term (Theorem 2's $\log\lvert\mathcal S_L\rvert$, e.g. by tree size); the cross-fitted moment criterion of §6.3
-- [ ] Default $K$: $n^{1/3}$ gave $K = 13$ at $n = 2000$, and $K = 25$ did better; test faster-growing rules
-- [ ] Operator-set ablation: without `max` (only the kink law needs it), since many contrived winners in Phase 2 used it
-- [ ] Criterion (c) vs. (b)
-- [ ] Compute $\delta_L$ numerically per design; plot recovery against $n\,\delta_L^2$
-- [ ] Write up the first results
+### Phase 4: full grid (done 2026-10-01; results in §12.3)
+- [x] Pooled candidates: pooling raised coverage (79% vs. 74% for the distilled front) but brought about three times as many wrong formulas that beat the truth. Recovery: 51% pooled vs. 58% distilled (BIC)
+- [x] Why distilled candidates select better: their fronts hold fewer formulas that outscore the truth (1.0 vs. 1.6 per run) and contain the true form more often (74% vs. 65%), as hypothesized
+- [x] Library + MMSC: the Lasso path scored by MMSC recovers the log law in 75–100% of runs (D1–D4), against 28–52% with cross-validation. The Phase 3 failures were the tuning; the library's limit is coverage
+- [x] Control-function SR on D2 with $\gamma \in \{0.45, 0.6\}$: power-law recovery stays at 0%; log-law recovery rises (83%, 100%), because $\gamma$ also strengthens the first stage. Inconclusive by design
+- [x] All laws × D1–D5 at $n = 2000$ (5 laws, 24 cells, 12 seeds)
+- [x] Recovery as $n$ grows ($1\,000 \to 50\,000$), strong setting: 100% from $n = 5000$ with the structure term; BIC alone plateaus at 75–92% (near-duplicates)
+- [x] Selection rules: structure term (best: +9 points); cross-fitted criterion (worst: −23 points)
+- [x] Default $K$: doubling $K$ at the selection stage changes nothing (51% vs. 51%); keep $n^{1/3}$
+- [x] Operator ablation without `max`: no gain (all paired differences within 3 runs, $p \ge 0.25$); contrived winners use other operators
+- [x] Criterion (c) vs. (b): kernel instruments slightly better at selection (54% vs. 51%, $p = 0.015$)
+- [x] Separation: $\delta_L$ over all wrong trees is uninformative; a penalty-adjusted margin over wrong trees with $\le p_0$ constants tracks recovery (Spearman 0.56)
+- [x] Write up the first results (§12.3)
+- [ ] Remaining variations: $\rho$, noise level, $J$ in D4, the bound $C$, and 20 seeds instead of 12
+- [ ] Control function: a design that breaks its assumption without strengthening the instrument (e.g. vary $\gamma$ at a fixed variance of $X$ given $Z$)
+- [ ] Search coverage for the kink and saturation laws: templates, a larger budget, more restarts
+- [ ] Structure term: tune $w$ and the per-node cost; check the loss on long true forms (saturation)
+- [ ] Weak-identification warning: report weak instruments (first-stage strength, Anderson–Rubin set) instead of a confident formula, as D5 requires
 
 ### Phase 5: theory
 - [ ] Formal setup and assumptions (A1)–(A4); treatment of trees that represent the same function
 - [ ] Theorem 1 (i): consistency
 - [ ] Theorem 1 (ii)–(iii): selection consistency; split-sample asymptotic normality
-- [ ] Theorem 2: finite-sample selection bound in terms of $\delta_L$
+- [ ] Theorem 2: finite-sample selection bound in terms of $\delta_L$. Phase 4 suggests two terms (§7): a penalty-adjusted separation margin over wrong trees with $p_s \le p_0$, and a complexity term for trees with more constants. Near-duplicates call for a structure penalty in the estimator
 - [ ] Theorem 3 (stretch): check the Chen–Pouzo conditions for bounded-constant formula classes
 - [ ] Discrete-instrument proposition (only if time allows)
 
@@ -438,6 +475,98 @@ Each formula entry is: true form recovered, then median in-sample error (units o
 5. **Guessing the form is costly.** IV fits of an assumed linear, log or power form have in-sample errors of 0.3–2.4 and extrapolation errors of 1.9–9.3.
 6. **SRIT-style pruning does not fix endogeneity.** It keeps Z in all 300 runs, because Z is informative about $y$ given $X$ when $X$ is confounded. Its implied $f$ carries the confounding term, with errors of 0.12–0.60: usually worse than plain SR.
 
+### 12.3 Phase 4: full grid
+
+**Searches:** 528, with 12 seeds per cell (20 were planned; cut for compute), for about 12 hours of search time. Every Pareto front was saved, and the selection rules were applied afterwards to the same fronts. The grids:
+- **Breadth:** five laws × designs D1–D5 at $n = 2000$.
+- **$n$-scaling:** power and log laws in the D1 strong setting, $n = 1000$ to $50\,000$.
+- **Operator ablation:** no `max`.
+- **Control function:** D2 with larger $\gamma$.
+
+**Candidate sets:**
+- PySR's squared-error front ("plain");
+- the one-step IV front;
+- PySR distilled from a sieve-2SLS curve;
+- the projected-Lasso library path;
+- all of these pooled.
+
+**Selection rules:**
+- MMSC with BIC, HQIC and AIC penalties;
+- BIC plus a structure term $w \cdot \text{nodes} \cdot \ln m$, with $m$ the number of symbols;
+- BIC with $2K$ instruments;
+- BIC with kernel (Nyström) instruments;
+- a two-fold cross-fitted criterion.
+
+Full tables, including per-cell errors, the operator ablation and the separation table: [`experiments/phase4/summary.md`](experiments/phase4/summary.md).
+
+**Breadth: true form recovered by the pooled candidates with BIC + structure ($w = 0.5$); in brackets, the share of runs whose candidates contain the true form** (12 seeds per cell, $n = 2000$):
+
+| Law | D1 confounding | D2 heterosk. first stage | D3 simultaneity | D4 discrete $Z$ ($J = 4$) | D5 weak $Z$ ($\pi = 0.1$) |
+|---|---|---|---|---|---|
+| $1 + 2\log x$ | 100% (100%) | 100% (100%) | 100% (100%) | 92% (100%) | 0% (100%) |
+| $2x^{0.7}$ | 100% (100%) | 100% (100%) | 33% (67%) | 67% (100%) | 0% (100%) |
+| $x - 0.8\max(x - 1.5, 0)$ | 0% (8%) | 0% (33%) | 0% (0%) | 0% (0%) | 0% (0%) |
+| $3x/(1 + x)$ | 25% (58%) | 25% (33%) | 8% (42%) | 0% (25%) | 0% (8%) |
+| $1.5\,x_1^{0.3}x_2^{0.5}$ | 100% (100%) | 92% (100%) | – | 83% (100%) | 0% (0%) |
+
+**Selection rules × candidate sets** (all 456 runs with $n \le 5000$; recovery rate):
+
+| Rule | Plain PySR front | One-step IV front | Distilled front | Library path | All pooled |
+|---|---|---|---|---|---|
+| MMSC-BIC | 52% | 48% | 58% | 31% | 51% |
+| MMSC-HQIC | 52% | 41% | 55% | 27% | 44% |
+| MMSC-AIC | 43% | 23% | 40% | 19% | 24% |
+| **BIC + structure ($w = 0.5$)** | 51% | 54% | **63%** | 32% | **60%** |
+| BIC, $2K$ instruments | 53% | 49% | 59% | 31% | 51% |
+| BIC, kernel instruments | 53% | 51% | 59% | 32% | 54% |
+| Cross-fitted criterion | 36% | 31% | 41% | 20% | 28% |
+
+The columns cover different runs: the plain front exists only up to $n = 10\,000$, and the one-step front is absent from the control-function grid. Same-run comparisons are in the findings.
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="experiments/phase4/fig_nscale_dark.png"><img alt="Recovery rate against sample size in the D1 strong setting, for the distilled, plain-PySR and one-step candidates scored by MMSC with the structure term, and for plain PySR's own pick. The numbers are in experiments/phase4/summary.md, section 4." src="experiments/phase4/fig_nscale_light.png"></picture>
+
+**Findings**
+
+1. **The instrument does its work when formulas are scored, not when they are generated.**
+   - On the same runs (breadth, D1–D4), MMSC-BIC recovered the law from plain PySR's front about as often as from the IV-specific fronts: 52%, against 47% (one-step), 52% (distilled) and 48% (pooled).
+   - In the strong-endogeneity $n$-scaling cells, PySR's own pick never recovered the power law (0/12 at every $n$). Yet its front contained the true form in every run, and MMSC selected it in 67–100% of runs.
+   - Where PySR's own pick does get the form, its constants are biased: the log-law slope is 2.38–2.41 in D1, D2 and D4 against 2.00 with MMSC, and its in-sample errors are 5–16× larger.
+   - IV-specific generators matter where endogeneity changes the shape of $E[y \mid X]$. Under simultaneity (D3), the plain front contains the true form in 25% of runs, against 44–48% for the one-step and distilled fronts.
+   - The cheap generators are also faster: median 9 s per plain or distilled search against 61 s for the one-step search.
+2. **A structure term is needed, as Theorem 2's $\log\lvert\mathcal S_L\rvert$ suggests.**
+   - BIC + $0.5 \cdot \text{nodes} \cdot \ln m$ raised pooled recovery from 51% to 60% (46 runs won, 8 lost; McNemar $p < 0.001$).
+   - In the $n$-scaling cells it gave 100% recovery from $n = 5000$ for every generator.
+   - With BIC alone, 1–3 of 12 runs still chose a near-duplicate of $2x^{0.7}$ at every $n$ up to $50\,000$, for example $(x\,e^{x/\max(c,\,x)})^{0.7}$ or $x^{0.75}(x e^{-x} + 1.74)$. These have the same number of constants as the truth, differ from it only at small $x$, and are separated by their size, not by the moments.
+   - The term costs recovery on the saturation law, whose true form $ax/(b + x)$ is long: pooled recovery in D1 fell from 42% to 25%.
+3. **Other rules:**
+   - HQIC (44%), AIC (24%) and the cross-fitted criterion (28%) are worse than BIC. Cross-fitting fails because over-parameterized formulas that contain the truth tie with it on held-out moments.
+   - Doubling $K$ at the selection stage changed nothing (16 runs won, 17 lost).
+   - Kernel instruments (criterion (c)) were slightly better than splines (54% vs. 51%; 19 won, 6 lost; $p = 0.015$).
+4. **Why distilled fronts select better** (the Phase 3 hypothesis, confirmed):
+   - They contain the true form more often than one-step fronts (74% vs. 65%).
+   - They hold fewer wrong formulas that outscore the truth under BIC (1.0 vs. 1.6 per run; at least one in 32% vs. 44% of runs).
+   - **Pooling** raises coverage to 79%, but nearly triples these wrong formulas (2.9 per run). Recovery given coverage falls from 84% to 72%, so the pooled set does not beat the distilled front alone.
+5. **The library baseline's limit is coverage, not the IV logic.**
+   - Its Lasso path scored by MMSC recovers the log law in 100/100/92/75% of runs in D1–D4, against 28–52% with cross-validated Lasso (Phase 3).
+   - Given coverage it recovers 96% of the time.
+   - It contains the true form in only 35% of runs, because only the log law is in its library.
+6. **Dropping `max` does not help.** In paired comparisons on the same data, no difference exceeded 3 runs ($p \ge 0.25$); without `max`, contrived winners use other operators.
+7. **Separation explains the selection failures, in a corrected form (§7).**
+   - $\delta_L$ over all wrong trees was about 0 in every cell and unrelated to recovery (Spearman 0.10).
+   - The penalty-adjusted margin $\min_s [n\delta_s/\sigma_u^2 - (p_0 - p_s)\ln n]$, over wrong trees with $p_s \le p_0$, tracked recovery among runs whose candidates contained the true form: Spearman 0.56 ($p < 0.001$) across 32 cells; 74% recovery when the margin is positive, 23% when it is not.
+   - **Caveat:** the margin is a worst case over the wrong formulas that any run produced.
+8. **Where it fails:**
+   - **Search failures:** the kink law was recovered in no pooled run; no generator produced it in more than 33% of runs. The saturation law appeared in 8–58% of runs.
+   - **Weak instruments (D5):** recovery is 0% for every law. Selected formulas err by 0.2–1.2 sd in sample and 2.2–6.3 out of sample. Plain PySR is more accurate for two of the five laws in sample and for four of five out of sample. The method should report weak identification here rather than a formula (§6.4).
+9. **The control-function test was inconclusive.**
+   - With $\gamma = 0.45$ and $0.6$, control-function SR still never recovered the power law (0%). Its in-sample error fell to 0.003, and its log-law recovery rose to 83% and 100%.
+   - In D2, a larger $\gamma$ also increases the variance of $X$ given $Z$, so the design does not isolate the failure of the control-function assumption.
+10. **Accuracy** (breadth, D1–D4, pooled + structure):
+    - Median in-sample error is 0.040, against 0.129 for the sieve-2SLS curve.
+    - Out of sample, the error is 0.074 when the form is recovered, 0.85 when it is not, and 0.76 for the sieve curve.
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="experiments/phase4/fig_separation_dark.png"><img alt="Recovery given coverage against the penalty-adjusted separation margin, one point per cell. Cells with a positive margin mostly recover the law; cells with a negative margin mostly do not. The numbers are in experiments/phase4/summary.md, section 7." src="experiments/phase4/fig_separation_light.png"></picture>
+
 ## 13. Code
 
 ```
@@ -456,7 +585,10 @@ experiments/
   smoke_pysr.py   one end-to-end run, plain PySR vs. symbolic IV
   phase2.py       Phase 2 Monte Carlo (resumable); phase2_report.py writes phase2/summary.md
   phase3.py       Phase 3 baselines (resumable, shardable); phase3_report.py writes phase3/summary.md
-  phase2/, phase3/  one JSON record per run, and summary.md
+  phase4.py       Phase 4 searches: saves every Pareto front (grids breadth, nscale, nomax, cf; resumable, shardable)
+  phase4_analysis.py  selection rules and metrics on the saved fronts (pure Python, parallel); --separation for §7
+  phase4_report.py    phase4/summary.md and figures (matplotlib, light and dark)
+  phase2/, phase3/, phase4/  one JSON record per run, and summary.md
 tests/            pytest; `pytest -m julia` runs the PySR tests, `pytest -m slow` the DeepIV test
 ```
 
@@ -475,7 +607,14 @@ python experiments/phase2_report.py
 python experiments/phase3.py --shard 0 --of 2     # and --shard 1 --of 2 in parallel, each with
                                                   # PYTHON_JULIACALL_THREADS=4; about 4 hours of wall time
 python experiments/phase3_report.py
+python experiments/phase4.py --grid breadth nscale nomax cf --shard 0 --of 2   # and --shard 1 --of 2 in parallel,
+                                                  # each with PYTHON_JULIACALL_THREADS=4; about 6 hours of wall time
+python experiments/phase4_analysis.py --workers 8               # about 1 hour
+python experiments/phase4_analysis.py --separation --workers 8  # about 10 minutes
+python experiments/phase4_report.py
 ```
+
+Phase 4 runs for longer than a terminal session should be trusted with. On Windows, start each search as a detached process with logs, e.g. `Start-Process .venv\Scripts\python.exe -ArgumentList "-u","experiments\phase4.py",... -WindowStyle Hidden -RedirectStandardOutput experiments\phase4\logs\search-0.out.log -RedirectStandardError experiments\phase4\logs\search-0.err.log`; elsewhere use `nohup ... &`. Every script skips finished runs, so an interrupted job resumes where it stopped. `logs/` is git-ignored.
 
 If the Julia install fails with `GitError ... could not find repository at ...\.julia\registries\General`, the user-wide Julia registry is corrupt. Move that folder **outside** `registries/` (Julia reads every folder in it) and rerun; a fresh registry is downloaded.
 

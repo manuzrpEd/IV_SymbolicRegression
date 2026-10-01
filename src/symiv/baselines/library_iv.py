@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-from sklearn.linear_model import LassoCV
+from sklearn.linear_model import LassoCV, lasso_path
 from sklearn.model_selection import KFold
 
 from symiv.criteria import MomentCriterion
@@ -28,6 +28,15 @@ class LibraryIVFit:
     candidate: Candidate  # post-Lasso GMM refit of intercept + selected terms
 
 
+def _projected_library(X, crit, library):
+    """Library columns, their scales, and their (scaled) projections on the instrument space."""
+    if crit.kind != "gmm":
+        raise ValueError("library IV projects on the instrument space: use a gmm criterion (orthonormal A)")
+    Phi = np.column_stack([parametrize(term, X.shape[1])(X) for term in library])
+    scale = Phi.std(axis=0)
+    return Phi, scale, crit.A @ (crit.A.T @ (Phi / scale))  # first stage: fitted values on the instruments
+
+
 def fit_library_iv(
     X: np.ndarray,
     y: np.ndarray,
@@ -37,11 +46,7 @@ def fit_library_iv(
     seed: int = 0,
     bound: float = 1e3,
 ) -> LibraryIVFit:
-    if crit.kind != "gmm":
-        raise ValueError("library IV projects on the instrument space: use a gmm criterion (orthonormal A)")
-    Phi = np.column_stack([parametrize(term, X.shape[1])(X) for term in library])
-    scale = Phi.std(axis=0)
-    Phi_hat = crit.A @ (crit.A.T @ (Phi / scale))  # first stage: fitted values on the instruments
+    Phi, scale, Phi_hat = _projected_library(X, crit, library)
     lasso = LassoCV(cv=KFold(folds, shuffle=True, random_state=seed), fit_intercept=True, max_iter=50_000)
     lasso.fit(Phi_hat, y)
 
@@ -50,3 +55,29 @@ def fit_library_iv(
     coefs = lasso.coef_[keep] / scale[keep]
     expr = " + ".join([repr(float(lasso.intercept_))] + [f"{float(c)!r}*({t})" for c, t in zip(coefs, terms)])
     return LibraryIVFit(terms, score(expr, X, y, crit, bound=bound))
+
+
+def library_path_candidates(
+    X: np.ndarray,
+    y: np.ndarray,
+    crit: MomentCriterion,
+    library: tuple[str, ...] = LIBRARY,
+    max_terms: int = 6,
+) -> list[str]:
+    """One candidate formula per distinct term set along the projected Lasso path (README §11, Phase 4).
+
+    Lets the library's candidates be scored by MMSC instead of cross-validation.
+    Constants start at the 2SLS fit of intercept + terms.
+    """
+    Phi, scale, Phi_hat = _projected_library(X, crit, library)
+    _, coefs, _ = lasso_path(Phi_hat - Phi_hat.mean(0), y - y.mean(), n_alphas=100)
+    seen, out = set(), []
+    for j in range(coefs.shape[1]):
+        support = tuple(int(k) for k in np.flatnonzero(np.abs(coefs[:, j]) > 1e-10))
+        if not support or len(support) > max_terms or support in seen:
+            continue
+        seen.add(support)
+        D = np.column_stack([np.ones(len(y)), Phi[:, support]])
+        beta = np.linalg.lstsq(crit.A.T @ D, crit.A.T @ y, rcond=None)[0]
+        out.append(" + ".join([repr(float(beta[0]))] + [f"{float(b)!r}*({library[k]})" for b, k in zip(beta[1:], support)]))
+    return out
