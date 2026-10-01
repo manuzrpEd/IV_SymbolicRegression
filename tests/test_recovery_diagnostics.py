@@ -26,6 +26,14 @@ def test_form_recovered(law, expr, expected):
     assert form_recovered(expr, get_law(law), X).recovered is expected
 
 
+def test_each_float_occurrence_is_its_own_constant():
+    from symiv.expressions import parametrize
+
+    form = parametrize("1.0 + 1.0*x0", 1)
+    assert form.n_constants == 2
+    np.testing.assert_allclose(form(np.array([[2.0]]), np.array([1.0, 3.0])), [7.0])
+
+
 def test_srbench_solution():
     assert srbench_solution("2*x0**0.7 + 3", "2*x0**0.7", 1)  # constant offset
     assert srbench_solution("x0**0.7", "2*x0**0.7", 1)  # constant factor

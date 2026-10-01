@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 search = ["pysr>=1.0"]
+deep = ["torch>=2.0"]
 dev = ["pytest>=8"]
 
 [tool.setuptools.packages.find]
@@ -27,6 +28,9 @@ symiv = ["julia/*.jl"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["julia: needs PySR and a working Julia install (slow; run with `pytest -m julia`)"]
+markers = [
+    "julia: needs PySR and a working Julia install (slow; run with `pytest -m julia`)",
+    "slow: trains neural networks (run with `pytest -m slow`)",
+]
 # Julia raises access violations on purpose (GC safepoints); pytest's faulthandler would print them as crashes.
-addopts = "-m \"not julia\" -p no:faulthandler"
+addopts = "-m \"not julia and not slow\" -p no:faulthandler"

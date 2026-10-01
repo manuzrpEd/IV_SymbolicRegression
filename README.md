@@ -2,7 +2,7 @@
 
 Symbolic regression that recovers the **structural** relation $f(X)$ rather than the conditional mean $E[y \mid X]$, by scoring the formula search with instrumental-variable moment conditions.
 
-Results so far: §12 (Phase 2 Monte Carlo). Code layout and setup: §13.
+Results so far: §12 (Phase 2 Monte Carlo; Phase 3 baselines). Code layout and setup: §13.
 
 ---
 
@@ -32,7 +32,11 @@ $$E[\,y - f(X) \mid Z\,] = 0.$$
 Two neighbours come close and must be beaten, not ignored (§3.2):
 
 - **Sparse IV over a term library** selects terms under endogeneity, but only for laws that are linear in their parameters over a library chosen in advance: $a + b\log x$ yes; $x^{\theta}$ with unknown $\theta$, a kink at an unknown point, or $ax/(b+x)$ no.
-- **Nonparametric IV followed by symbolic distillation** (fit $\hat f$ with KIV or DeepIV, then run SR on $(X, \hat f(X))$) does produce a formula, but inherits the instability of the NPIV fit and has no selection theory.
+- **Nonparametric IV followed by symbolic distillation** (fit $\hat f$ with KIV or DeepIV, then run SR on $(X, \hat f(X))$) does produce a formula, but inherits the instability of the NPIV fit and has no selection theory. Phase 3 (§12.2) makes this precise:
+  - with SR's own choice of formula, distillation rarely recovers the law;
+  - with the formula chosen by our moment criterion on the original data, it recovers the law more often than the one-step search.
+
+  The missing piece is IV-based *selection* among formulas, and its theory.
 
 ## 2. Why it matters
 
@@ -61,7 +65,7 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
 | Literature | What it does | Why it matters here | What we do |
 |---|---|---|---|
 | **Sparse / high-dimensional IV:** STIV ([Gautier & Rose](https://arxiv.org/abs/1105.2454)), penalized FGMM ([Fan & Liao 2014](https://doi.org/10.1214/13-AOS1202)), two-stage regularization ([Lin, Feng & Li 2015](https://doi.org/10.1080/01621459.2014.908125)), Lasso-GMM ([Caner 2009](https://doi.org/10.1017/S0266466608090099)) | Selects a sparse subset of many regressors under endogeneity | This is "SINDy with instruments" in all but name. If the law is linear in its parameters over a known library ($a + b\log x$), it already solves the problem | Main competitor for such laws. Add a **library + sparse IV** baseline (§8.1). Include laws outside any finite library ($x^{\theta}$, kink at unknown $c$, saturation): the contribution rests on these. Report honestly where the library wins |
-| **NPIV, then symbolic distillation** (the pattern of [Cranmer et al. 2020](https://arxiv.org/abs/2006.11287), applied to an NPIV fit) | Fit $\hat f$ by sieve IV, KIV or DeepIV; run plain SR on $(X, \hat f(X))$ | The obvious two-step alternative built from existing tools | Main baseline. Hypothesis: one-step wins when the NPIV fit is unstable (weak instruments, small $n$, extrapolation). If it does not, reposition the paper around distillation plus the selection theory of §7 |
+| **NPIV, then symbolic distillation** (the pattern of [Cranmer et al. 2020](https://arxiv.org/abs/2006.11287), applied to an NPIV fit) | Fit $\hat f$ by sieve IV, KIV or DeepIV; run plain SR on $(X, \hat f(X))$ | The obvious two-step alternative built from existing tools | Main baseline. Hypothesis: one-step wins when the NPIV fit is unstable (weak instruments, small $n$, extrapolation). If it does not, reposition the paper around distillation plus the selection theory of §7. **Phase 3: it did not.** With PySR's own pick, distillation recovered the form in 2–52% of runs. Scored by MMSC on the original data, the same candidates recovered it in 74–100%, more often than the one-step search (paired $p < 0.001$). Repositioned accordingly (§4) |
 | **Model and moment selection in GMM:** [Andrews 1999](https://doi.org/10.1111/1468-0262.00036); [Andrews & Lu 2001](https://doi.org/10.1016/S0304-4076(00)00077-4); [Hong, Preston & Shum 2003](https://doi.org/10.1017/S0266466603196028) | Consistent, BIC-type criteria for choosing among moment-condition models | Gives a principled complexity penalty in place of an ad hoc $\lambda \cdot C(f)$ | Select from the Pareto front with MMSC (§6.3). Theorem 1 (§7) extends Andrews–Lu to formula classes |
 | **Conditional vs. unconditional moments:** [Domínguez & Lobato 2004](https://doi.org/10.1111/j.1468-0262.2004.00545.x) | Shows that finitely many unconditional moments can lose the identification that $E[u \mid Z] = 0$ provides | Explains the finite-$K$ problem of criterion (b) | Let $K$ grow with $n$ or use kernel MMR (§6.2); report sensitivity to $K$ |
 | **Parametric specification test under IV:** [Horowitz 2006](https://doi.org/10.1111/j.1468-0262.2006.00670.x) | Tests a given parametric form against the nonparametric alternative | The natural check of a discovered formula | Run on the held-out split for the selected formula (§6.4) |
@@ -100,6 +104,13 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
 | Formula from an NPIV fit | NPIV + symbolic distillation | Two steps; inherits NPIV instability; no selection theory |
 
 **Target:** a **search over free-form formulas scored by instrument moment conditions** $E[y - f(X) \mid Z] = 0$, for **structural endogeneity** (unobserved confounding, simultaneity, choice) with **external instruments**, with a **consistent selection rule** and a finite-sample account of when recovery succeeds. This is exactly the setting that SRIT's authors leave open ("causal insufficiency"). The contribution must show gains over (i) library-based sparse IV on laws that are nonlinear in their parameters and (ii) NPIV → distillation, in finite samples and under weak instruments.
+
+**Revised after Phase 3 (§12.2).**
+- **The core of the method is the selection rule.** It is MMSC, on the original data, over free-form candidate formulas, together with its theory (§7) and the failure diagnostics. The candidates can come from any generator: the one-step search, or PySR distilling an NPIV fit.
+- **Distilling a sieve-2SLS fit gave better candidates than the one-step search.** Scored by the same rule, they recovered the true form in 74–100% of runs against 66–92%.
+- **The selection rule is what beats the literature.** Distillation with PySR's own choice (the literature's version) recovered the form in 2–52% of runs; library IV and SRIT-style did no better.
+- **The method to present:** pool the candidates from several generators and score all of them by MMSC (tested in Phase 4).
+- **Unchanged:** the theorems of §7 are about the selection rule, so they apply to any generator whose candidates include the true form.
 
 ## 5. Model and identification
 
@@ -190,6 +201,8 @@ Let $T h = E[h(X) \mid Z]$.
 - a simpler wrong formula winning when separation is small ($x + c$ against $2x^{0.7}$ with $\pi = 0.7$, $n = 2000$);
 - a contrived formula with one extra constant winning because it fits the moments slightly better. The best of many structures beats a per-constant $\ln n$ penalty, which is why the bound carries a $\log\lvert\mathcal S_L\rvert$ term.
 
+**Phase 3 evidence (§12.2).** The theorems are about the selection rule, not the search. Phase 3 shows that is where the value lies: the same rule applied to candidates from a distilled NPIV fit did better than the one-step search. For the theory, the candidate set can come from any generator; what matters is whether it contains the true form and how many competitors it adds (the $\lvert\mathcal S\rvert$ in Theorem 2).
+
 ## 8. Experiments
 
 ### 8.1 Monte Carlo
@@ -240,13 +253,14 @@ The econometrician sees only $(y, X, Z)$.
 | **Library + sparse IV** (PySR-style term library; Lasso on instrument-projected data; STIV if feasible) | Main competitor for laws linear in parameters (§3.2) |
 | Control-function SR, variant (a) | Cheap alternative; should win on D1 and lose on D2 |
 
-**Expected results** (stated so that they can fail):
+**Expected results** (stated so that they can fail), with outcomes from Phases 2–3 (§12):
 
-- Plain SR returns a wrong formula or the right form with biased constants, depending on how large the endogeneity term is relative to $f_0$.
-- Library IV matches symbolic IV on the log law and fails on power, kink and saturation.
-- One-step symbolic IV beats NPIV → distillation when the NPIV fit is unstable (weak instruments, small $n$, extrapolation). If it does not, the paper is repositioned (§3.2).
-- Recovery tracks $n\,\delta_L^2$.
-- Degradation under weak instruments is documented as part of the contribution.
+- Plain SR returns a wrong formula or the right form with biased constants, depending on how large the endogeneity term is relative to $f_0$. **Confirmed.** Its bias matches $\rho/(1+\pi^2)$.
+- Library IV matches symbolic IV on the log law and fails on power, kink and saturation. **Partly.** It never recovers the power law. Even for the log law, which is in its library, cross-validated Lasso adds terms (28–52% recovery), though its in-sample errors are competitive.
+- One-step symbolic IV beats NPIV → distillation when the NPIV fit is unstable (weak instruments, small $n$, extrapolation). If it does not, the paper is repositioned (§3.2). **Refuted when the distilled candidates are scored by MMSC; repositioned (§4).**
+- Control-function SR wins on D1 and loses on D2 (§8.1 baselines table). **Confirmed.** It gives the lowest errors on D1; on D2 its form recovery falls to 0% (power law) and 42% (log law).
+- Recovery tracks $n\,\delta_L^2$. *Phase 4.*
+- Degradation under weak instruments is documented as part of the contribution. *Phase 4.*
 
 ### 8.2 Simulated economic environments
 
@@ -277,7 +291,7 @@ The econometrician sees only $(y, X, Z)$.
 | Criterion ties at zero with finite $K$ | $K$ much larger than the number of constants and growing with $n$, or MMR (§6.2) |
 | Noisier, non-convex search (the moment criterion is flatter than MSE) | Several restarts; seed with the plain-SR front; report search failures separately (§7). Phase 2: only 2 of 200 failures were search failures at $n = 2000$ |
 | Selection, not search, is the bottleneck: a penalty too weak for the size of the search space (contrived formulas win) or too strong for weak separation (simpler wrong formulas win) | Structure-aware penalty; cross-fitted moment criterion; larger $n$ and $K$; operator-set ablation (Phase 4). Evidence in §12 |
-| Library IV or NPIV → distillation match the method | Laws outside any finite library; if the one-step method does not win, reposition (§3.2) |
+| Library IV or NPIV → distillation match the method | Laws outside any finite library; if the one-step method does not win, reposition (§3.2). **Realized for distillation (Phase 3):** distillation + MMSC beat the one-step search, so the contribution was repositioned to IV-scored selection over candidates (§4) |
 | Misspecification on real data | Stability across instrument bases and weights (§6.5) |
 | Additive-error assumption fails | Out of scope for v1; IV quantile extension (§5) |
 | Inference after the search has selected the formula ([Berk et al. 2013](https://doi.org/10.1214/12-aos1077); [Belloni et al. 2012](https://doi.org/10.3982/ecta9626); [Chernozhukov et al. 2018](https://doi.org/10.1111/ectj.12097)) | Sample splitting (§6.4) |
@@ -317,15 +331,20 @@ The econometrician sees only $(y, X, Z)$.
 - [x] MMSC gap to the runner-up tracked: median 2.2–4.7 under BIC, 0.8–0.9 under AIC
 - [x] Sensitivity to $C$ and $K$ (20 seeds, power law, strong setting): $K$ matters (30% at $K = 8$, 70% at $K = 25$); $C$ does not, with this operator set
 
-### Phase 3: baselines
-- [ ] Oracle 2SLS and wrong-form 2SLS (both are `symiv.gmm.fit_gmm` on a fixed form; needs a wrapper and reporting)
-- [ ] Sieve 2SLS, KIV, DeepIV or DFIV
-- [ ] NPIV → PySR distillation
-- [ ] Library + sparse IV
-- [ ] Control-function SR with `TemplateExpressionSpec`
-- [ ] SRIT
+### Phase 3: baselines (done 2026-10-01; results in §12.2)
+- [x] Oracle 2SLS and wrong-form 2SLS (linear, log, power forms)
+- [x] Sieve 2SLS (B-splines in log x, J by held-out moment criterion), KIV (Singh et al.'s split-sample tuning), DeepIV (torch; first 20 seeds)
+- [x] NPIV → PySR distillation from each NPIV fit, with PySR's own pick and with MMSC on the original data
+- [x] Library + sparse IV (9-term library, instrument-projected cross-validated Lasso, GMM refit; in the spirit of Lin, Feng & Li 2015)
+- [x] Control-function SR with `TemplateExpressionSpec` f(x) + g(v̂)
+- [x] SRIT: the original is not runnable (its code link returned 404 on 2026-09-30; it used the commercial Eureqa engine). Replaced by a simplified SRIT-style reimplementation with PySR and HSIC pruning, clearly labelled
+- [x] Run on the Phase 2 D1 cells (same data) and on D2, 50 seeds each: 300 runs, 0 method errors
 
 ### Phase 4: full grid
+- [ ] Pooled candidates: the one-step front plus the distilled fronts, all scored by MMSC. Does pooling beat distillation alone, or does the larger candidate set bring more contrived winners (§7)?
+- [ ] Why distilled candidates select better: count contrived formulas on each front; test the hypothesis that fronts fitted to a smooth NPIV curve contain fewer formulas that fit moment noise
+- [ ] Library + MMSC: score the Lasso path's subsets by MMSC instead of cross-validation (to separate the library's limits from its tuning)
+- [ ] Control-function SR on more D2 settings ($\gamma$) and designs where it should fail more visibly
 - [ ] All laws × D1–D5; vary $\pi$, $n$, $\rho$, noise, $J$, $C$, $K$
 - [ ] Recovery as $n$ grows ($2\,000 \to 50\,000$) in the Phase 2 strong setting: Theorem 1 predicts it goes to one; the $x + c$ failures should disappear first
 - [ ] Selection rules aimed at the Phase 2 failures: a penalty with a structure term (Theorem 2's $\log\lvert\mathcal S_L\rvert$, e.g. by tree size); the cross-fitted moment criterion of §6.3
@@ -353,7 +372,9 @@ The econometrician sees only $(y, X, Z)$.
 - [ ] Package API and documentation; release the benchmark suite
 - [ ] Paper draft; choose the venue after Phase 4 and Theorem 2
 
-## 12. Results: Phase 2 Monte Carlo
+## 12. Results
+
+### 12.1 Phase 2 Monte Carlo
 
 Design D1, $n = 2000$, 50 seeds per cell; the same PySR budget and operators for both methods; formulas selected by BIC-type rules after refitting constants (§6.3). Full tables, including HQIC and AIC, oracle fits and outcome counts: [`experiments/phase2/summary.md`](experiments/phase2/summary.md). Errors are RMS$(\hat f - f_0)$ in units of the in-sample sd of $f_0$; extrapolation is on $[q_{99}, 3q_{99}]$ of $X$.
 
@@ -383,6 +404,40 @@ Design D1, $n = 2000$, 50 seeds per cell; the same PySR budget and operators for
    - The bound $C \in \{3, 10, 100\}$ made no detectable difference ($p = 0.75$), as expected without oscillatory operators.
 6. **Cost:** median 26 s per symbolic-IV search against 4 s for plain PySR ($n = 2000$, 8 threads).
 
+### 12.2 Phase 3: baselines
+
+The Phase 2 D1 cells (same data) plus design D2, where the control-function assumption fails but the IV condition holds. There are 50 seeds per cell ($n = 2000$), except DeepIV (20). Full tables, including oracle and wrong-form IV, elasticities, extrapolation, runtimes, and each method's paired win rate against symbolic IV: [`experiments/phase3/summary.md`](experiments/phase3/summary.md).
+
+Each formula entry is: true form recovered, then median in-sample error (units of sd of $f_0$). Curves give no formula, so only their error is shown.
+
+| Cell | $f_0$ | Symbolic IV | Sieve 2SLS → PySR, MMSC | KIV / DeepIV → PySR, MMSC | Sieve 2SLS → PySR, PySR's pick | Control-function SR | Library + sparse IV | SRIT-style | Curves: sieve / KIV / DeepIV |
+|---|---|---|---|---|---|---|---|---|---|
+| D1 default | $2x^{0.7}$ | 86%, 0.013 | 90%, 0.014 | 64% / 90% | 16%, 0.052 | 84%, 0.006 | 0%, 0.037 | 0%, 0.282 | 0.076 / 0.721 / 0.395 |
+| D1 default | $1 + 2\log x$ | 92%, 0.020 | 98%, 0.016 | 64% / 95% | 8%, 0.032 | 100%, 0.011 | 36%, 0.024 | 98%, 0.400 | 0.032 / 0.375 / 0.126 |
+| D1 strong | $2x^{0.7}$ | 66%, 0.039 | 74%, 0.036 | 62% / 80% | 4%, 0.101 | 72%, 0.015 | 0%, 0.054 | 0%, 0.505 | 0.110 / 0.765 / 0.447 |
+| D1 strong | $1 + 2\log x$ | 80%, 0.033 | 86%, 0.030 | 42% / 80% | 2%, 0.072 | 100%, 0.021 | 28%, 0.051 | 86%, 0.599 | 0.076 / 0.436 / 0.201 |
+| D2 | $2x^{0.7}$ | 86%, 0.006 | 100%, 0.005 | 56% / 90% | 52%, 0.039 | 0%, 0.014 | 0%, 0.082 | 0%, 0.123 | 0.106 / 0.936 / 0.671 |
+| D2 | $1 + 2\log x$ | 88%, 0.020 | 100%, 0.016 | 78% / 100% | 12%, 0.029 | 42%, 0.034 | 52%, 0.017 | 40%, 0.369 | 0.031 / 0.333 / 0.127 |
+
+**Findings**
+
+1. **Selection is what works.**
+   - Distilling a sieve-2SLS fit and scoring the resulting formulas by MMSC on the original data recovered the true form in 74–100% of runs. That is more often than the one-step search in every cell: on the same data, 37 runs were recovered only by distillation + MMSC and 12 only by the one-step search (exact McNemar $p = 0.0005$).
+   - The same distilled candidates with PySR's own pick, the version in the literature, recovered the form in 2–52%.
+   - Even the poor KIV curve gives 42–78% once its candidates are scored by MMSC.
+   - Hypothesis for Phase 4: fronts fitted to a smooth curve contain fewer contrived formulas that fit moment noise. This led to the repositioning in §4.
+2. **Control-function SR wins when its assumption holds and fails when it does not, as §8.1 predicted.**
+   - On D1 it has the lowest errors of any method (0.006–0.021).
+   - On D2 its recovery falls to 0% (power law) and 42% (log law); it gets the curve's shape wrong while staying close in sample. There it beats symbolic IV on error in only 30% of seeds.
+   - IV-based selection works in both designs.
+3. **Library + sparse IV approximates well but rarely recovers exact laws.** It has competitive in-sample errors (0.017–0.082). It never recovers the power law, which is not in its library. For the log law, which is, cross-validated Lasso usually adds terms (28–52% recovery).
+4. **Black-box NPIV curves are less accurate and extrapolate badly.**
+   - Sieve 2SLS is the best of them (0.03–0.11).
+   - KIV struggles at these instrument strengths (0.33–0.94); with $\pi = 3$ its error is about 0.05, so this is ill-posedness, not a bug.
+   - Beyond the data, curves err by 0.1–4.7, against 0.02–0.30 for the selected formulas.
+5. **Guessing the form is costly.** IV fits of an assumed linear, log or power form have in-sample errors of 0.3–2.4 and extrapolation errors of 1.9–9.3.
+6. **SRIT-style pruning does not fix endogeneity.** It keeps Z in all 300 runs, because Z is informative about $y$ given $X$ when $X$ is confounded. Its implied $f$ carries the confounding term, with errors of 0.12–0.60: usually worse than plain SR.
+
 ## 13. Code
 
 ```
@@ -395,12 +450,14 @@ src/symiv/
   metrics.py      function, extrapolation and elasticity errors; implied constants (§8.1)
   diagnostics.py  success / search failure / statistical failure (§7)
   search.py       PySR wrappers; the loss is julia/moment_loss.jl (§6.6)
-  baselines/      Phase 3
+  baselines/      Phase 3: fixed_form (oracle and wrong-form IV), npiv (sieve 2SLS, KIV), deepiv (torch),
+                  library_iv, distill (NPIV -> PySR), control_function (template SR), srit (SRIT-style)
 experiments/
   smoke_pysr.py   one end-to-end run, plain PySR vs. symbolic IV
   phase2.py       Phase 2 Monte Carlo (resumable); phase2_report.py writes phase2/summary.md
-  phase2/         runs.jsonl (one record per run) and summary.md
-tests/            pytest; `pytest -m julia` runs the PySR tests
+  phase3.py       Phase 3 baselines (resumable, shardable); phase3_report.py writes phase3/summary.md
+  phase2/, phase3/  one JSON record per run, and summary.md
+tests/            pytest; `pytest -m julia` runs the PySR tests, `pytest -m slow` the DeepIV test
 ```
 
 **Setup** (tested with Python 3.12, PySR 2.6.0, SymbolicRegression.jl 2.5.1, Julia 1.11.9, Windows 11):
@@ -408,13 +465,16 @@ tests/            pytest; `pytest -m julia` runs the PySR tests
 ```
 python -m venv .venv
 .venv\Scripts\activate            # Windows; elsewhere: source .venv/bin/activate
-pip install -e ".[search,dev]"
+pip install -e ".[search,dev]"   # add "deep" for DeepIV (torch; CPU wheel: --index-url https://download.pytorch.org/whl/cpu)
 python -c "import pysr"           # first run installs Julia and SymbolicRegression.jl (several minutes)
 pytest                            # pure-Python tests, seconds
 pytest -m julia                   # PySR integration, about a minute
 python experiments/smoke_pysr.py --design D1 --law power --n 2000
 python experiments/phase2.py --part main          # about 2 hours; then --part sensitivity (about 45 min)
 python experiments/phase2_report.py
+python experiments/phase3.py --shard 0 --of 2     # and --shard 1 --of 2 in parallel, each with
+                                                  # PYTHON_JULIACALL_THREADS=4; about 4 hours of wall time
+python experiments/phase3_report.py
 ```
 
 If the Julia install fails with `GitError ... could not find repository at ...\.julia\registries\General`, the user-wide Julia registry is corrupt. Move that folder **outside** `registries/` (Julia reads every folder in it) and rerun; a fresh registry is downloaded.

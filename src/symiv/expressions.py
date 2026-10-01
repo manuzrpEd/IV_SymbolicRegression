@@ -65,10 +65,17 @@ def parametrize(expr: sp.Expr | str, d: int) -> ParametricForm:
     """Turn every Float in `expr` into a free constant c0, c1, ...
 
     Integers are structural (x0**2, the -1 in a subtraction); Floats are
-    constants, which is how PySR exports them.
+    constants, which is how PySR exports them. Each occurrence is its own
+    constant, so "1.0 + 1.0*x0" has two.
     """
-    expr = canonical(expr, d)
-    floats = sorted(expr.atoms(sp.Float), key=sp.default_sort_key)
-    params = tuple(sp.Symbol(f"c{j}") for j in range(len(floats)))
-    form = expr.xreplace(dict(zip(floats, params)))
-    return ParametricForm(form, params, np.array([float(f) for f in floats]), variables(d))
+    found: list[float] = []
+
+    def replace(e):
+        if isinstance(e, sp.Float):
+            found.append(float(e))
+            return sp.Symbol(f"c{len(found) - 1}")
+        return e.func(*map(replace, e.args)) if e.args else e
+
+    form = replace(canonical(expr, d))
+    params = tuple(sp.Symbol(f"c{j}") for j in range(len(found)))
+    return ParametricForm(form, params, np.array(found), variables(d))

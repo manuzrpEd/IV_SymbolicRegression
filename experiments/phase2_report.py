@@ -41,7 +41,9 @@ def wilson(k: int, n: int, z: float = 1.96) -> str:
 
 
 def med(xs) -> str:
+    """Median, ignoring NaN (undefined, e.g. an elasticity where f_hat = 0); inf still counts."""
     xs = np.asarray([x for x in xs if x is not None], dtype=float)
+    xs = xs[~np.isnan(xs)]
     if xs.size == 0:
         return "–"
     m = np.median(xs)
