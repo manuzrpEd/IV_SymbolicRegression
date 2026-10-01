@@ -13,6 +13,30 @@ def test_shapes_and_support(design, law):
     np.testing.assert_allclose(s.y, s.f0 + s.hidden["u"])
 
 
+@pytest.mark.parametrize("law", ["demand_iso", "demand_log", "demand_hyper"])
+def test_d6_equilibrium_is_on_both_curves(law):
+    s = simulate("D6", law, n=2000, seed=0)
+    p, t = s.params, np.log(s.X[:, 0])
+    supply = p["kappa"] * t + p["gamma"] * s.Z[:, 0] + s.hidden["e"]
+    np.testing.assert_allclose(s.y, supply, atol=1e-6)  # the equilibrium quantity is on the supply curve
+    np.testing.assert_allclose(s.y, s.f0 + s.hidden["u"])  # and on the demand curve
+    assert np.all(np.diff(s.law(np.linspace(0.5, 20, 50)[:, None])) < 0)  # demand slopes down
+    u, z = s.hidden["u"], s.Z[:, 0]
+    assert abs(np.corrcoef(u, z)[0, 1]) < 0.06 and np.corrcoef(u, t)[0, 1] > 0.1  # Z valid; a demand shock raises the price
+
+
+def test_d6_rejects_an_increasing_law():
+    with pytest.raises(ValueError):
+        simulate("D6", "power", n=100)
+
+
+@pytest.mark.parametrize("law", ["hump", "quadlog"])
+def test_labour_laws_bend_backward(law):
+    f = get_law(law)(np.linspace(0.2, 15.0, 300)[:, None])
+    d = np.diff(f)
+    assert d[0] > 0 and d[-1] < 0
+
+
 def test_reproducible_by_seed():
     a, b, c = (simulate("D1", "power", n=100, seed=k) for k in (3, 3, 4))
     np.testing.assert_array_equal(a.y, b.y)
@@ -78,6 +102,7 @@ def test_law_overrides_and_expr():
     assert law.values == (2.0, 0.5)
     X = np.array([[4.0]])
     assert law(X)[0] == pytest.approx(4.0)
-    assert set(LAWS) == {"log", "power", "kink", "saturation", "cobb_douglas"}
+    assert set(LAWS) == {"log", "power", "kink", "saturation", "cobb_douglas",
+                         "demand_iso", "demand_log", "demand_hyper", "hump", "quadlog", "quadlog_mid"}
     with pytest.raises(ValueError):
         get_law("power", nope=1.0)

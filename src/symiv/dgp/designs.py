@@ -19,6 +19,9 @@ DESIGN_DEFAULTS: dict[str, dict[str, float]] = {
     "D4": dict(pi=1.0, rho=0.8, sigma=0.5, J=4),
     # Weak instrument: D1 with small pi.
     "D5": dict(pi=0.1, rho=0.8, sigma=0.5),
+    # Demand with a cost shifter (the mirror image of D3): y = f0(X) + u is a decreasing demand curve,
+    # supply is y = kappa log X + gamma Z + e, shifted by Z; solved for the price X.
+    "D6": dict(gamma=1.0, kappa=1.0, sigma_u=0.5, sigma_e=0.5),
 }
 
 
@@ -53,8 +56,8 @@ def simulate(design: str, law: str | Law, n: int, seed: int = 0, **params: float
     p = {**DESIGN_DEFAULTS[design], **params}
     rng = np.random.default_rng(seed)
 
-    if design == "D3":
-        y, X, Z, hidden = _simultaneous(law, n, rng, p)
+    if design in ("D3", "D6"):
+        y, X, Z, hidden = _simultaneous(law, n, rng, p, demand=design == "D6")
     else:
         d = law.dim
         if design == "D4":
@@ -75,26 +78,32 @@ def simulate(design: str, law: str | Law, n: int, seed: int = 0, **params: float
     return Sample(y=y, X=X, Z=Z, law=law, design=design, params=p, hidden=hidden)
 
 
-def _simultaneous(law: Law, n: int, rng: np.random.Generator, p: dict[str, float]):
-    """D3: the target f0 is an increasing (supply) curve, identified by a shifter Z of the second equation."""
+def _simultaneous(law: Law, n: int, rng: np.random.Generator, p: dict[str, float], demand: bool = False):
+    """D3: the target f0 is an increasing (supply) curve, identified by a shifter Z of the demand equation.
+    D6 (demand=True): the target is a decreasing demand curve, identified by a shifter Z of the supply equation."""
+    name = "D6" if demand else "D3"
     if law.dim != 1:
-        raise ValueError("D3 is defined for one regressor")
+        raise ValueError(f"{name} is defined for one regressor")
     grid = np.exp(np.linspace(-6.0, 6.0, 400))[:, None]
-    if np.any(np.diff(law(grid)) < 0):
-        raise ValueError(f"D3 needs an increasing law; {law.name} with {law.values} is not")
+    slope = np.diff(law(grid))
+    if (demand and np.any(slope > 0)) or (not demand and np.any(slope < 0)):
+        kind = "decreasing" if demand else "increasing"
+        raise ValueError(f"{name} needs a {kind} law; {law.name} with {law.values} is not")
 
     Z = rng.standard_normal((n, 1))
     u = p["sigma_u"] * rng.standard_normal(n)
     e = p["sigma_e"] * rng.standard_normal(n)
-    # Equilibrium: f0(X) + u = -kappa log X + gamma Z + e. Solve for t = log X by bisection;
-    # the left side minus the right is strictly increasing in t.
+    # Equilibrium: f0(X) + u = -kappa log X + gamma Z + e (D3) or f0(X) + u = kappa log X + gamma Z + e (D6).
+    # Solve for t = log X by bisection: g(t) = f0(e^t) -+ kappa t - rhs is strictly monotone in t.
     rhs = p["gamma"] * Z[:, 0] + e - u
+    sign = -1.0 if demand else 1.0
     lo, hi = np.full(n, -30.0), np.full(n, 30.0)
     for _ in range(100):
         mid = 0.5 * (lo + hi)
-        above = law(np.exp(mid)[:, None]) + p["kappa"] * mid - rhs > 0
-        hi = np.where(above, mid, hi)
-        lo = np.where(above, lo, mid)
+        above = law(np.exp(mid)[:, None]) + sign * p["kappa"] * mid - rhs > 0
+        root_left = above if not demand else ~above  # g increasing (D3): g > 0 means the root is to the left
+        hi = np.where(root_left, mid, hi)
+        lo = np.where(root_left, lo, mid)
     X = np.exp(0.5 * (lo + hi))[:, None]
     y = law(X) + u
     return y, X, Z, {"u": u, "e": e}

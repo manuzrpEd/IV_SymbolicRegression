@@ -56,19 +56,24 @@ def first_stage(X: np.ndarray, crit: MomentCriterion) -> FirstStage:
     return FirstStage(Fs, r2s)
 
 
-def ar_statistic(form: ParametricForm, X, y, crit: MomentCriterion, theta, envelope: float | None = None) -> float:
+def ar_statistic(form: ParametricForm, X, y, crit: MomentCriterion, theta, envelope: float | None = None,
+                 max_residual: float | None = None, cap: float | None = None) -> float:
     """Anderson–Rubin statistic at theta: n g' Omega(theta)^{-1} g with the weight evaluated at theta (CUE objective).
 
-    `envelope` bounds max |f(X; theta)|: the sample version of the envelope in (A3). Without it the statistic
-    can be small at absurd constants, because residuals dominated by a few observations make the robust
-    weight tiny everywhere else.
+    `envelope` bounds max |f(X; theta)| and `max_residual` bounds max |y - f(X; theta)|: sample versions of the
+    envelope in (A3). `cap` winsorizes the residuals inside the weight Omega only (the moments g keep the full
+    residuals). A formula that misfits a few observations badly would otherwise inflate its own weight and pass
+    the test; at the true form the residuals are the errors, which the cap rarely touches.
     """
     vals = form(X, np.asarray(theta, dtype=float))
     if not np.all(np.isfinite(vals)) or (envelope is not None and np.max(np.abs(vals)) > envelope):
         return np.inf
     r = y - vals
+    if max_residual is not None and np.max(np.abs(r)) > max_residual:
+        return np.inf
     g = crit.moments(r)
-    S = (crit.A * r[:, None] ** 2).T @ crit.A
+    r_w = np.clip(r, -cap, cap) if cap is not None else r
+    S = (crit.A * r_w[:, None] ** 2).T @ crit.A
     try:
         val = float(g @ solve(S, g, assume_a="pos"))
     except (np.linalg.LinAlgError, ValueError):
@@ -76,16 +81,17 @@ def ar_statistic(form: ParametricForm, X, y, crit: MomentCriterion, theta, envel
     return val if np.isfinite(val) and val >= 0 else np.inf
 
 
-def s_statistic(form, X, y, crit, theta0, bound: float = 10.0, n_starts: int = 3, seed: int = 0, envelope: float | None = None):
+def s_statistic(form, X, y, crit, theta0, bound: float = 10.0, n_starts: int = 3, seed: int = 0, envelope: float | None = None,
+                max_residual: float | None = None, cap: float | None = None):
     """Stock–Wright's S statistic, min over theta of the AR statistic, from theta0 and perturbed starts."""
     theta0 = np.asarray(theta0, dtype=float)
     p = len(theta0)
     if p == 0:
-        return ar_statistic(form, X, y, crit, theta0, envelope), theta0
+        return ar_statistic(form, X, y, crit, theta0, envelope, max_residual, cap), theta0
     rng = np.random.default_rng(seed)
 
     def obj(t):
-        return ar_statistic(form, X, y, crit, np.clip(t, -bound, bound), envelope)
+        return ar_statistic(form, X, y, crit, np.clip(t, -bound, bound), envelope, max_residual, cap)
 
     starts = [theta0] + [theta0 * (1 + 0.1 * rng.standard_normal(p)) + 0.05 * rng.standard_normal(p) for _ in range(n_starts - 1)]
     best_val, best_x = np.inf, theta0
@@ -120,13 +126,13 @@ def wald_se(form, X, y, crit: MomentCriterion, theta) -> np.ndarray:
     return np.sqrt(np.clip(np.diag(V), 0.0, None))
 
 
-def _profile(form, X, y, crit, theta, j, value, bound, envelope):
+def _profile(form, X, y, crit, theta, j, value, bound, envelope, max_residual=None, cap=None):
     """AR minimized over the other constants with constant j fixed at `value`; warm start at theta."""
     p = len(theta)
     t = np.array(theta, dtype=float)
     t[j] = value
     if p == 1:
-        return ar_statistic(form, X, y, crit, t, envelope), t
+        return ar_statistic(form, X, y, crit, t, envelope, max_residual, cap), t
     free = [i for i in range(p) if i != j]
 
     def full(tf):
@@ -134,13 +140,13 @@ def _profile(form, X, y, crit, theta, j, value, bound, envelope):
         out[free] = np.clip(tf, -bound, bound)
         return out
 
-    res = minimize(lambda tf: ar_statistic(form, X, y, crit, full(tf), envelope), t[free], method="Nelder-Mead",
+    res = minimize(lambda tf: ar_statistic(form, X, y, crit, full(tf), envelope, max_residual, cap), t[free], method="Nelder-Mead",
                    options=dict(xatol=1e-5, fatol=1e-4, maxfev=150 * (p - 1)))
     return float(res.fun), full(res.x)
 
 
 def ar_interval(form, X, y, crit, theta, j, step, bound: float = 10.0, level: float = 0.95, max_steps: int = 25,
-                envelope: float | None = None):
+                envelope: float | None = None, max_residual: float | None = None, cap: float | None = None):
     """Projection AR interval for constant j around theta (the S minimizer).
 
     The connected set of values whose profiled AR statistic is below chi2_{K, level}, found by stepping
@@ -148,7 +154,7 @@ def ar_interval(form, X, y, crit, theta, j, step, bound: float = 10.0, level: fl
     reaches the constant bound is unbounded. (nan, nan, False, False) if theta itself is rejected.
     """
     c = chi2.ppf(level, crit.K)
-    a0, _ = _profile(form, X, y, crit, theta, j, theta[j], bound, envelope)
+    a0, _ = _profile(form, X, y, crit, theta, j, theta[j], bound, envelope, max_residual, cap)
     if a0 > c:
         return np.nan, np.nan, False, False
 
@@ -158,14 +164,14 @@ def ar_interval(form, X, y, crit, theta, j, step, bound: float = 10.0, level: fl
             v = inside + direction * h
             if direction * v >= bound:
                 return direction * bound, False
-            a, w = _profile(form, X, y, crit, warm, j, v, bound, envelope)
+            a, w = _profile(form, X, y, crit, warm, j, v, bound, envelope, max_residual, cap)
             if a <= c:
                 inside, warm, h = v, w, h * 1.6
                 continue
             lo, hi = inside, v  # bracket: lo accepted, hi rejected
             for _ in range(6):
                 mid = (lo + hi) / 2
-                a, w2 = _profile(form, X, y, crit, warm, j, mid, bound, envelope)
+                a, w2 = _profile(form, X, y, crit, warm, j, mid, bound, envelope, max_residual, cap)
                 if a <= c:
                     lo, warm = mid, w2
                 else:
@@ -215,34 +221,47 @@ def identification_report(
     level: float = 0.95,
     tau: float = 0.2,
     envelope_factor: float = 3.0,
+    cap_factor: float = 5.0,
     seed: int = 0,
 ) -> IdentificationReport:
     """Is the selected formula identified by the data? (module docstring)
 
     tau: a candidate the data do not reject counts as a different formula when its fit is more than
-    tau standard deviations of f_hat away from f_hat (trimmed). On the Phase 4 runs, 0.2 flags every
-    weak-instrument run and 5% of the strong-instrument runs whose selection was right; 0.1 flags 16%.
+    tau standard deviations of f_hat away from f_hat (trimmed).
     envelope_factor: constants are restricted to formulas whose values on the sample stay within this
-    multiple of max |y| (see `ar_statistic`).
+    multiple of max |y| (the sample version of the envelope in (A3)).
+    cap_factor: inside the weight matrix of each formula's AR statistic, its residuals are winsorized at this
+    many robust standard deviations of its own residuals at the two-step fit (never below their 99.5%
+    quantile). A formula that misfits a few observations badly would otherwise inflate its own weight and
+    pass the S test. At the true form the residuals are the errors, so the cap is about five error standard
+    deviations; the share of error variance beyond it, which is what the cap costs in validity, is negligible
+    for Gaussian-like errors.
     """
     d = X.shape[1]
     envelope = envelope_factor * float(np.max(np.abs(y)))
     keep = int(np.ceil(0.95 * len(y)))  # the distance ignores the 5% largest differences: a pole, or a tail the moments do not see
+    floor = 1e-8 * float(np.std(y))
+
+    def cap_for(resid: np.ndarray) -> float:
+        r = np.abs(resid)
+        return max(cap_factor * max(1.4826 * float(np.median(r)), floor), float(np.quantile(r, 0.995)))
+
     form = parametrize(selected_expr, d)
     fit = fit_gmm(form, X, y, crit, bound=bound, seed=seed)
     theta_hat = fit.theta
     f_hat = form(X, theta_hat)
     sd = float(f_hat.std()) if np.all(np.isfinite(f_hat)) and f_hat.std() > 0 else 1.0
+    restrict = dict(envelope=envelope, cap=cap_for(y - f_hat if np.all(np.isfinite(f_hat)) else y - y.mean()))
     se = wald_se(form, X, y, crit, theta_hat)
     c = float(chi2.ppf(level, crit.K))
-    S_sel, theta_s = s_statistic(form, X, y, crit, theta_hat, bound, seed=seed, envelope=envelope)
+    S_sel, theta_s = s_statistic(form, X, y, crit, theta_hat, bound, seed=seed, **restrict)
     reasons: list[str] = []
 
     ar, ar_b, ratio = [], [], []
     if S_sel <= c:
         for j in range(form.n_constants):
             step = float(se[j]) if np.isfinite(se[j]) and se[j] > 0 else 0.05 * max(1.0, abs(theta_s[j]))
-            lo, hi, lb, hb = ar_interval(form, X, y, crit, theta_s, j, step, bound, level, envelope=envelope)
+            lo, hi, lb, hb = ar_interval(form, X, y, crit, theta_s, j, step, bound, level, **restrict)
             ar.append((float(lo), float(hi)))
             ar_b.append(bool(lb and hb))
             ok = lb and hb and np.isfinite(se[j]) and se[j] > 0
@@ -260,7 +279,10 @@ def identification_report(
         if str(cf.form) == sel_form:
             continue
         cfit = fit_gmm(cf, X, y, crit, bound=bound, n_starts=2, seed=seed)
-        S, th = s_statistic(cf, X, y, crit, cfit.theta, bound, n_starts=2, seed=seed, envelope=envelope)
+        r_c = y - cf(X, cfit.theta)
+        if not np.all(np.isfinite(r_c)):
+            continue
+        S, th = s_statistic(cf, X, y, crit, cfit.theta, bound, n_starts=2, seed=seed, envelope=envelope, cap=cap_for(r_c))
         vals = cf(X, th)
         if np.all(np.isfinite(vals)):
             diff = np.sort((vals - f_hat) ** 2)

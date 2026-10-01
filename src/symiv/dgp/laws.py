@@ -51,6 +51,15 @@ LAWS: dict[str, Law] = {
     "cobb_douglas": Law(
         "cobb_douglas", 2, _A * _x0**_alpha * _x1**_beta, (_A, _alpha, _beta), (1.5, 0.3, 0.5)
     ),
+    # Phase 6 environments (README §8.2). Demand curves, decreasing in the price (design D6):
+    "demand_iso": Law("demand_iso", 1, _a * _x0**_theta, (_a, _theta), (3.0, -0.5)),  # constant elasticity
+    "demand_log": Law("demand_log", 1, _a + _b * sp.log(_x0), (_a, _b), (6.0, -1.5)),  # in the library
+    "demand_hyper": Law("demand_hyper", 1, _a / (_b + _x0), (_a, _b), (6.0, 1.0)),
+    # Labour supply, backward-bending in the wage (design D1 with a weaker shifter):
+    "hump": Law("hump", 1, _A * _x0 * sp.exp(-_b * _x0), (_A, _b), (8.0, 0.5)),
+    "quadlog": Law("quadlog", 1, _a + _b * sp.log(_x0) + _c * sp.log(_x0) ** 2, (_a, _b, _c), (5.0, 2.0, -0.6)),  # in the library
+    # The same quadratic with its peak at the median wage, so that the backward bend is inside the data.
+    "quadlog_mid": Law("quadlog_mid", 1, _a + _b * sp.log(_x0) + _c * sp.log(_x0) ** 2, (_a, _b, _c), (5.0, 0.5, -0.6)),
 }
 
 

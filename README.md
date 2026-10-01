@@ -195,7 +195,7 @@ Real laws are rarely exactly in $\mathcal F_L$. Under misspecification, the GMM 
 >   - a complexity condition for longer or more heavily parameterized formulas.
 >
 >   A per-node structure penalty makes the bound uniform in $L$ (Corollary 2.2; the theory's $w \approx 5$ is conservative against the empirical $0.5$). Proposition 2.4 extends the bound to the code's sample-orthonormalized criterion and an estimated scale. Corollary 2.3 (candidates from an independent sample) was simulated: the mechanism holds, but the structure term on the full sample does better (§12.4).
-> - **Proposition 5** (new): an Anderson–Rubin confidence set for the formula, valid whatever the instrument strength, is the identification diagnostic of §6.4. On the Phase 4 runs it flags every weak-instrument run and 5% of the strong-instrument runs whose selection was right, and covers the true form in 99% of the runs where it was a candidate (§12.4).
+> - **Proposition 5** (new): an Anderson–Rubin confidence set for the formula, valid whatever the instrument strength, is the identification diagnostic of §6.4. On the Phase 4 runs it flags every weak-instrument run and 4% of the strong-instrument runs whose selection was right, and covers the true form in 99% of the runs where it was a candidate (§12.4).
 > - **Discrete instruments** (Proposition 4, parts (a)–(b)): formulas with $J$ or more constants can zero the criterion. Part (c) is a conjecture with its transversality hypothesis stated.
 > - **Theorem 3(a)** (fixed $L$, misspecified) and **Theorem 3(b)** (growing $L$, compact support, any number of regressors) are proved; `max` gives a spline sieve for one regressor and Bernstein polynomials give one for several. Proposition 3.3 reduces rates to a modulus of continuity on the formula sieve; bounding it is open.
 >
@@ -309,8 +309,8 @@ The econometrician sees only $(y, X, Z)$.
 
 ### 8.2 Simulated economic environments
 
-- **Supply and demand with endogenous prices** (D3): in the simulation the target is the supply curve, identified by a demand shifter; recovering a demand curve with cost-shifter instruments is the mirror image and needs decreasing laws.
-- **Labour supply:** hours $= f_0(w) + u$ with a backward-bending $f_0$. The wage is endogenous because unobserved taste for work is correlated with productivity; the instrument is an exogenous wage shifter (e.g., a simulated tax reform).
+- **Supply and demand with endogenous prices** (D3): in the simulation the target is the supply curve, identified by a demand shifter. **Phase 6** adds the mirror image, design **D6**: quantity $= f_0(p) + u$ is a decreasing demand curve, the supply equation $q = \kappa\log p + \gamma Z + e$ is shifted by a cost shifter $Z$, and the price is set by equilibrium. Demand laws: constant elasticity $3p^{-0.5}$, log-linear $6 - 1.5\log p$ (in the library), hyperbolic $6/(1 + p)$. Results in §12.5.
+- **Labour supply:** hours $= f_0(w) + u$ with a backward-bending $f_0$. The wage is endogenous because unobserved taste for work is correlated with productivity; the instrument is an exogenous wage shifter (e.g., a simulated tax reform). **Phase 6:** design D1 with $\pi = 0.5$ and the laws $8w\,e^{-0.5w}$ (a hump) and $5 + 2\log w - 0.6(\log w)^2$ (the textbook quadratic in logs, in the library); neither shape was in the Phase 4 grid. Results in §12.5.
 - *Dropped:* earnings $=$ wage $\times$ hours with heterogeneous wages. It is not additive: $u = (w - \bar w)\,h$, and $E[u \mid Z] \neq 0$ because hours respond to $w$. In logs it becomes additive, but then the "law" is an identity with coefficient 1. The motivation that earnings risk partly reflects hours choices ([Halvorsen et al. 2024](https://academic.oup.com/jeea/article-abstract/22/2/617/7251473); [Kaplan & Violante 2010](https://www.aeaweb.org/articles?id=10.1257%2Fmac.2.4.53)) belongs to the non-separable extension (§5).
 
 ### 8.3 Real applications with known answers
@@ -319,7 +319,7 @@ The econometrician sees only $(y, X, Z)$.
 |---|---|---|---|---|
 | **Engel curves** ([Blundell, Chen & Kristensen 2007](https://doi.org/10.1111/j.1468-0262.2007.00808.x)) | UK Family Expenditure Survey (UK Data Service; free registration) | Household head's earnings, for log total expenditure | Budget shares linear in log expenditure (Working–Leser) for food; quadratic in log expenditure for some goods ([Banks, Blundell & Lewbel 1997](https://doi.org/10.1162/003465397557015)) | **Primary:** continuous instrument and a formula-shaped answer |
 | **Gasoline demand** ([Blundell, Horowitz & Parey 2012](https://doi.org/10.3982/QE91); earlier nonparametric estimates in [Hausman & Newey 1995](https://doi.org/10.2307/2171777)) | US National Household Travel Survey 2001 (public) | Distance from the Gulf of Mexico (price shifter) | Price responsiveness that varies with price and income | **Secondary:** comparison with shape-restricted NPIV |
-| Returns to schooling ([Angrist & Krueger 1991](https://doi.org/10.2307/2937954)) | Public | Quarter of birth | None usable for functional form | **Stress test only.** The instruments are weak ([Bound, Jaeger & Baker 1995](https://doi.org/10.1080/01621459.1995.10476536)), discrete, and shift schooling only near the compulsory-schooling margin, so they cannot identify a functional form over the whole range. Success means the method reports weak identification instead of a confident formula |
+| Returns to schooling ([Angrist & Krueger 1991](https://doi.org/10.2307/2937954)) | Public: the Mastering 'Metrics extract `ak91.dta` (329,509 men born 1930–39), downloaded by hand into `data/` | Quarter of birth | None usable for functional form | **Stress test only.** The instruments are weak ([Bound, Jaeger & Baker 1995](https://doi.org/10.1080/01621459.1995.10476536)), discrete, and shift schooling only near the compulsory-schooling margin, so they cannot identify a functional form over the whole range. Success means the method reports weak identification instead of a confident formula |
 
 ## 9. Deliverables and venues
 
@@ -345,7 +345,7 @@ The econometrician sees only $(y, X, Z)$.
 
 | Risk | Mitigation |
 |---|---|
-| Weak instruments; identification failure (completeness not holding) | Designs D4–D5; weak-ID-robust confidence sets; report the criterion gap to the runner-up; Angrist–Krueger stress test. **Phase 5:** the identification diagnostic of §6.4 flags every D5 run and 5% of the strong-instrument runs whose selection was right (§12.4) |
+| Weak instruments; identification failure (completeness not holding) | Designs D4–D5; weak-ID-robust confidence sets; report the criterion gap to the runner-up; Angrist–Krueger stress test. **Phase 5:** the identification diagnostic of §6.4 flags every D5 run and 4% of the strong-instrument runs whose selection was right (§12.4) |
 | Oscillatory formulas exploit ill-posedness | Bounded constants, restricted operators, nesting constraints (§6.1) |
 | Criterion ties at zero with finite $K$ | $K$ much larger than the number of constants and growing with $n$, or MMR (§6.2) |
 | Noisier, non-convex search (the moment criterion is flatter than MSE) | Several restarts; seed with the plain-SR front; report search failures separately (§7). Phase 2: only 2 of 200 failures were search failures at $n = 2000$ |
@@ -430,7 +430,7 @@ The econometrician sees only $(y, X, Z)$.
 - [x] Theorem 3 (b): consistency as $L$ grows, proved directly on a compact support; approximation within a Lipschitz ball by `max` hinges (one regressor) and by Bernstein polynomials (any number of regressors)
 - [x] Simulated Theorem 1 (iii) on the Phase 4 fronts: nominal coverage on fresh samples; 83–90% on the selection sample; under the weak instrument only AR sets keep their coverage
 - [x] Tested Corollary 2.3: fewer wrong candidates beat the truth when selection uses an independent sample, but full-sample selection with the structure term recovers more
-- [x] Proposition 5: an identification-robust confidence set for the formula, the diagnostic built on it (`symiv.identification`, §6.4), and its evaluation on all 288 Phase 4 breadth runs: every D5 run flagged, 5% false alarms, 99% coverage of the true form
+- [x] Proposition 5: an identification-robust confidence set for the formula, the diagnostic built on it (`symiv.identification`, §6.4), and its evaluation on all 288 Phase 4 breadth runs: every D5 run flagged, 4% false alarms, 99% coverage of the true form
 - [x] Rates: parametric when the law is in the class (Corollary 1.1); for growing $L$, reduced to a modulus of continuity on the formula sieve (Proposition 3.3)
 - [ ] Bound that modulus for formula sieves (the open rate problem; $\mathcal F_L - f_0$ is not a linear space)
 - [ ] Theorem 3 (b) on unbounded supports: envelope-respecting approximants and a deviation bound with an unbounded envelope
@@ -441,17 +441,20 @@ The econometrician sees only $(y, X, Z)$.
 ### Before the paper (required)
 - [x] Weak-identification diagnostic (2026-10-01): first-stage $F$, AR intervals for the constants and the formula confidence set of THEORY.md Proposition 5, in `symiv.identification`; evaluated on every Phase 4 breadth run (§12.4)
 - [ ] **More seeds in the headline cells.** Twelve seeds give recovery rates with intervals about 25 points wide, too wide for the comparisons the paper rests on (pooled vs. distilled candidates, BIC vs. BIC + structure, recovery as $n$ grows). Raise the cells the paper leans on to 50 seeds, as in Phase 2: D1 default and strong × log and power; D3 × log and power; D5 × all five laws; the $n$-scaling cells at $n \in \{1000, 2000, 5000\}$. About 650 extra searches, roughly a day of compute at the Phase 4 rates; the scripts resume, so this can run in the background
-- [ ] One application with a known answer (Phase 6: Engel curves), or at least the simulated supply-and-demand environment
+- [x] The simulated economic environments (demand with a cost shifter; labour supply) and the Angrist–Krueger stress test are done (§12.5)
+- [ ] One real application with a known functional form: the Engel curves, pending the FES data (§11, Phase 6)
+- [ ] **A search budget that reaches three-constant formulas.** Selection chose the true form whenever it was a candidate, but the search proposed the quadratic-in-logs labour law in only 20–45% of runs, the kink law in at most 33% and the saturation law in 8–58% (§12.3, §12.5): the Phase 2–6 budget (40 iterations, maximum size 15, default operators) is what every result so far was obtained with. Before the paper, rerun the cells with a three-constant or threshold law under a larger budget (more iterations and populations, size up to 25, restarts with different seeds) and with templates for the economic shapes (`a + b log w + c (log w)^2`, `a x + b max(x − c, 0)`); report coverage before and after, since coverage, not selection, is the binding constraint in those cells
 - [ ] Independent reading of the proofs in THEORY.md
 
 ### Beyond the paper
 See §9.1: listed there so they do not read as blockers, and marked *(beyond the paper)* in place.
 
 ### Phase 6: applications
-- [ ] Simulated demand and labour-supply environments (§8.2)
-- [ ] Engel curves: data access; replicate the BCK 2007 NPIV curve; run symbolic IV; compare with Working–Leser and quadratic-in-log forms
-- [ ] Gasoline demand: data access; confirm the instrument definition in BHP 2012; replicate their setup; compare
-- [ ] Angrist–Krueger stress test
+- [x] Simulated demand and labour-supply environments (2026-10-01; §12.5): design D6 and five new laws; demand curves recovered in 70–100% of runs with oracle-level error and the right elasticity; the backward-bending laws show the limits (the bend must be inside the data and the instrument's reach; 3-constant forms are proposed by the search in only 20–45% of runs)
+- [x] Engel curves, pipeline (2026-10-01): `phase6_engel.py` selects the formula, tests the Working–Leser and quadratic forms, and runs the identification report; self-tested on synthetic FES-like data (§12.5)
+- [ ] Engel curves, data: register with the UK Data Service, obtain the FES extract used by BCK 2007 (couples, log total nondurable expenditure, head's gross earnings), export a CSV, run `phase6_engel.py --data`; replicate their NPIV curve; compare with Working–Leser and quadratic-in-log forms
+- [ ] Gasoline demand (secondary; after the Engel curves): the NHTS 2001 household file is public but the price variable must be merged from an external source and the instrument definition confirmed in BHP 2012 before anything can be run
+- [x] Angrist–Krueger stress test (2026-10-01): replicates $F = 4.9$, OLS 0.071, 2SLS 0.089; with both instrument sets the method reports weak identification instead of a formula, and the AR interval for the return includes zero (§12.5)
 
 ### Phase 7: package and paper
 - [ ] Package API and documentation; release the benchmark suite
@@ -638,20 +641,47 @@ Three experiments on the saved Phase 4 fronts, no new searches. Full tables: [`e
 | | Runs | Flagged as weakly identified or rejected | True form in the confidence set |
 |---|---|---|---|
 | D5 weak instrument, all runs | 60 | **100%** | 100% |
-| D1–D4, form recovered | 123 | 5% | 99% |
+| D1–D4, form recovered | 123 | 4% | 99% |
 | D1–D4, statistical failure | 29 | 45% | 100% |
-| D1–D4, search failure | 76 | 53% | – |
+| D1–D4, search failure | 76 | 57% | – |
 
-- The method now reports weak identification on every D5 run instead of a formula: the median first-stage $F$ is 2, and the data allow formulas a full standard deviation away from the selected one.
-- Where the instrument is strong and the selection right, 5% of runs are flagged: the AR level.
+- The method now reports weak identification on every D5 run instead of a formula: the median first-stage $F$ is 2, and the data allow formulas 0.7 sd away from the selected one (median of the farthest).
+- Where the instrument is strong and the selection right, 4% of runs are flagged: the AR level.
 - The confidence set covers the true form in 99% of the runs where it was a candidate (nominal $\ge 95\%$).
-- It cannot detect a search failure whose wrong formula fits the moments: 47% of the search failures pass as identified, mostly D3 with the kink and saturation laws.
+- It cannot detect a search failure whose wrong formula fits the moments: 43% of the search failures pass as identified, mostly D3 with the kink and saturation laws.
+
+### 12.5 Phase 6: applications
+
+**Simulated economic environments (§8.2).** 20 seeds per law, $n = 2000$; candidates from plain PySR, PySR distilled from a sieve-2SLS curve and the library path, pooled; selection by BIC + structure. Full table: [`experiments/phase6/summary.md`](experiments/phase6/summary.md).
+
+| Environment | Law | Plain PySR, own pick: recovered / error | Pooled + BIC | **Pooled + BIC + structure** | Error: selected / oracle IV | Elasticity at the median: truth / selected | First-stage $F$ |
+|---|---|---|---|---|---|---|---|
+| Demand, D6 | $3p^{-0.5}$ | 0% / 0.43 | 95% | **100%** | 0.029 / 0.029 | −0.50 / −0.49 | 332 |
+| Demand, D6 | $6 - 1.5\log p$ | 0% / 0.33 | 90% | **100%** | 0.024 / 0.024 | −0.62 / −0.62 | 338 |
+| Demand, D6 | $6/(1 + p)$ | 0% / 0.57 | 65% | **70%** | 0.041 / 0.025 | −0.78 / −0.77 | 330 |
+| Labour, $\pi = 0.5$ | $8w\,e^{-0.5w}$ | 0% / 0.42 | 60% | **75%** | 0.040 / 0.033 | 0.50 / 0.49 | 40 |
+| Labour, $\pi = 0.5$ | $5 + 2\log w - 0.6(\log w)^2$ | 0% / 0.30 | 10% | **0%** | 0.347 / 0.051 | 0.40 / 0.29 | 40 |
+| Labour, $\pi = 1$ (control) | $8w\,e^{-0.5w}$ | 60% / 0.21 | 75% | **75%** | 0.027 / 0.025 | 0.50 / 0.51 | 161 |
+| Labour, $\pi = 1$ (control) | $5 + 0.5\log w - 0.6(\log w)^2$ | 10% / 0.37 | 20% | **20%** | 0.190 / 0.032 | 0.10 / 0.10 | 161 |
+
+- **Demand curves are recovered.** With a cost shifter, the constant-elasticity and log-linear demand curves are recovered in every run, with the oracle's error and the right price elasticity; plain PySR never recovers them (its picks carry the simultaneity bias, errors 0.3–0.6 sd). The hyperbolic demand $6/(1 + p)$ is recovered in 70% of runs; the misses are near-duplicates such as $3.3p^{-0.74}$, with the elasticity still right.
+- **Backward-bending labour supply exposes a limit.** With $\pi = 0.5$ only 7% of wages lie past the peak of the quadratic-in-logs law, and the law is never recovered: in 7 of the 9 runs where it was a candidate, a simpler wrong formula beat it (Theorem 2's separation channel), and the selected formulas are worse in sample than plain PySR's (0.35 vs. 0.30 sd). The hump law, whose peak sits inside the data, is recovered in 75% of runs with near-oracle error.
+- **The control shows what identification needs.** With $\pi = 1$ and the quadratic's peak at the median wage, recovery rises only to 20%, and now every miss is a search failure: the 3-constant form was a candidate in just 20% of runs, and whenever it was, it was selected. The hump stays at 75%, again equal to its coverage. So for these shapes the binding constraint is the search's coverage of 3-constant forms, not selection.
+- **What the identification diagnostic says.** Every demand run is "identified". The hump runs are "weakly identified" in 85% of cases at $\pi = 0.5$ and in 95% at $\pi = 1$, even where the form was recovered: candidates 0.2–0.4 sd away fit the moments as well as the truth (in one run better: $S = 3.5$ against 11.1), because a bump is a feature that the smoothing of $E[\cdot \mid Z]$ nearly erases. So the recovered hump is correct but not pinned down by the data, and the method says so. For the quadratic at $\pi = 0.5$, 45% of the wrong selections fail their own S test and another 30% are flagged as weakly identified; 25% pass as identified. Building this environment also exposed a weakness of the S test, a formula that misfits 2% of the sample badly inflates its own robust weight and escapes rejection, which is now handled by winsorizing the residuals inside the weight (THEORY.md §3.2).
+
+**Engel curves (§8.3): pipeline built, data pending.** `experiments/phase6_engel.py` takes the Family Expenditure Survey file (one row per household: budget share, log expenditure, the head's log earnings), which needs a UK Data Service registration. On synthetic FES-like data with a planted Working–Leser food share, measurement error in expenditure and log earnings as the instrument ($n = 1500$), it selects `0.452 − 0.060 log x` against the truth `0.45 − 0.06 log x`, reports "identified" (first-stage $F = 180$), and rejects neither the Working–Leser nor the quadratic form by their S tests (the quadratic nests the truth); plain PySR's own pick is `0.68^x`, the shape of the conditional mean. A pipeline check, not evidence.
+
+**Angrist–Krueger (1991) stress test (§8.3): the method reports weak identification, as it should.** 329,509 men born 1930–39; log weekly wage demeaned within birth year; schooling instrumented by quarter of birth (`experiments/phase6_ak.py`; full output in [experiments/phase6/ak.md](experiments/phase6/ak.md)).
+- *Replication.* With the 30 within-cohort quarter-of-birth contrasts (AK's Table V), the first-stage $F$ is 4.9 (Bound, Jaeger & Baker report 4.7–4.9), the OLS return 0.071 and the 2SLS return 0.089 (AK: 0.071 and 0.089). With the 3 overall contrasts, $F = 34$ and 2SLS gives 0.103.
+- *Selection.* Both instrument sets select `log(0.075 (s + 1))`, a concave return profile (0.10 per year at 9 years of schooling, 0.07 at 13, 0.06 at 17), which is also plain PySR's own pick: the moments do not move the formula away from the conditional-mean shape.
+- *The diagnostic says "weakly identified" with both sets.* Every other candidate survives its S test (25 of 25 with 30 instruments; 23 of 23 with 3), the farthest 1.1–1.3 sd from the selected formula. The identification-robust AR interval for the linear return is $[-0.01, 0.44]$ against the Wald interval $[0.06, 0.16]$ with 30 instruments, and $[-0.01, 0.26]$ against $[0.03, 0.18]$ with 3: 2–5 times wider, and including zero. With 3 instruments ($K = 4$) any formula with four constants fits the moments exactly (Proposition 4); with 30, the compulsory-schooling variation is too small to tell shapes apart. A confident formula would have been wrong here; the method does not give one.
+- The sieve-2SLS curve shows the NPIV instability the plan anticipated: with 3 instruments it moves by $-1.0$ log points between 8 and 12 years and by $+2.5$ between 12 and 16.
 
 ## 13. Code
 
 ```
 src/symiv/
-  dgp/            laws and designs D1-D5 (§8.1)
+  dgp/            laws and designs D1-D6 (§8.1, §8.2)
   criteria/       instrument bases, Nystrom features, the criterion ||A'r||^2 / n (§6.2)
   gmm.py          two-step GMM refit with bounded constants; Hansen's J (§6.3)
   selection.py    MMSC selection over the Pareto front; least-squares selection for plain SR (§6.3)
@@ -673,9 +703,13 @@ experiments/
   phase5_split.py     Phase 5: candidates from one sample, selection on another (Corollary 2.3)
   phase5_identification.py  Phase 5: the identification diagnostic on every Phase 4 breadth run (Proposition 5)
   phase5_report.py    phase5/summary.md
-  phase2/ ... phase5/  one JSON record per run, and summary.md
+  phase6_simulated.py Phase 6: demand with a cost shifter (D6) and backward-bending labour supply (§8.2): search, analysis, report
+  phase6_ak.py        Phase 6: the Angrist–Krueger stress test on the 1980 census extract (§8.3)
+  phase6_engel.py     Phase 6: the Engel-curve pipeline for the FES data; --synthetic runs a self-test (§8.3)
+  phase2/ ... phase6/  one JSON record per run, and summary.md
 tests/            pytest; `pytest -m julia` runs the PySR tests, `pytest -m slow` the DeepIV test
 THEORY.md         Phase 5: assumptions, theorems and proofs (§7)
+data/             third-party application data, downloaded by hand and git-ignored: ak91.dta (§8.3)
 ```
 
 **Setup** (tested with Python 3.12, PySR 2.6.0, SymbolicRegression.jl 2.5.1, Julia 1.11.9, Windows 11):

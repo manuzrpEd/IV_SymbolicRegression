@@ -245,7 +245,9 @@ the weight being evaluated at the same $\theta$ (the continuously-updated object
 
 $$\mathcal C_\alpha := \{s \in \hat{\mathcal S} : S_s \le \chi^2_{K,1-\alpha}\}.$$
 
-In the code, $\Theta_s$ also carries the sample version of (A3)'s envelope, $\max_i\lvert f_s(X_i;\theta)\rvert \le 3\max_i\lvert y_i\rvert$. Without it, $\mathrm{AR}_s(\theta)$ can be small at absurd constants: when a few observations dominate the residuals, $\hat\Omega_s(\theta)$ is dominated by them and the statistic collapses to roughly the number of those observations.
+Two implementation details guard against a weakness of the robust weight, which discounts exactly the observations a formula misfits most:
+- $\Theta_s$ carries the sample version of (A3)'s envelope, $\max_i\lvert f_s(X_i;\theta)\rvert \le 3\max_i\lvert y_i\rvert$. Without it, $\mathrm{AR}_s(\theta)$ can be small at absurd constants: when a few observations dominate the residuals, $\hat\Omega_s(\theta)$ is dominated by them and the statistic collapses to roughly the number of those observations.
+- Inside $\hat\Omega_s(\theta)$ only, the residuals are winsorized at five robust standard deviations of the formula's own residuals at its two-step fit (never below their 99.5% quantile); the moments $\hat g$ keep the full residuals. A formula that misfits 2% of the sample by five or more standard deviations would otherwise inflate its own weight by a factor near two and halve the power of the test against it (observed in the Phase 6 labour environment). At the true form the residuals are the errors, so the cap sits at about five error standard deviations, and the cost in validity is the share of error variance beyond it: negligible for Gaussian-like errors, and quantifiable otherwise. Proposition 5(a) below is stated for the uncapped statistic; with the cap it holds up to that share.
 
 **Proposition 5.**
 
@@ -646,17 +648,17 @@ Both reuse the Phase 4 Pareto fronts, so no new searches were needed. Scripts: `
 
 | | Runs | Flagged (weakly identified or rejected) | Of which rejected | True form in the confidence set |
 |---|---|---|---|---|
-| D5 weak instrument, all runs | 60 | **100%** | 13% | 100% (the 25 runs with the true form a candidate) |
-| D1–D4, selection recovered the form | 123 | 5% | 1% | 99% |
-| D1–D4, statistical failure (true form a candidate, lost) | 29 | 45% | 7% | 100% |
-| D1–D4, search failure (true form not a candidate) | 76 | 53% | 9% | – |
+| D5 weak instrument, all runs | 60 | **100%** | 15% | 100% (the 25 runs with the true form a candidate) |
+| D1–D4, selection recovered the form | 123 | 4% | 1% | 99% |
+| D1–D4, statistical failure (true form a candidate, lost) | 29 | 45% | 10% | 100% |
+| D1–D4, search failure (true form not a candidate) | 76 | 57% | 14% | – |
 
 - **Coverage, Proposition 5(a):** across the 177 runs in which the true form was a candidate, it is in the confidence set in 176 (99%; nominal $\ge 95\%$).
-- **The weak instrument is always caught.** In D5 the median first-stage $F$ is 2, 89% of the candidates are not rejected, and the farthest member of the set differs from the selected formula by 1.0 sd (median). The method no longer returns a confident wrong formula there: 87% of the runs are "weakly identified", with the formulas the data also allow listed, and 13% "rejected".
-- **False alarms:** 5% of the strong-instrument runs whose selection was right, the rate the 5% AR level implies. At $\tau = 0.1$ it would be 16%, with 76% of the statistical failures caught instead of 45%; the full trade-off is in [experiments/phase5/summary.md](experiments/phase5/summary.md).
+- **The weak instrument is always caught.** In D5 the median first-stage $F$ is 2, 88% of the candidates are not rejected, and the farthest member of the set differs from the selected formula by 0.7 sd (median). The method no longer returns a confident wrong formula there: 85% of the runs are "weakly identified", with the formulas the data also allow listed, and 15% "rejected".
+- **False alarms:** 4% of the strong-instrument runs whose selection was right, the rate the 5% AR level implies. At $\tau = 0.1$ it would be 16%, with 79% of the statistical failures caught instead of 45%; the full trade-off is in [experiments/phase5/summary.md](experiments/phase5/summary.md).
 - **Statistical failures, Proposition 5(b):** the true form was in the confidence set in all 29; the diagnostic reports it as a different formula in 45%. The other 55% are near-duplicates within $0.2$ sd of the truth, Theorem 2's channel (II): the function is identified, only the tree is not minimal.
-- **Search failures:** 53% flagged (9% rejected outright), because the candidates that fit the moments disagree among themselves. The rest, mostly D3 with the kink and saturation laws, pass as "identified": the wrong formula fits the moments and the other candidates agree with it. No diagnostic computed from the candidates can detect that case.
-- **Discrete instrument (D4):** 37% of runs are "weakly identified" despite $F \approx 640$. With $K = 4$ moments the S test has little power, and the set contains formulas up to 0.14 sd away (median): Proposition 4 in the data.
+- **Search failures:** 57% flagged (14% rejected outright), because the candidates that fit the moments disagree among themselves. The rest, mostly D3 with the kink and saturation laws, pass as "identified": the wrong formula fits the moments and the other candidates agree with it. No diagnostic computed from the candidates can detect that case.
+- **Discrete instrument (D4):** 35% of runs are "weakly identified" despite $F \approx 640$. With $K = 4$ moments the S test has little power, and the set contains formulas up to 0.13 sd away (median): Proposition 4 in the data.
 
 The Monte Carlo evidence for the rest of the table is in README §12.3.
 

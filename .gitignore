@@ -18,3 +18,6 @@ results/
 
 # Logs of detached long-running jobs
 logs/
+
+# Third-party data for the applications: downloaded by the scripts, kept local, not redistributed
+data/
