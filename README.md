@@ -90,6 +90,7 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
 | Full reading (2026-09-27): SRIT (Yan et al.) and Kuang & Lin 2026 | Complete texts | Neither overlaps; see §3.1 |
 | Review (2026-09-30): econometrics literatures not covered by the searches above | High-dimensional IV, GMM model selection, NPIV testing and identification, symbolic distillation | No free-form formula search; library-based sparse IV and NPIV → distillation become the main baselines (§3.2) |
 | Web search (2026-09-30): `symbolic regression instrumental variables endogeneity moment conditions 2026`; `SINDy instrumental variable sparse regression endogeneity library` | General web | Nothing new |
+| Web search (2026-10-01), the Phase 0 queries left open: `"symbolic regression" "instrumental variable(s)"`, `... endogeneity OR "unobserved confounders"`, `... "method of moments" OR GMM`; `SINDy "instrumental variables"`; `"sparse instrumental variables" dictionary OR library`; `"equation discovery" "instrumental variables" confounding` | General web | Nothing new. The 2026 references of §3.1 verified against their publishers |
 
 **Blind spots:** Semantic Scholar was rate-limited; OpenAlex undercounts citations to ML conference papers; very recent preprints may not be indexed yet; the searches used SR vocabulary, so work phrased as "sparse IV over a dictionary" was found only by the review.
 
@@ -188,7 +189,7 @@ Real laws are rarely exactly in $\mathcal F_L$. Under misspecification, the GMM 
 
 ## 7. Theory plan
 
-> **Phase 5 status ([THEORY.md](THEORY.md); second pass, with a review log of what the first pass got wrong).**
+> **Phase 5 status ([THEORY.md](THEORY.md); three passes: the author's two, then two fresh-context referees, with a review log of what each pass found).**
 > - **Theorem 1 (i)–(iii) is proved.** It holds for any candidate generator whose candidates contain a minimal true formula. Corollary 1.1 gives the parametric rate when the law is in the class. The split-sample intervals, $J$ test and AR sets of (iii) were simulated (§12.4): nominal on fresh samples, distorted on the selection sample, and only the AR sets survive the weak instrument.
 > - **Theorem 2 is proved with explicit constants**, for GMM with orthonormal instruments, sub-Gaussian errors and a bounded Lipschitz class, with two failure channels:
 >   - a separation margin $n\delta_s/\sigma^2 - (p_0 - p_s)\kappa_n$, plus deviation terms of the same order $\log n$, for wrong formulas;
@@ -317,7 +318,7 @@ The econometrician sees only $(y, X, Z)$.
 
 | Application | Data | Instrument | Known answer | Role |
 |---|---|---|---|---|
-| **Engel curves** ([Blundell, Chen & Kristensen 2007](https://doi.org/10.1111/j.1468-0262.2007.00808.x)) | UK Family Expenditure Survey (UK Data Service; free registration) | Household head's earnings, for log total expenditure | Budget shares linear in log expenditure (Working–Leser) for food; quadratic in log expenditure for some goods ([Banks, Blundell & Lewbel 1997](https://doi.org/10.1162/003465397557015)) | **Primary:** continuous instrument and a formula-shaped answer |
+| **Engel curves** ([Blundell, Chen & Kristensen 2007](https://doi.org/10.1111/j.1468-0262.2007.00808.x)) | Public: BCK's own FES 1995 extract, the `Engel95` data frame shipped with the R package [`np`](https://cran.r-project.org/package=np) (1,655 married couples with an employed head aged 25–55; 7 budget shares, log total expenditure, the head's log earnings, a children indicator). No registration or affiliation is needed: extract `np/data/Engel95.rda` from the CRAN tarball and convert it with `pyreadr` into `data/engel95.csv` (git-ignored) | Household head's earnings, for log total expenditure | Budget shares linear in log expenditure (Working–Leser) for food; quadratic in log expenditure for some goods ([Banks, Blundell & Lewbel 1997](https://doi.org/10.1162/003465397557015)) | **Primary:** continuous instrument and a formula-shaped answer |
 | **Gasoline demand** ([Blundell, Horowitz & Parey 2012](https://doi.org/10.3982/QE91); earlier nonparametric estimates in [Hausman & Newey 1995](https://doi.org/10.2307/2171777)) | US National Household Travel Survey 2001 (public) | Distance from the Gulf of Mexico (price shifter) | Price responsiveness that varies with price and income | **Secondary:** comparison with shape-restricted NPIV |
 | Returns to schooling ([Angrist & Krueger 1991](https://doi.org/10.2307/2937954)) | Public: the Mastering 'Metrics extract `ak91.dta` (329,509 men born 1930–39), downloaded by hand into `data/` | Quarter of birth | None usable for functional form | **Stress test only.** The instruments are weak ([Bound, Jaeger & Baker 1995](https://doi.org/10.1080/01621459.1995.10476536)), discrete, and shift schooling only near the compulsory-schooling margin, so they cannot identify a functional form over the whole range. Success means the method reports weak identification instead of a confident formula |
 
@@ -325,7 +326,7 @@ The econometrician sees only $(y, X, Z)$.
 
 - **Open-source package:** symbolic IV on top of PySR (criteria (a)–(c), MMSC selection, split-sample inference), plus the Monte Carlo benchmark suite (designs D1–D5 × laws).
 - **Paper:** an ML venue (NeurIPS / ICML causality tracks) needs §8 plus Theorems 1–2. An econometrics journal (*Journal of Econometrics*, *The Econometrics Journal*) needs full proofs of Theorems 1–2, and ideally the consistency part of Theorem 3.
-- **Data:** no confidential data. The Engel-curve application needs a free UK Data Service registration.
+- **Data:** no confidential data and no institutional access. Both applications use public extracts (the `Engel95` data of the R package `np` for the Engel curves; the Mastering 'Metrics extract for Angrist–Krueger), downloaded by the user into `data/` and not redistributed. The full FES/LCF files at the UK Data Service are not needed.
 
 ### 9.1 Scope of the paper
 
@@ -365,11 +366,11 @@ The econometrician sees only $(y, X, Z)$.
 - [x] Read SRIT in full: independence-test pruning of inputs; assumes causal sufficiency; no instruments
 - [x] Read Kuang & Lin in full: IV for coefficients only (fixed library, measurement noise); no model selection
 - [x] Review: add high-dimensional IV, GMM model selection, NPIV testing and identification, distillation (2026-09-30, §3.2)
-- [ ] Read Gautier & Rose (STIV) and Fan & Liao (2014); choose the sparse-IV estimator for the library baseline
-- [ ] Read Andrews & Lu (2001) and Domínguez & Lobato (2004); fix the selection criterion and the rule for $K$
-- [ ] Read Horowitz (2006); decide whether to implement the test or only cite it
-- [ ] New searches: "sparse instrumental variables" with "dictionary", "library" or "nonlinear"; "SINDy" with "instrumental" or "endogeneity"; "symbolic distillation" with "instrumental"; retry Semantic Scholar
-- [ ] Verify the 2026 references (Kuang & Lin; Zeiringer et al.; Li et al.)
+- [x] Sparse-IV estimator for the library baseline: settled in Phases 3–4 by the instrument-projected Lasso path scored by MMSC (§12.2–§12.3), in the spirit of Lin, Feng & Li (2015); STIV (Gautier & Rose) and Fan & Liao (2014) are cited as the alternatives, not implemented
+- [x] Selection criterion and the rule for $K$: settled by Phases 2–4 (MMSC-BIC with the structure term; $K \approx n^{1/3}$, and doubling $K$ at selection changes nothing, §12.3); Andrews & Lu (2001) is the reference for MMSC
+- [x] Horowitz (2006): cite only. The specification-test role is played by Hansen's $J$ and the $S$ tests of Proposition 5 (§6.4)
+- [x] New searches (web, 2026-10-01): "symbolic regression" with "instrumental variable(s)", endogeneity, "unobserved confounders" or "method of moments"; SINDy with "instrumental variables"; "sparse instrumental variables" with dictionary or library; "equation discovery" with instrumental variables and confounding. Nothing new: no symbolic-regression or equation-discovery method scores formulas by instrument moments; the neighbours of §3.1 stand
+- [x] 2026 references verified (2026-10-01): Kuang & Lin (arXiv 2511.09024, to appear at L4DC 2026); Zeiringer, Garnier & Horn (*J. Franklin Institute* 363(7), May 2026); Li, Feng & Cui (*J. Hydrology: Regional Studies* 65, June 2026)
 - [ ] Optional: ask one nonparametric-IV researcher whether they know of related work
 
 ### Phase 1: infrastructure (done 2026-09-30; §13)
@@ -419,7 +420,7 @@ The econometrician sees only $(y, X, Z)$.
 - [ ] Structure term: tune $w$ and the per-node cost; check the loss on long true forms (saturation)
 - [x] Weak-identification warning: done in Phase 5 (`symiv.identification`, §6.4, §12.4): first-stage strength, AR intervals and the formula confidence set
 
-### Phase 5: theory (two passes done 2026-10-01; [THEORY.md](THEORY.md), simulations in §12.4)
+### Phase 5: theory (three passes done 2026-10-01; [THEORY.md](THEORY.md), simulations in §12.4)
 - [x] Formal setup and assumptions: (A0)–(A3), (A2$_K$) and (A5). Trees that represent the same function are handled through the set of minimal true trees $\mathcal S_0^{\min}$; recovering the form means selecting any of them. Second pass: parameter sets made compact where a formula can be undefined
 - [x] Theorem 1 (i): consistency, for any generator whose candidates contain a true tree; Corollary 1.1: parametric rate when the law is in the class
 - [x] Theorem 1 (ii)–(iii): selection consistency (needs only $nQ_n(f_0) = O_p(1)$ and $\kappa_n \to \infty$); split-sample normality, $J$, and Anderson–Rubin sets
@@ -436,15 +437,15 @@ The econometrician sees only $(y, X, Z)$.
 - [ ] Theorem 3 (b) on unbounded supports: envelope-respecting approximants and a deviation bound with an unbounded envelope
 - [ ] Theorem 2 for the exact kernel criterion (degenerate U-processes) and for the estimated efficient weight under heteroskedasticity
 - [ ] Conjecture 4 (c): a design family of dimension $\ge J - p_s$ for which the regular-value condition can be verified
-- [ ] Independent reading of the proofs before they go into a paper (both passes are the author's own)
+- [x] Third pass (2026-10-01): two fresh-context referees (separate model instances, one per half of THEORY.md) read the proofs cold. The theorem statements and proofs stood; they found one error in an informal reading of Theorem 2 ($k_s \le p_s$ fails for trees nonlinear in their constants), three errors in Proposition 5 (the sample envelope needs a stated condition, part (b) was a conditional claim, one $O_p(1)$ step), a missing probability in Corollary 2.5, and that Corollary 2.2's constants certify nothing at $n = 2000$. All fixed; THEORY.md §9 lists them. A human reading before submission remains advisable, not a blocker
 
 ### Before the paper (required)
 - [x] Weak-identification diagnostic (2026-10-01): first-stage $F$, AR intervals for the constants and the formula confidence set of THEORY.md Proposition 5, in `symiv.identification`; evaluated on every Phase 4 breadth run (§12.4)
-- [ ] **More seeds in the headline cells.** Twelve seeds give recovery rates with intervals about 25 points wide, too wide for the comparisons the paper rests on (pooled vs. distilled candidates, BIC vs. BIC + structure, recovery as $n$ grows). Raise the cells the paper leans on to 50 seeds, as in Phase 2: D1 default and strong × log and power; D3 × log and power; D5 × all five laws; the $n$-scaling cells at $n \in \{1000, 2000, 5000\}$. About 650 extra searches, roughly a day of compute at the Phase 4 rates; the scripts resume, so this can run in the background
+- [ ] **More seeds in the headline cells.** Twelve seeds give recovery rates with intervals about 25 points wide, too wide for the comparisons the paper rests on (pooled vs. distilled candidates, BIC vs. BIC + structure, recovery as $n$ grows). Raise the cells the paper leans on to 50 seeds, as in Phase 2: D1 default and strong × log and power; D3 × log and power; D5 × all five laws; the $n$-scaling cells at $n \in \{1000, 2000, 5000\}$. About 650 extra searches, roughly a day of compute at the Phase 4 rates; the scripts resume, so this can run in the background. **In progress:** the 570 searches (`phase4.py --grid headline`) were launched on 2026-10-01 as a detached job of about 15 hours; the Phase 4 re-analysis and report, the identification diagnostic on the new runs and the budget experiment below are queued behind it
 - [x] The simulated economic environments (demand with a cost shifter; labour supply) and the Angrist–Krueger stress test are done (§12.5)
-- [ ] One real application with a known functional form: the Engel curves, pending the FES data (§11, Phase 6)
-- [ ] **A search budget that reaches three-constant formulas.** Selection chose the true form whenever it was a candidate, but the search proposed the quadratic-in-logs labour law in only 20–45% of runs, the kink law in at most 33% and the saturation law in 8–58% (§12.3, §12.5): the Phase 2–6 budget (40 iterations, maximum size 15, default operators) is what every result so far was obtained with. Before the paper, rerun the cells with a three-constant or threshold law under a larger budget (more iterations and populations, size up to 25, restarts with different seeds) and with templates for the economic shapes (`a + b log w + c (log w)^2`, `a x + b max(x − c, 0)`); report coverage before and after, since coverage, not selection, is the binding constraint in those cells
-- [ ] Independent reading of the proofs in THEORY.md
+- [x] One real application with a known functional form (2026-10-01): the Engel curves on BCK 2007's public FES 1995 extract (§12.5). The food share is compatible with Working–Leser in all three samples, the motor share needs a quadratic term, and on 628–1,655 households the method reports weak identification rather than a confident formula
+- [ ] **A search budget that reaches three-constant formulas.** Selection chose the true form whenever it was a candidate, but the search proposed the quadratic-in-logs labour law in only 20–45% of runs, the kink law in at most 33% and the saturation law in 8–58% (§12.3, §12.5): the Phase 2–6 budget (40 iterations, maximum size 15, default operators) is what every result so far was obtained with. Before the paper, rerun the cells with a three-constant or threshold law under a larger budget (more iterations and populations, size up to 25, restarts with different seeds) and with templates for the economic shapes (`a + b log w + c (log w)^2`, `a x + b max(x − c, 0)`); report coverage before and after, since coverage, not selection, is the binding constraint in those cells. **In progress** (`experiments/phase7_budget.py`, §12.6): the template library is built (`symiv.templates`) and the base-budget arms are analysed; on the saved fronts, templates give 100% coverage but recover the kink law in 0 of 24 runs and the quadratic labour law in 0 of 20, so for those laws the binding constraint is separation, not coverage. The large-budget searches run after the seeds job
+- [x] Reading of the proofs by fresh-context referees (2026-10-01; Phase 5 list above, THEORY.md §9). A human reading before submission is advisable but not required to finish the paper
 
 ### Beyond the paper
 See §9.1: listed there so they do not read as blockers, and marked *(beyond the paper)* in place.
@@ -452,7 +453,7 @@ See §9.1: listed there so they do not read as blockers, and marked *(beyond the
 ### Phase 6: applications
 - [x] Simulated demand and labour-supply environments (2026-10-01; §12.5): design D6 and five new laws; demand curves recovered in 70–100% of runs with oracle-level error and the right elasticity; the backward-bending laws show the limits (the bend must be inside the data and the instrument's reach; 3-constant forms are proposed by the search in only 20–45% of runs)
 - [x] Engel curves, pipeline (2026-10-01): `phase6_engel.py` selects the formula, tests the Working–Leser and quadratic forms, and runs the identification report; self-tested on synthetic FES-like data (§12.5)
-- [ ] Engel curves, data: register with the UK Data Service, obtain the FES extract used by BCK 2007 (couples, log total nondurable expenditure, head's gross earnings), export a CSV, run `phase6_engel.py --data`; replicate their NPIV curve; compare with Working–Leser and quadratic-in-log forms
+- [x] Engel curves, data (2026-10-01): BCK 2007's own FES 1995 sample is public (the `Engel95` data of the R package `np`; `fetch_data.py`), so no registration was needed. Seven budget shares × three samples (all couples, without children, with children), 21 runs; results in §12.5. The NPIV curve itself is not replicated (BCK's sieve and ours differ); the Working–Leser and quadratic forms are tested by their S tests and the quadratic term's AR interval
 - [ ] Gasoline demand (secondary; after the Engel curves): the NHTS 2001 household file is public but the price variable must be merged from an external source and the instrument definition confirmed in BHP 2012 before anything can be run
 - [x] Angrist–Krueger stress test (2026-10-01): replicates $F = 4.9$, OLS 0.071, 2SLS 0.089; with both instrument sets the method reports weak identification instead of a formula, and the AR interval for the return includes zero (§12.5)
 
@@ -669,13 +670,43 @@ Three experiments on the saved Phase 4 fronts, no new searches. Full tables: [`e
 - **The control shows what identification needs.** With $\pi = 1$ and the quadratic's peak at the median wage, recovery rises only to 20%, and now every miss is a search failure: the 3-constant form was a candidate in just 20% of runs, and whenever it was, it was selected. The hump stays at 75%, again equal to its coverage. So for these shapes the binding constraint is the search's coverage of 3-constant forms, not selection.
 - **What the identification diagnostic says.** Every demand run is "identified". The hump runs are "weakly identified" in 85% of cases at $\pi = 0.5$ and in 95% at $\pi = 1$, even where the form was recovered: candidates 0.2–0.4 sd away fit the moments as well as the truth (in one run better: $S = 3.5$ against 11.1), because a bump is a feature that the smoothing of $E[\cdot \mid Z]$ nearly erases. So the recovered hump is correct but not pinned down by the data, and the method says so. For the quadratic at $\pi = 0.5$, 45% of the wrong selections fail their own S test and another 30% are flagged as weakly identified; 25% pass as identified. Building this environment also exposed a weakness of the S test, a formula that misfits 2% of the sample badly inflates its own robust weight and escapes rejection, which is now handled by winsorizing the residuals inside the weight (THEORY.md §3.2).
 
-**Engel curves (§8.3): pipeline built, data pending.** `experiments/phase6_engel.py` takes the Family Expenditure Survey file (one row per household: budget share, log expenditure, the head's log earnings), which needs a UK Data Service registration. On synthetic FES-like data with a planted Working–Leser food share, measurement error in expenditure and log earnings as the instrument ($n = 1500$), it selects `0.452 − 0.060 log x` against the truth `0.45 − 0.06 log x`, reports "identified" (first-stage $F = 180$), and rejects neither the Working–Leser nor the quadratic form by their S tests (the quadratic nests the truth); plain PySR's own pick is `0.68^x`, the shape of the conditional mean. A pipeline check, not evidence.
+**Engel curves (§8.3): the method reports shapes and tests, not a confident formula.** Blundell, Chen & Kristensen's FES 1995 sample (1,655 married couples; 628 without children, 1,027 with; `experiments/phase6_engel.py`; full output in [experiments/phase6/engel.md](experiments/phase6/engel.md)): budget share on log total expenditure, instrumented by the head's log earnings ($K = 9$–$12$ spline instruments; first-stage $F$ = 31–59). Candidates from plain PySR, distillation, the library path and the template library, pooled; selection by BIC + structure; then the identification report, and the S tests of the Working–Leser (linear in log expenditure) and quadratic forms with an AR interval for the quadratic term. On synthetic FES-like data with a planted Working–Leser share the same pipeline recovers `0.452 − 0.060 log x` from `0.45 − 0.06 log x` and reports "identified".
+
+| Share | Selected, all couples | Shape | Verdict: all / no children / with children | Working–Leser rejected | Quadratic term's AR interval excludes 0 |
+|---|---|---|---|---|---|
+| food | `0.747^x` (share ∝ expenditure$^{-0.29}$) | decreasing | weak / weak / weak | no / no / no | no / no / no |
+| catering | constant 0.080 | flat | weak / weak / weak | no / no / no | no / no / no |
+| alcohol | `0.19 − 0.025 log x` (a template) | decreasing | weak / weak / weak | no / no / no | no / no / no |
+| fuel | `(log x)^{-5.3}` | decreasing | weak / weak / weak | no / no / at the margin (18.4 vs 18.3) | no / no / at the margin ([0.000, 0.084]) |
+| motor | `0.693^x`; within the confidence set: `0.025 / max(0.17, x − 5.74)` | decreasing | **rejected** / weak / **rejected** | **yes** / no / **yes** | **yes** / **yes** / **yes** |
+| fares | constant 0.015; within the set: `0.0028 x` | flat | **rejected** / weak / weak | no / no / no | no / no / no |
+| leisure | `0.00051 e^x` (share ∝ expenditure) | increasing | weak / weak / weak | no / no / no | no / no / no |
+
+- **The known answers hold.** The food share is compatible with Working–Leser in all three samples: the linear-in-log-expenditure form is never rejected and the quadratic term's AR interval always contains zero. The motor share needs a quadratic term: its AR interval excludes zero in all three samples and the Working–Leser form is rejected in two, the case Banks, Blundell & Lewbel (1997) make for some goods. Fuel sits at the margin in the with-children sample. Leisure is a luxury (increasing), food and fuel necessities (decreasing); catering and fares are flat within the data's power.
+- **No share is "identified".** With 628–1,655 households and shares whose noise dwarfs their structural variation, 24–40 candidates per share pass the S test, up to 0.25–2.8 sd of the selected curve apart; the report lists them instead of claiming one formula. The selection itself fails its own S test three times (motor twice, fares once); the pick restricted to the confidence set is then reported, a kinked hyperbola for motor and a line through the origin for fares.
+- **Plain PySR's own pick coincides with the IV selection** for food, fuel and motor in the full sample (`0.747^x`, `0.60^x`, `0.69^x`): on these data the conditional-mean and the structural shapes are close in the bulk of the sample, so the instrument's work shows in the tests and the set, not in the pick. The templates changed one pick (alcohol, all couples: the Working–Leser template replaced a quadratic in the level of log expenditure).
+- Cost: 21 runs in about 45 minutes, searches included.
 
 **Angrist–Krueger (1991) stress test (§8.3): the method reports weak identification, as it should.** 329,509 men born 1930–39; log weekly wage demeaned within birth year; schooling instrumented by quarter of birth (`experiments/phase6_ak.py`; full output in [experiments/phase6/ak.md](experiments/phase6/ak.md)).
 - *Replication.* With the 30 within-cohort quarter-of-birth contrasts (AK's Table V), the first-stage $F$ is 4.9 (Bound, Jaeger & Baker report 4.7–4.9), the OLS return 0.071 and the 2SLS return 0.089 (AK: 0.071 and 0.089). With the 3 overall contrasts, $F = 34$ and 2SLS gives 0.103.
 - *Selection.* Both instrument sets select `log(0.075 (s + 1))`, a concave return profile (0.10 per year at 9 years of schooling, 0.07 at 13, 0.06 at 17), which is also plain PySR's own pick: the moments do not move the formula away from the conditional-mean shape.
 - *The diagnostic says "weakly identified" with both sets.* Every other candidate survives its S test (25 of 25 with 30 instruments; 23 of 23 with 3), the farthest 1.1–1.3 sd from the selected formula. The identification-robust AR interval for the linear return is $[-0.01, 0.44]$ against the Wald interval $[0.06, 0.16]$ with 30 instruments, and $[-0.01, 0.26]$ against $[0.03, 0.18]$ with 3: 2–5 times wider, and including zero. With 3 instruments ($K = 4$) any formula with four constants fits the moments exactly (Proposition 4); with 30, the compulsory-schooling variation is too small to tell shapes apart. A confident formula would have been wrong here; the method does not give one.
 - The sieve-2SLS curve shows the NPIV instability the plan anticipated: with 3 instruments it moves by $-1.0$ log points between 8 and 12 years and by $+2.5$ between 12 and 16.
+
+### 12.6 Before the paper: search budget and templates (in progress)
+
+The cells where the Phase 2–6 search rarely proposed the law (§11, "Before the paper"): D1 and D3 × the kink and saturation laws (seeds 0–11, paired with the Phase 4 runs) and the two quadratic labour-supply laws (seeds 0–19, paired with Phase 6). Four arms per run: the base budget (40 iterations, size ≤ 15, from the saved fronts), base + the template library (`symiv.templates`: 11 textbook shapes with free constants, scored like any candidate), a large budget (200 iterations, 40 populations, size ≤ 25, two restarts pooled), and large + templates. Plain PySR and distillation only, plus the library path; the one-step front is left out so the arms compare. Script `experiments/phase7_budget.py`; tables in [experiments/phase7/budget.md](experiments/phase7/budget.md). **The large-budget searches run after the seeds job; the base arms are done:**
+
+| Cell | Law | Base: coverage → recovery | Base + templates: coverage → recovery |
+|---|---|---|---|
+| D1 | $x - 0.8\max(x - 1.5, 0)$ | 0% → 0% | 100% → **0%** |
+| D1 | $3x/(1 + x)$ | 50% → 42% | 100% → **67%** (+3 / −0) |
+| D3 | $x - 0.8\max(x - 1.5, 0)$ | 0% → 0% | 100% → **0%** |
+| D3 | $3x/(1 + x)$ | 25% → 0% | 100% → 8% |
+| Labour, $\pi = 0.5$ | $5 + 2\log w - 0.6(\log w)^2$ | 45% → 0% | 100% → **0%** |
+
+- **Templates solve coverage and expose separation.** With the true form guaranteed to be a candidate, the kink law is still never selected: a one- or two-constant formula such as $x^{0.54}$ beats the three-constant kink under BIC + structure, because the moments barely distinguish them (the kink pays about 22 more in penalty than $x^{c}$ and gains less than that in $J$). In D3 only 6% of the regressor's mass lies past the kink, and the identity $x$ wins 6 of 12 runs. The quadratic labour law at $\pi = 0.5$ loses the same way (Theorem 2's channel (I)). The saturation law, whose shape the moments do see, gains: 42% → 67% in D1.
+- So for the threshold and quadratic laws at $n = 2000$ the binding constraint is separation, not search; a larger budget cannot fix it, and the paper should say so. Whether the large budget raises coverage without templates, and whether it helps the saturation law, is what the running arm will show.
 
 ## 13. Code
 
@@ -689,6 +720,7 @@ src/symiv/
   metrics.py      function, extrapolation and elasticity errors; implied constants (§8.1)
   diagnostics.py  success / search failure / statistical failure (§7)
   identification.py  after selection: first-stage F, AR intervals, the formula confidence set and a verdict (§6.4)
+  templates.py    a fixed library of 11 economic shapes, scored as candidates like any formula (§11, §12.6)
   search.py       PySR wrappers; the loss is julia/moment_loss.jl (§6.6)
   baselines/      Phase 3: fixed_form (oracle and wrong-form IV), npiv (sieve 2SLS, KIV), deepiv (torch),
                   library_iv, distill (NPIV -> PySR), control_function (template SR), srit (SRIT-style)
@@ -696,20 +728,23 @@ experiments/
   smoke_pysr.py   one end-to-end run, plain PySR vs. symbolic IV
   phase2.py       Phase 2 Monte Carlo (resumable); phase2_report.py writes phase2/summary.md
   phase3.py       Phase 3 baselines (resumable, shardable); phase3_report.py writes phase3/summary.md
-  phase4.py       Phase 4 searches: saves every Pareto front (grids breadth, nscale, nomax, cf; resumable, shardable)
+  phase4.py       Phase 4 searches: saves every Pareto front (grids breadth, nscale, nomax, cf, headline; resumable, shardable)
   phase4_analysis.py  selection rules and metrics on the saved fronts (pure Python, parallel); --separation for §7
   phase4_report.py    phase4/summary.md and figures (matplotlib, light and dark)
   phase5_inference.py Phase 5: inference after selection on fresh samples (Theorem 1 (iii)); reuses the Phase 4 fronts
   phase5_split.py     Phase 5: candidates from one sample, selection on another (Corollary 2.3)
   phase5_identification.py  Phase 5: the identification diagnostic on every Phase 4 breadth run (Proposition 5)
+  phase5_discrete.py  Phase 5: a four-constant formula against four moments in D4 (Proposition 4); writes phase5/discrete.md
   phase5_report.py    phase5/summary.md
   phase6_simulated.py Phase 6: demand with a cost shifter (D6) and backward-bending labour supply (§8.2): search, analysis, report
   phase6_ak.py        Phase 6: the Angrist–Krueger stress test on the 1980 census extract (§8.3)
-  phase6_engel.py     Phase 6: the Engel-curve pipeline for the FES data; --synthetic runs a self-test (§8.3)
-  phase2/ ... phase6/  one JSON record per run, and summary.md
+  phase6_engel.py     Phase 6: Engel curves on the FES 1995 extract, 7 shares x 3 subsamples; --synthetic runs a self-test (§8.3)
+  phase7_budget.py    Before the paper: a larger search budget and the template library on the 3-constant and threshold laws (§12.6)
+  fetch_data.py       downloads the two public application files into data/ (§8.3)
+  phase2/ ... phase7/  one JSON record per run, and summary.md
 tests/            pytest; `pytest -m julia` runs the PySR tests, `pytest -m slow` the DeepIV test
 THEORY.md         Phase 5: assumptions, theorems and proofs (§7)
-data/             third-party application data, downloaded by hand and git-ignored: ak91.dta (§8.3)
+data/             third-party application data, downloaded by fetch_data.py and git-ignored: ak91.dta, engel95.csv (§8.3)
 ```
 
 **Setup** (tested with Python 3.12, PySR 2.6.0, SymbolicRegression.jl 2.5.1, Julia 1.11.9, Windows 11):
@@ -733,6 +768,13 @@ python experiments/phase4_analysis.py --workers 8               # about 1 hour
 python experiments/phase4_analysis.py --separation --workers 8  # about 10 minutes
 python experiments/phase4_report.py
 python experiments/phase5_inference.py --workers 8  # minutes; then phase5_split.py and phase5_report.py
+python experiments/phase5_identification.py --workers 8; python experiments/phase5_report.py
+python experiments/phase6_simulated.py --part search; then --part analyze --workers 8; --part report   # about 1 hour
+python experiments/fetch_data.py                  # ak91.dta and engel95.csv into data/ (needs ".[apps]")
+python experiments/phase6_ak.py; python experiments/phase6_engel.py --data data/engel95.csv            # about 2 hours
+python experiments/phase4.py --grid headline      # the paper's cells to 50 seeds: about 15 hours; then phase4_analysis.py,
+                                                  # phase4_report.py, phase5_identification.py, phase5_report.py
+python experiments/phase7_budget.py --part search; then --part analyze --workers 8; --part report      # about 6 hours
 ```
 
 Phase 4 runs for longer than a terminal session should be trusted with. On Windows, start each search as a detached process with logs, e.g. `Start-Process .venv\Scripts\python.exe -ArgumentList "-u","experiments\phase4.py",... -WindowStyle Hidden -RedirectStandardOutput experiments\phase4\logs\search-0.out.log -RedirectStandardError experiments\phase4\logs\search-0.err.log`; elsewhere use `nohup ... &`. Every script skips finished runs, so an interrupted job resumes where it stopped. `logs/` is git-ignored.
@@ -834,5 +876,5 @@ print(best.fitted_expr, diagnose(best, s.law, s.X, s.y, crit).outcome)
 - Kuang, S. & Lin, X. (2026). Instrumental variables system identification with $L^p$ consistency. *Proceedings of Machine Learning Research*, 331. https://arxiv.org/abs/2511.09024
 - Kacprzyk, K. et al. (2024). ODE discovery for longitudinal heterogeneous treatment effects inference. *ICLR*. https://arxiv.org/abs/2403.10766
 - Yan, B., Yang, G., Wang, J. & Lu, D. Causally constrained symbolic regression for mining interpretable functions from observational data. SSRN 6879831. https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6879831
-- Zeiringer, T., Garnier, H. & Horn, M. (2026). Instrumental variable framework for nonlinear continuous-time system identification. *J. Franklin Institute*. https://doi.org/10.1016/j.jfranklin.2026.108619
-- Li, R., Feng, Q. & Cui, Y. (2026). Causally guided symbolic regression for basin-scale water balance change. *J. Hydrology: Regional Studies*. https://doi.org/10.1016/j.ejrh.2026.103355
+- Zeiringer, T., Garnier, H. & Horn, M. (2026). Instrumental variable framework for nonlinear continuous-time system identification. *J. Franklin Institute*, 363(7), 108619. https://doi.org/10.1016/j.jfranklin.2026.108619
+- Li, R., Feng, Q. & Cui, Y. (2026). Causally guided symbolic regression for basin-scale water balance change in the China–Mongolia arid region. *J. Hydrology: Regional Studies*, 65, 103355. https://doi.org/10.1016/j.ejrh.2026.103355

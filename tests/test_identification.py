@@ -43,3 +43,16 @@ def test_wrong_selection_rejected():
     rep = identification_report("1.0*x0 + 0.5", ["2.0*x0**0.7"], s.X, s.y, crit)
     assert rep.verdict == "rejected"
     assert rep.reasons[0].startswith("the selected formula fails")
+
+
+def test_flat_selection_has_a_finite_distance_scale():
+    # y = 0.3 + noise, no dependence on X: a constant is selected; alternatives are measured against 0.1 sd(y).
+    rng = np.random.default_rng(0)
+    n = 1000
+    Z = rng.normal(size=(n, 1))
+    X = np.exp(0.5 * Z[:, 0] + 0.5 * rng.normal(size=n))[:, None]
+    y = 0.3 + 0.05 * rng.normal(size=n)
+    crit = gmm_criterion(Z)
+    rep = identification_report("0.3", ["0.3 + 0.01*log(x0)", "0.2*x0**0.5"], X, y, crit)
+    assert all(np.isfinite(c.distance) and c.distance < 100 for c in rep.candidates), [c.distance for c in rep.candidates]
+    assert rep.max_distance < 100

@@ -222,35 +222,47 @@ def identification_report(
     tau: float = 0.2,
     envelope_factor: float = 3.0,
     cap_factor: float = 5.0,
+    sd_floor: float = 0.1,
     seed: int = 0,
 ) -> IdentificationReport:
     """Is the selected formula identified by the data? (module docstring)
 
     tau: a candidate the data do not reject counts as a different formula when its fit is more than
     tau standard deviations of f_hat away from f_hat (trimmed).
+    sd_floor: the distance scale is the sample sd of f_hat, but never below sd_floor times the sd of y, so that a
+    flat selected formula still has a meaningful scale (alternatives are then measured against a tenth of the
+    outcome's spread).
     envelope_factor: constants are restricted to formulas whose values on the sample stay within this
-    multiple of max |y| (the sample version of the envelope in (A3)).
-    cap_factor: inside the weight matrix of each formula's AR statistic, its residuals are winsorized at this
-    many robust standard deviations of its own residuals at the two-step fit (never below their 99.5%
-    quantile). A formula that misfits a few observations badly would otherwise inflate its own weight and
-    pass the S test. At the true form the residuals are the errors, so the cap is about five error standard
-    deviations; the share of error variance beyond it, which is what the cap costs in validity, is negligible
-    for Gaussian-like errors.
+    multiple of max |y| (the sample version of the envelope in (A3)). The true form stays feasible as long
+    as max |f0(X_i)| <= envelope_factor * max |y_i|, which holds unless the errors systematically offset the
+    law where it is largest (THEORY.md §3.2, condition (E)).
+    cap_factor: inside the weight matrix of each formula's AR statistic, its residuals are winsorized at
+    max(cap_factor, sqrt(2 ln n)) robust standard deviations of its own residuals at the two-step fit (never
+    below their 99.5% quantile). A formula that misfits a few observations badly would otherwise inflate its
+    own weight and pass the S test. At the true form the residuals are the errors, so the cap is about five
+    error standard deviations; the cost in validity is the share of the moment variance beyond it: negligible
+    for Gaussian-like errors, a size of 10-15% instead of 5% for t_3 errors (THEORY.md §3.2).
     """
     d = X.shape[1]
     envelope = envelope_factor * float(np.max(np.abs(y)))
     keep = int(np.ceil(0.95 * len(y)))  # the distance ignores the 5% largest differences: a pole, or a tail the moments do not see
     floor = 1e-8 * float(np.std(y))
+    # The cap grows slowly with n (it exceeds 5 only beyond n = 270,000), which makes the capped AR statistic exact in
+    # the limit for any error with E[||b||^2 u^2] < inf; at finite n its size is governed by the share of the moment
+    # variance beyond the cap (THEORY.md §3.2).
+    cap_n = max(cap_factor, float(np.sqrt(2 * np.log(len(y)))))
 
     def cap_for(resid: np.ndarray) -> float:
         r = np.abs(resid)
-        return max(cap_factor * max(1.4826 * float(np.median(r)), floor), float(np.quantile(r, 0.995)))
+        return max(cap_n * max(1.4826 * float(np.median(r)), floor), float(np.quantile(r, 0.995)))
 
     form = parametrize(selected_expr, d)
     fit = fit_gmm(form, X, y, crit, bound=bound, seed=seed)
     theta_hat = fit.theta
     f_hat = form(X, theta_hat)
-    sd = float(f_hat.std()) if np.all(np.isfinite(f_hat)) and f_hat.std() > 0 else 1.0
+    # The distance scale: the sd of f_hat over the sample, floored at sd_floor * sd(y). A flat selected formula (a
+    # constant, whose sample sd is rounding noise) would otherwise make every alternative astronomically far.
+    sd = max(float(f_hat.std()) if np.all(np.isfinite(f_hat)) else 0.0, sd_floor * float(np.std(y)))
     restrict = dict(envelope=envelope, cap=cap_for(y - f_hat if np.all(np.isfinite(f_hat)) else y - y.mean()))
     se = wald_se(form, X, y, crit, theta_hat)
     c = float(chi2.ppf(level, crit.K))

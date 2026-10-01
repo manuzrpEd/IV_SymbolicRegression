@@ -65,20 +65,26 @@ def _safe(rec):
     try:
         return work(rec)
     except Exception:
-        return {k: rec[k] for k in ("design", "law", "seed")} | {"error": traceback.format_exc()}
+        return {k: rec[k] for k in ("design", "law", "seed", "n", "params")} | {"error": traceback.format_exc()}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--recompute", action="store_true", help="ignore the saved rows and rewrite the file (after a change to the diagnostic)")
     args = parser.parse_args()
     OUT_DIR.mkdir(exist_ok=True)
     recs = [json.loads(line) for line in (P4 / "analysis.jsonl").read_text().splitlines() if line.strip()]
-    recs = [r for r in recs if "error" not in r and r["grid"] == "breadth"][: args.limit]
-    print(f"identification: {len(recs)} runs", flush=True)
+    out_file = OUT_DIR / "identification.jsonl"
+    rkey = lambda r: (r["design"], r["law"], r["seed"], r["n"], json.dumps(r["params"], sort_keys=True))  # noqa: E731
+    done = set()
+    if out_file.exists() and not args.recompute:  # resumable: saved rows are kept (the headline seeds of README §11 are added later)
+        done = {rkey(r) for r in map(json.loads, out_file.read_text().splitlines()) if "error" not in r}
+    recs = [r for r in recs if "error" not in r and r["grid"] == "breadth" and rkey(r) not in done][: args.limit]
+    print(f"identification: {len(recs)} runs to do ({len(done)} done)", flush=True)
     n_err = 0
-    with ProcessPoolExecutor(args.workers) as pool, (OUT_DIR / "identification.jsonl").open("w") as f:
+    with ProcessPoolExecutor(args.workers) as pool, out_file.open("w" if args.recompute else "a") as f:
         futures = [pool.submit(_safe, r) for r in recs]
         for i, fut in enumerate(as_completed(futures), 1):
             row = fut.result()

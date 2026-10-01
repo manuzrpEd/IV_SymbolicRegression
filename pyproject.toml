@@ -19,6 +19,7 @@ dependencies = [
 search = ["pysr>=1.0"]
 deep = ["torch>=2.0"]
 dev = ["pytest>=8", "matplotlib>=3.8"]  # matplotlib: experiment figures
+apps = ["pandas>=2.0", "pyreadr>=0.5"]  # the applications' data files (Stata, R)
 
 [tool.setuptools.packages.find]
 where = ["src"]

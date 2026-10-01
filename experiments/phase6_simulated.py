@@ -106,11 +106,11 @@ def analyze_all(args) -> None:
     runs = [json.loads(line) for f in sorted(OUT_DIR.glob("runs-*.jsonl")) for line in f.read_text().splitlines() if line.strip()]
     out_file = OUT_DIR / "analysis.jsonl"
     done = set()
-    if out_file.exists():
+    if out_file.exists() and not args.recompute:
         done = {key(r) for r in map(json.loads, out_file.read_text().splitlines()) if "error" not in r}
     todo = [r for r in runs if key(r) not in done and not r["errors"]]
     print(f"analysis: {len(todo)} runs to do ({len(done)} done)", flush=True)
-    with ProcessPoolExecutor(args.workers) as pool, out_file.open("a") as f:
+    with ProcessPoolExecutor(args.workers) as pool, out_file.open("w" if args.recompute else "a") as f:
         futures = [pool.submit(_analyze, r) for r in todo]
         for i, fut in enumerate(as_completed(futures), 1):
             res = fut.result()
@@ -180,6 +180,7 @@ def main() -> None:
     parser.add_argument("--shard", type=int, default=0)
     parser.add_argument("--of", type=int, default=1)
     parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument("--recompute", action="store_true", help="analyze: ignore the saved analysis and rewrite it")
     args = parser.parse_args()
     warnings.filterwarnings("ignore")
     {"search": search, "analyze": analyze_all, "report": report}[args.part](args)

@@ -88,7 +88,8 @@ def describe(expr, law, X, recovered: bool) -> dict:
     )
 
 
-def analyze(rec: dict) -> dict:
+def analyze(rec: dict, extra_sets: dict[str, list[str]] | None = None) -> dict:
+    """`extra_sets`: further named candidate sets (expression strings), e.g. the template library; they join the pool."""
     warnings.filterwarnings("ignore")
     s = simulate(rec["design"], rec["law"], n=rec["n"], seed=rec["seed"], **rec["params"])
     X, y, law, n, d = s.X, s.y, s.law, s.n, s.X.shape[1]
@@ -103,6 +104,8 @@ def analyze(rec: dict) -> dict:
     sets = {g: list(fr["exprs"]) for g, fr in rec["fronts"].items()}
     if d == 1:
         sets["library"] = library_path_candidates(X, y, crits["default"])
+    for name, exprs in (extra_sets or {}).items():
+        sets[name] = list(exprs)
     if "onestep" in sets and "distill" in sets:
         sets["iv"] = sets["onestep"] + sets["distill"]
     sets["pooled"] = [e for name in list(sets) if name not in ("iv", "pooled") for e in sets[name]]

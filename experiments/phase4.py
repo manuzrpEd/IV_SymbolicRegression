@@ -1,6 +1,6 @@
 """Phase 4 (README §11), part 1: candidate generation. Every Pareto front is saved.
 
-    python experiments/phase4.py --grid breadth --shard 0 --of 3   # also: nscale, nomax, cf
+    python experiments/phase4.py --grid breadth --shard 0 --of 3   # also: nscale, nomax, cf, headline
     python experiments/phase4_analysis.py                          # selection rules and metrics (pure Python)
     python experiments/phase4_report.py                            # tables and figures
 
@@ -15,6 +15,8 @@ Grids:
 - nscale:  power and log laws, D1 strong setting, n = 1000 ... 50000, 12 seeds; one-step up to 5000, plain up to 10000
 - nomax:   D1 default and strong, power and log laws, operators without `max`, 12 seeds
 - cf:      D2 with gamma = 0.45 and 0.6, power and log laws, 12 seeds
+- headline: seeds 12-49 for the breadth cells D1 and D3 x {log, power}, D5 x all laws, and the n-scaling cells at
+           n <= 5000, recorded under their original grid labels (README §11, "Before the paper")
 
 Each finished run is appended to experiments/phase4/runs-<grid>-<shard>.jsonl; rerunning skips finished runs.
 """
@@ -40,6 +42,7 @@ SEARCH = dict(niterations=40, maxsize=15, temp_equation_file=True)  # as in Phas
 NOMAX_OPS = ["+", "-", "*", "/", "^"]
 DISTILL_POINTS = 5000
 SEEDS = 12  # 20 planned; cut for compute (PySR already uses all cores, so sharding does not add throughput)
+HEADLINE_SEEDS = range(12, 50)  # grid "headline": the paper's cells raised to 50 seeds
 STRONG = dict(pi=0.7, rho=1.2)
 
 
@@ -76,6 +79,20 @@ def units(grid: str):
             for law in ("power", "log"):
                 for seed in range(SEEDS):
                     yield unit("D2", law, 2000, seed, f"gamma{gamma}", {"gamma": gamma}, gens=("distill", "cf"))
+    elif grid == "headline":
+        # Seeds 12-49 for the cells the paper leans on (README §11, "Before the paper"). The records keep the grid
+        # label of the cell they extend, so the analysis and report merge them with the Phase 4 runs; the report's
+        # aggregate tables use the balanced grid (seeds < SEEDS) only. Seeds are the outer loop, so an interrupted
+        # job leaves every cell with the same number of seeds.
+        for seed in HEADLINE_SEEDS:
+            for law in ("log", "power"):
+                yield unit("D1", law, 2000, seed) | {"grid": "breadth"}
+                yield unit("D3", law, 2000, seed) | {"grid": "breadth"}
+            for law in ("log", "power", "kink", "saturation", "cobb_douglas"):
+                yield unit("D5", law, 2000, seed) | {"grid": "breadth"}
+            for law in ("power", "log"):
+                for n in (1000, 2000, 5000):
+                    yield unit("D1", law, n, seed, "strong", STRONG) | {"grid": "nscale"}
     else:
         raise ValueError(grid)
 
@@ -144,7 +161,7 @@ def run(u: dict) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--grid", required=True, nargs="+", choices=["breadth", "nscale", "nomax", "cf"],
+    parser.add_argument("--grid", required=True, nargs="+", choices=["breadth", "nscale", "nomax", "cf", "headline"],
                         help="one or more grids, run in order in this process")
     parser.add_argument("--shard", type=int, default=0)
     parser.add_argument("--of", type=int, default=1)
