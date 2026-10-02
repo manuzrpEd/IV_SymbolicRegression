@@ -131,35 +131,36 @@ Coverage (a candidate of the true form exists) is a property of the candidate se
 
 ## 3. The identification diagnostic on the Phase 4 runs (Proposition 5)
 
-288 runs (0 errors): every Phase 4 breadth run, the pooled candidates and the formula selected from them by BIC + structure, on the run's own data. Verdicts: *identified*; *weakly identified* (an AR interval of a constant reaches the bound, or a candidate the data do not reject is more than τ = 0.2 sd from the selected formula in the trimmed metric); *rejected* (the selected formula fails its own S test). Outcome of the run: recovered, statistical failure (the true form was a candidate but lost) or search failure (it was not a candidate). Flagged = weakly identified or rejected.
+630 runs (0 errors): every Phase 4 breadth run, the pooled candidates and the formula selected from them by BIC + structure, on the run's own data. Verdicts: *identified*; *weakly identified* (an AR interval of a constant reaches the bound, or a candidate the data do not reject is more than τ = 0.2 sd from the selected formula in the trimmed metric); *rejected* (the selected formula fails its own S test). Outcome of the run: recovered, statistical failure (the true form was a candidate but lost) or search failure (it was not a candidate). Flagged = weakly identified or rejected.
 
 | Design | Runs | Identified | Weakly identified | Rejected | First-stage F, median | Farthest member of the set (sd), median | Candidates not rejected, median |
 |---|---|---|---|---|---|---|---|
-| D1 confounding | 60 | 67% | 28% | 5% | 160 | 0.08 | 64% |
+| D1 confounding | 136 | 84% | 12% | 4% | 162 | 0.04 | 68% |
 | D2 heterosk. first stage | 60 | 83% | 12% | 5% | 137 | 0.04 | 57% |
-| D3 simultaneity | 48 | 85% | 2% | 12% | 331 | 0.08 | 68% |
+| D3 simultaneity | 124 | 93% | 2% | 6% | 330 | 0.07 | 68% |
 | D4 discrete Z (J = 4) | 60 | 60% | 35% | 5% | 642 | 0.13 | 63% |
-| D5 weak Z (π = 0.1) | 60 | 0% | 85% | 15% | 2 | 0.68 | 88% |
+| D5 weak Z (π = 0.1) | 250 | 0% | 84% | 16% | 3 | 0.77 | 88% |
 
 **By the run's outcome** (D1–D4 and D5 separately; 95% Wilson intervals):
 
 | Designs | Outcome | Runs | Flagged | Of which: rejected | True form in the confidence set |
 |---|---|---|---|---|---|
-| D1–D4 | recovered | 123 | 5/123 (4%, 2–9) | 1% | 122/123 (99%, 96–100) |
-| D1–D4 | statistical failure | 29 | 13/29 (45%, 28–62) | 10% | 29/29 (100%, 88–100) |
-| D1–D4 | search failure | 76 | 43/76 (57%, 45–67) | 14% | – |
-| D5 | statistical failure | 25 | 25/25 (100%, 87–100) | 16% | 25/25 (100%, 87–100) |
-| D5 | search failure | 35 | 35/35 (100%, 90–100) | 14% | – |
+| D1–D4 | recovered | 257 | 9/257 (4%, 2–7) | 2% | 254/257 (99%, 97–100) |
+| D1–D4 | statistical failure | 43 | 13/43 (30%, 19–45) | 7% | 43/43 (100%, 92–100) |
+| D1–D4 | search failure | 80 | 43/80 (54%, 43–64) | 14% | – |
+| D5 | recovered | 1 | 1/1 (100%, 21–100) | 0% | 1/1 (100%, 21–100) |
+| D5 | statistical failure | 103 | 103/103 (100%, 96–100) | 23% | 102/103 (99%, 95–100) |
+| D5 | search failure | 146 | 146/146 (100%, 97–100) | 10% | – |
 
-Proposition 5 (a): across all 177 runs in which the true form was a candidate, it is in the confidence set in 176/177 (99%, 97–100) (nominal ≥ 95%).
+Proposition 5 (a): across all 404 runs in which the true form was a candidate, it is in the confidence set in 400/404 (99%, 97–100) (nominal ≥ 95%).
 
 **Threshold sensitivity.** Share of runs flagged for other values of τ (the AR-bound and rejection criteria unchanged):
 
 | τ (sd) | D1–D4, recovered (false alarms) | D1–D4, statistical failures | D1–D4, search failures | D5, all |
 |---|---|---|---|---|
-| 0.05 | 40% | 90% | 97% | 100% |
-| 0.1 | 16% | 79% | 82% | 100% |
-| 0.2 | 4% | 45% | 57% | 100% |
-| 0.3 | 2% | 24% | 34% | 98% |
-| 0.5 | 1% | 14% | 18% | 87% |
+| 0.05 | 40% | 79% | 96% | 100% |
+| 0.1 | 14% | 58% | 78% | 100% |
+| 0.2 | 4% | 30% | 54% | 100% |
+| 0.3 | 2% | 16% | 32% | 98% |
+| 0.5 | 2% | 9% | 18% | 86% |
 

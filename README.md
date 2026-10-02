@@ -116,8 +116,13 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
 **Revised after Phase 4 (§12.3).**
 - **The instrument does its work when formulas are scored, not when they are generated.** Plain PySR's squared-error front, scored by MMSC, recovered the law as often as the IV-specific generators in designs D1, D2 and D4. In the strong-endogeneity power-law cell, PySR's own pick never recovered the form (0/12 at every $n$), yet its front contained the form in every run and MMSC selected it in 67–100% of runs. IV-specific generators matter where endogeneity changes the shape of $E[y \mid X]$ (simultaneity, D3).
 - **Pooling did not beat the distilled front alone.** It adds coverage, but also wrong formulas that outscore the truth.
-- **The selection rule needs a structure term.** Plain BIC lets near-duplicates of the law win even at $n = 50\,000$. Adding $w \cdot \text{nodes} \cdot \ln m$ (a per-node version of Theorem 2's $\log\lvert\mathcal S_L\rvert$) raised recovery from 51% to 60% and gave 100% from $n = 5000$ in the $n$-scaling cells.
+- **The selection rule needs a structure term.** Plain BIC lets near-duplicates of the law win even at $n = 50\,000$. Adding $w \cdot \text{nodes} \cdot \ln m$ (a per-node version of Theorem 2's $\log\lvert\mathcal S_L\rvert$) raised recovery from 51% to 60% and gave 98–100% from $n = 5000$ in the $n$-scaling cells.
 - **The method to present:** generate candidates cheaply (plain PySR, and PySR distilled from a sieve-2SLS curve), then select by MMSC with the structure term. Contribution: the selection rule, its theory (§7) and diagnostics.
+
+**Revised after the budget experiment (§12.6, 2026-10-02).**
+- **A fixed template library of economic shapes joins the candidate generators.** Scored like any candidate, it gives full coverage of the textbook shapes at no search cost and raises recovery where the moments separate the law (the quadratic labour law 20% → 75%; the saturation law 42% → 67%).
+- **A larger free search does not.** Eight times the budget raised coverage from 25% to 55% of runs but recovery only from 10% to 19%: the extra candidates bring extra wrong formulas that outscore the truth, Theorem 2's complexity channel and the Phase 4 pooling result again. The size of the candidate pool is a cost; candidates should be pruned before pooling, not added wholesale.
+- **Two limits are stated, not fixed:** a threshold law whose kink the instruments barely see (the kink law in D1–D3), and a bend that lies at the edge of the data ($\pi = 0.5$ labour supply). The diagnostic of §6.4 flags part of these cases; the rest are honest failures of identification, not of the method.
 
 ## 5. Model and identification
 
@@ -230,7 +235,7 @@ Let $T h = E[h(X) \mid Z]$.
 
 **Phase 4 evidence (§12.3).**
 - **Theorem 1 holds in the data only with a structure term.**
-  - With BIC + structure, recovery reached 100% from $n = 5000$ to $50\,000$ for every generator in the $n$-scaling cells.
+  - With BIC + structure, recovery reached 98–100% at $n = 5000$ (50 seeds) and 100% from $n = 10\,000$ to $50\,000$ for every generator in the $n$-scaling cells.
   - With BIC alone, 1–3 of 12 runs still chose a near-duplicate at every $n$. These formulas have the same number of constants as $f_0$ but more nodes. An example is $(x\,e^{x/\max(c,\,x)})^{\theta}$, which equals $e^{\theta}x^{\theta}$ wherever $x > c$.
 - **The separation that predicts selection is not $\delta_L$ over all wrong trees.** Measured that way it was about 0 in every cell, and unrelated to recovery (Spearman 0.10), for two reasons:
   - trees with more constants than $f_0$ approximate it arbitrarily well;
@@ -306,7 +311,7 @@ The econometrician sees only $(y, X, Z)$.
   - It gives the lowest errors on D1; on D2 its form recovery falls to 0% (power law) and 42% (log law).
   - Raising $\gamma$ did not make it fail more, because $\gamma$ also strengthens the first stage (§12.3).
 - Recovery tracks $n\,\delta_L^2$. **Supported in a corrected form (§7, §12.3):** recovery tracks a penalty-adjusted margin over wrong formulas with at most $p_0$ constants, not $\delta_L$ over all trees.
-- Degradation under weak instruments is documented as part of the contribution. **Documented.** With $\pi = 0.1$ (D5), recovery is 0% for every law, and selected formulas err by 0.2–1.2 sd in sample. Since Phase 5 the identification diagnostic (§6.4) flags every D5 run, so the method reports weak identification there instead of a formula (§12.4).
+- Degradation under weak instruments is documented as part of the contribution. **Documented.** With $\pi = 0.1$ (D5), recovery is 0–2% for every law over 50 seeds, and selected formulas err by 0.3–1.0 sd in sample. Since Phase 5 the identification diagnostic (§6.4) flags every D5 run, so the method reports weak identification there instead of a formula (§12.4).
 
 ### 8.2 Simulated economic environments
 
@@ -350,8 +355,8 @@ The econometrician sees only $(y, X, Z)$.
 | Oscillatory formulas exploit ill-posedness | Bounded constants, restricted operators, nesting constraints (§6.1) |
 | Criterion ties at zero with finite $K$ | $K$ much larger than the number of constants and growing with $n$, or MMR (§6.2) |
 | Noisier, non-convex search (the moment criterion is flatter than MSE) | Several restarts; seed with the plain-SR front; report search failures separately (§7). Phase 2: only 2 of 200 failures were search failures at $n = 2000$ |
-| Selection, not search, is the bottleneck: a penalty too weak for the size of the search space (contrived formulas win) or too strong for weak separation (simpler wrong formulas win) | **Phase 4:** a structure term fixes the first failure (60% vs. 51% recovery; 100% from $n = 5000$). The cross-fitted criterion, larger $K$ and dropping `max` did not help. The second failure is what the separation margin measures (§12.3) |
-| The search never proposes the law (laws with a threshold or a ratio) | **Realized in Phase 4:** no generator produced the kink law in more than 33% of runs, and the saturation law appeared in 8–58% of runs. Next steps: templates such as $a x + b\max(x - c, 0)$, a larger search budget, and reporting a search failure (§7) instead of a wrong formula |
+| Selection, not search, is the bottleneck: a penalty too weak for the size of the search space (contrived formulas win) or too strong for weak separation (simpler wrong formulas win) | **Phase 4:** a structure term fixes the first failure (60% vs. 51% recovery; 98–100% from $n = 5000$). The cross-fitted criterion, larger $K$ and dropping `max` did not help. The second failure is what the separation margin measures (§12.3) |
+| The search never proposes the law (laws with a threshold or a ratio) | **Realized in Phase 4:** no generator produced the kink law in more than 33% of runs, and the saturation law appeared in 8–58% of runs. **Tested (§12.6):** a fixed library of economic-shape templates gives full coverage and recovers the quadratic labour law (20% → 75%) and the saturation law (42% → 67%) where the moments separate them; an eight-fold search budget raises coverage (25% → 55%) but not recovery (10% → 19%), because more candidates bring more wrong formulas that outscore the truth. The kink law stays unrecovered: a limit the paper states |
 | Library IV or NPIV → distillation match the method | Laws outside any finite library; if the one-step method does not win, reposition (§3.2). **Realized for distillation (Phase 3):** distillation + MMSC beat the one-step search, so the contribution was repositioned to IV-scored selection over candidates (§4) |
 | Misspecification on real data | Stability across instrument bases and weights (§6.5) |
 | Additive-error assumption fails | Out of scope for the paper; IV quantile extension (§5) *(beyond the paper)* |
@@ -407,7 +412,7 @@ The econometrician sees only $(y, X, Z)$.
 - [x] Library + MMSC: the Lasso path scored by MMSC recovers the log law in 75–100% of runs (D1–D4), against 28–52% with cross-validation. The Phase 3 failures were the tuning; the library's limit is coverage
 - [x] Control-function SR on D2 with $\gamma \in \{0.45, 0.6\}$: power-law recovery stays at 0%; log-law recovery rises (83%, 100%), because $\gamma$ also strengthens the first stage. Inconclusive by design
 - [x] All laws × D1–D5 at $n = 2000$ (5 laws, 24 cells, 12 seeds)
-- [x] Recovery as $n$ grows ($1\,000 \to 50\,000$), strong setting: 100% from $n = 5000$ with the structure term; BIC alone plateaus at 75–92% (near-duplicates)
+- [x] Recovery as $n$ grows ($1\,000 \to 50\,000$), strong setting: 98–100% from $n = 5000$ with the structure term (50 seeds at $n \le 5000$ since 2026-10-02); BIC alone plateaus at 75–92% (near-duplicates)
 - [x] Selection rules: structure term (best: +9 points); cross-fitted criterion (worst: −23 points)
 - [x] Default $K$: doubling $K$ at the selection stage changes nothing (51% vs. 51%); keep $n^{1/3}$
 - [x] Operator ablation without `max`: no gain (all paired differences within 3 runs, $p \ge 0.25$); contrived winners use other operators
@@ -416,7 +421,7 @@ The econometrician sees only $(y, X, Z)$.
 - [x] Write up the first results (§12.3)
 - [ ] Remaining variations: $\rho$, noise level, $J$ in D4, the bound $C$, and 20 seeds instead of 12
 - [ ] Control function: a design that breaks its assumption without strengthening the instrument (e.g. vary $\gamma$ at a fixed variance of $X$ given $Z$)
-- [ ] Search coverage for the kink and saturation laws: templates, a larger budget, more restarts
+- [x] Search coverage for the kink and saturation laws: templates, a larger budget, more restarts: done 2026-10-02 (§12.6). Templates recover the saturation law in 67% of D1 runs (from 42%); an eight-fold budget raises coverage but not recovery; nothing recovers the kink law at $n = 2000$
 - [ ] Structure term: tune $w$ and the per-node cost; check the loss on long true forms (saturation)
 - [x] Weak-identification warning: done in Phase 5 (`symiv.identification`, §6.4, §12.4): first-stage strength, AR intervals and the formula confidence set
 
@@ -431,7 +436,7 @@ The econometrician sees only $(y, X, Z)$.
 - [x] Theorem 3 (b): consistency as $L$ grows, proved directly on a compact support; approximation within a Lipschitz ball by `max` hinges (one regressor) and by Bernstein polynomials (any number of regressors)
 - [x] Simulated Theorem 1 (iii) on the Phase 4 fronts: nominal coverage on fresh samples; 83–90% on the selection sample; under the weak instrument only AR sets keep their coverage
 - [x] Tested Corollary 2.3: fewer wrong candidates beat the truth when selection uses an independent sample, but full-sample selection with the structure term recovers more
-- [x] Proposition 5: an identification-robust confidence set for the formula, the diagnostic built on it (`symiv.identification`, §6.4), and its evaluation on all 288 Phase 4 breadth runs: every D5 run flagged, 4% false alarms, 99% coverage of the true form
+- [x] Proposition 5: an identification-robust confidence set for the formula, the diagnostic built on it (`symiv.identification`, §6.4), and its evaluation on all 630 Phase 4 breadth runs (after the 50-seed extension; recomputed 2026-10-02): every D5 run flagged, 4% false alarms, 99% coverage of the true form
 - [x] Rates: parametric when the law is in the class (Corollary 1.1); for growing $L$, reduced to a modulus of continuity on the formula sieve (Proposition 3.3)
 - [ ] Bound that modulus for formula sieves (the open rate problem; $\mathcal F_L - f_0$ is not a linear space)
 - [ ] Theorem 3 (b) on unbounded supports: envelope-respecting approximants and a deviation bound with an unbounded envelope
@@ -441,10 +446,10 @@ The econometrician sees only $(y, X, Z)$.
 
 ### Before the paper (required)
 - [x] Weak-identification diagnostic (2026-10-01): first-stage $F$, AR intervals for the constants and the formula confidence set of THEORY.md Proposition 5, in `symiv.identification`; evaluated on every Phase 4 breadth run (§12.4)
-- [ ] **More seeds in the headline cells.** Twelve seeds give recovery rates with intervals about 25 points wide, too wide for the comparisons the paper rests on (pooled vs. distilled candidates, BIC vs. BIC + structure, recovery as $n$ grows). Raise the cells the paper leans on to 50 seeds, as in Phase 2: D1 default and strong × log and power; D3 × log and power; D5 × all five laws; the $n$-scaling cells at $n \in \{1000, 2000, 5000\}$. About 650 extra searches, roughly a day of compute at the Phase 4 rates; the scripts resume, so this can run in the background. **In progress:** the 570 searches (`phase4.py --grid headline`) were launched on 2026-10-01 as a detached job of about 15 hours; the Phase 4 re-analysis and report, the identification diagnostic on the new runs and the budget experiment below are queued behind it
+- [x] **More seeds in the headline cells** (done 2026-10-02; §12.3). The 15 cells the paper leans on (D1 default and strong × log and power; D3 × log and power; D5 × all five laws; the $n$-scaling cells at $n \le 5000$) now have 50 seeds: 570 extra searches in 11 hours, no errors. The headline numbers moved little and their intervals shrank to ±7–14 points: D1 100% for both laws; D3 88% (log) and 60% (power, from 33% at 12 seeds, with coverage 84%); D5 0–2% for every law; $n$-scaling with the structure term 50% → 74% → 98% for the power law and 90% → 94% → 100% for the log law at $n = 1000, 2000, 5000$
 - [x] The simulated economic environments (demand with a cost shifter; labour supply) and the Angrist–Krueger stress test are done (§12.5)
 - [x] One real application with a known functional form (2026-10-01): the Engel curves on BCK 2007's public FES 1995 extract (§12.5). The food share is compatible with Working–Leser in all three samples, the motor share needs a quadratic term, and on 628–1,655 households the method reports weak identification rather than a confident formula
-- [ ] **A search budget that reaches three-constant formulas.** Selection chose the true form whenever it was a candidate, but the search proposed the quadratic-in-logs labour law in only 20–45% of runs, the kink law in at most 33% and the saturation law in 8–58% (§12.3, §12.5): the Phase 2–6 budget (40 iterations, maximum size 15, default operators) is what every result so far was obtained with. Before the paper, rerun the cells with a three-constant or threshold law under a larger budget (more iterations and populations, size up to 25, restarts with different seeds) and with templates for the economic shapes (`a + b log w + c (log w)^2`, `a x + b max(x − c, 0)`); report coverage before and after, since coverage, not selection, is the binding constraint in those cells. **In progress** (`experiments/phase7_budget.py`, §12.6): the template library is built (`symiv.templates`) and the base-budget arms are analysed; on the saved fronts, templates give 100% coverage but recover the kink law in 0 of 24 runs and the quadratic labour law in 0 of 20, so for those laws the binding constraint is separation, not coverage. The large-budget searches run after the seeds job
+- [x] **A search budget that reaches three-constant formulas.** Selection chose the true form whenever it was a candidate, but the search proposed the quadratic-in-logs labour law in only 20–45% of runs, the kink law in at most 33% and the saturation law in 8–58% (§12.3, §12.5): the Phase 2–6 budget (40 iterations, maximum size 15, default operators) is what every result so far was obtained with. Before the paper, rerun the cells with a three-constant or threshold law under a larger budget (more iterations and populations, size up to 25, restarts with different seeds) and with templates for the economic shapes (`a + b log w + c (log w)^2`, `a x + b max(x − c, 0)`); report coverage before and after, since coverage, not selection, is the binding constraint in those cells. **Done 2026-10-02** (`experiments/phase7_budget.py`, §12.6): an eight-fold budget raised coverage from 25% to 55% of runs but recovery only from 10% to 19% ($p = 0.10$), because the extra candidates bring extra beaters; the template library (`symiv.templates`) gave full coverage and raised recovery to 27% overall and to 75% for the quadratic labour law with the strong shifter, at no extra search cost. The kink law stays unrecovered under every arm, and the quadratic law at $\pi = 0.5$ is found but not selected: separation, not search, is the limit there, and the paper says so. Templates join the method; a larger search does not
 - [x] Reading of the proofs by fresh-context referees (2026-10-01; Phase 5 list above, THEORY.md §9). A human reading before submission is advisable but not required to finish the paper
 
 ### Beyond the paper
@@ -529,7 +534,7 @@ Each formula entry is: true form recovered, then median in-sample error (units o
 
 ### 12.3 Phase 4: full grid
 
-**Searches:** 528, with 12 seeds per cell (20 were planned; cut for compute), for about 12 hours of search time. Every Pareto front was saved, and the selection rules were applied afterwards to the same fronts. The grids:
+**Searches:** 1,098: the 528 of the Phase 4 run, 12 seeds per cell (about 12 hours), plus 570 run on 2026-10-02 to raise the 15 headline cells to 50 seeds (`phase4.py --grid headline`, about 11 hours; §11, "Before the paper"). Every Pareto front was saved, and the selection rules were applied afterwards to the same fronts. Comparisons across rules and candidate sets (the second and third tables below, the ablation and the separation analysis) use the balanced grid of 12 seeds; the per-cell tables use every seed. The grids:
 - **Breadth:** five laws × designs D1–D5 at $n = 2000$.
 - **$n$-scaling:** power and log laws in the D1 strong setting, $n = 1000$ to $50\,000$.
 - **Operator ablation:** no `max`.
@@ -551,15 +556,15 @@ Each formula entry is: true form recovered, then median in-sample error (units o
 
 Full tables, including per-cell errors, the operator ablation and the separation table: [`experiments/phase4/summary.md`](experiments/phase4/summary.md).
 
-**Breadth: true form recovered by the pooled candidates with BIC + structure ($w = 0.5$); in brackets, the share of runs whose candidates contain the true form** (12 seeds per cell, $n = 2000$):
+**Breadth: true form recovered by the pooled candidates with BIC + structure ($w = 0.5$); in brackets, the share of runs whose candidates contain the true form** ($n = 2000$; **50 seeds** in the D1 and D3 cells of the log and power laws and in every D5 cell, 12 seeds elsewhere; a 50-seed rate carries a 95% interval of about ±7 points at 90% and ±14 at 60%):
 
 | Law | D1 confounding | D2 heterosk. first stage | D3 simultaneity | D4 discrete $Z$ ($J = 4$) | D5 weak $Z$ ($\pi = 0.1$) |
 |---|---|---|---|---|---|
-| $1 + 2\log x$ | 100% (100%) | 100% (100%) | 100% (100%) | 92% (100%) | 0% (100%) |
-| $2x^{0.7}$ | 100% (100%) | 100% (100%) | 33% (67%) | 67% (100%) | 0% (100%) |
-| $x - 0.8\max(x - 1.5, 0)$ | 0% (8%) | 0% (33%) | 0% (0%) | 0% (0%) | 0% (0%) |
-| $3x/(1 + x)$ | 25% (58%) | 25% (33%) | 8% (42%) | 0% (25%) | 0% (8%) |
-| $1.5\,x_1^{0.3}x_2^{0.5}$ | 100% (100%) | 92% (100%) | – | 83% (100%) | 0% (0%) |
+| $1 + 2\log x$ | **100%** (100%) | 100% (100%) | **88%** (100%) | 92% (100%) | **2%** (100%) |
+| $2x^{0.7}$ | **100%** (100%) | 100% (100%) | **60%** (84%) | 67% (100%) | **0%** (100%) |
+| $x - 0.8\max(x - 1.5, 0)$ | 0% (8%) | 0% (33%) | 0% (0%) | 0% (0%) | **0%** (0%) |
+| $3x/(1 + x)$ | 25% (58%) | 25% (33%) | 8% (42%) | 0% (25%) | **0%** (4%) |
+| $1.5\,x_1^{0.3}x_2^{0.5}$ | 100% (100%) | 92% (100%) | – | 83% (100%) | **0%** (4%) |
 
 **Selection rules × candidate sets** (all 456 runs with $n \le 5000$; recovery rate):
 
@@ -581,14 +586,14 @@ The columns cover different runs: the plain front exists only up to $n = 10\,000
 
 1. **The instrument does its work when formulas are scored, not when they are generated.**
    - On the same runs (breadth, D1–D4), MMSC-BIC recovered the law from plain PySR's front about as often as from the IV-specific fronts: 52%, against 47% (one-step), 52% (distilled) and 48% (pooled).
-   - In the strong-endogeneity $n$-scaling cells, PySR's own pick never recovered the power law (0/12 at every $n$). Yet its front contained the true form in every run, and MMSC selected it in 67–100% of runs.
+   - In the strong-endogeneity $n$-scaling cells, PySR's own pick never recovered the power law (0/50 at $n \le 5000$, 0/12 beyond). Yet its front contained the true form in every run, and MMSC selected it in 66–100% of runs (BIC + structure; 78–100% with BIC alone).
    - Where PySR's own pick does get the form, its constants are biased: the log-law slope is 2.38–2.41 in D1, D2 and D4 against 2.00 with MMSC, and its in-sample errors are 5–16× larger.
    - IV-specific generators matter where endogeneity changes the shape of $E[y \mid X]$. Under simultaneity (D3), the plain front contains the true form in 25% of runs, against 44–48% for the one-step and distilled fronts.
    - The cheap generators are also faster: median 9 s per plain or distilled search against 61 s for the one-step search.
 2. **A structure term is needed, as Theorem 2's $\log\lvert\mathcal S_L\rvert$ suggests.**
    - BIC + $0.5 \cdot \text{nodes} \cdot \ln m$ raised pooled recovery from 51% to 60% (46 runs won, 8 lost; McNemar $p < 0.001$).
-   - In the $n$-scaling cells it gave 100% recovery from $n = 5000$ for every generator.
-   - With BIC alone, 1–3 of 12 runs still chose a near-duplicate of $2x^{0.7}$ at every $n$ up to $50\,000$, for example $(x\,e^{x/\max(c,\,x)})^{0.7}$ or $x^{0.75}(x e^{-x} + 1.74)$. These have the same number of constants as the truth, differ from it only at small $x$, and are separated by their size, not by the moments.
+   - In the $n$-scaling cells it gave 98–100% recovery at $n = 5000$ (50 seeds: 100% for the plain and one-step fronts, 98% for the distilled and pooled sets) and 100% from $n = 10\,000$ (12 seeds) for every generator.
+   - With BIC alone, recovery of $2x^{0.7}$ plateaus: 86–90% of the 50 runs at $n = 5000$ and 75–92% of the 12 runs at each $n$ from $10\,000$ to $50\,000$. The rest chose a near-duplicate, for example $(x\,e^{x/\max(c,\,x)})^{0.7}$ or $x^{0.75}(x e^{-x} + 1.74)$. These have the same number of constants as the truth, differ from it only at small $x$, and are separated by their size, not by the moments.
    - The term costs recovery on the saturation law, whose true form $ax/(b + x)$ is long: pooled recovery in D1 fell from 42% to 25%.
 3. **Other rules:**
    - HQIC (44%), AIC (24%) and the cross-fitted criterion (28%) are worse than BIC. Cross-fitting fails because over-parameterized formulas that contain the truth tie with it on held-out moments.
@@ -609,11 +614,11 @@ The columns cover different runs: the plain front exists only up to $n = 10\,000
    - **Caveat:** the margin is a worst case over the wrong formulas that any run produced.
 8. **Where it fails:**
    - **Search failures:** the kink law was recovered in no pooled run; no generator produced it in more than 33% of runs. The saturation law appeared in 8–58% of runs.
-   - **Weak instruments (D5):** recovery is 0% for every law. Selected formulas err by 0.2–1.2 sd in sample and 2.2–6.3 out of sample. Plain PySR is more accurate for two of the five laws in sample and for four of five out of sample. The method should report weak identification here rather than a formula (§6.4).
+   - **Weak instruments (D5):** recovery is 0–2% for every law (50 seeds). Selected formulas err by 0.3–1.0 sd in sample and 2.2–6.2 out of sample (medians). Plain PySR's own pick is more accurate for two of the five laws in sample and for four of five out of sample. The method should report weak identification here rather than a formula (§6.4), and since Phase 5 it does (§12.4).
 9. **The control-function test was inconclusive.**
    - With $\gamma = 0.45$ and $0.6$, control-function SR still never recovered the power law (0%). Its in-sample error fell to 0.003, and its log-law recovery rose to 83% and 100%.
    - In D2, a larger $\gamma$ also increases the variance of $X$ given $Z$, so the design does not isolate the failure of the control-function assumption.
-10. **Accuracy** (breadth, D1–D4, pooled + structure):
+10. **Accuracy** (breadth, D1–D4, balanced grid, pooled + structure):
     - Median in-sample error is 0.040, against 0.129 for the sieve-2SLS curve.
     - Out of sample, the error is 0.074 when the form is recovered, 0.85 when it is not, and 0.76 for the sieve curve.
 
@@ -637,19 +642,19 @@ Three experiments on the saved Phase 4 fronts, no new searches. Full tables: [`e
 
 **Candidates from one sample, selection on another (Corollary 2.3).** D1 strong, the $n = 1000$ fronts, 12 seeds: wrong candidates that outscore the truth fall from 1.9 to 1.4 per run (power law) and from 0.4 to 0.1 (log law), and recovery at equal selection size rises by 10–25 points. But same-sample selection on the full $n = 2000$ with the structure term recovers more (67% vs. 47% for the power law, pooled), because halving the sample halves the separation. Splitting is the right tool for inference, not for selection.
 
-**The identification diagnostic (THEORY.md Proposition 5; `symiv.identification`).** On every breadth run, with the pooled candidates and the BIC + structure selection, on the run's own data ($\tau = 0.2$):
+**The identification diagnostic (THEORY.md Proposition 5; `symiv.identification`).** On every breadth run (630 after the 50-seed extension), with the pooled candidates and the BIC + structure selection, on the run's own data ($\tau = 0.2$; recomputed on 2026-10-02 with the final distance scale):
 
 | | Runs | Flagged as weakly identified or rejected | True form in the confidence set |
 |---|---|---|---|
-| D5 weak instrument, all runs | 60 | **100%** | 100% |
-| D1–D4, form recovered | 123 | 4% | 99% |
-| D1–D4, statistical failure | 29 | 45% | 100% |
-| D1–D4, search failure | 76 | 57% | – |
+| D5 weak instrument, all runs | 250 | **100%** | 99% |
+| D1–D4, form recovered | 257 | 4% | 99% |
+| D1–D4, statistical failure | 43 | 30% | 100% |
+| D1–D4, search failure | 80 | 54% | – |
 
-- The method now reports weak identification on every D5 run instead of a formula: the median first-stage $F$ is 2, and the data allow formulas 0.7 sd away from the selected one (median of the farthest).
+- The method now reports weak identification on every D5 run instead of a formula: the median first-stage $F$ is 3, and the data allow formulas 0.8 sd away from the selected one (median of the farthest).
 - Where the instrument is strong and the selection right, 4% of runs are flagged: the AR level.
-- The confidence set covers the true form in 99% of the runs where it was a candidate (nominal $\ge 95\%$).
-- It cannot detect a search failure whose wrong formula fits the moments: 43% of the search failures pass as identified, mostly D3 with the kink and saturation laws.
+- The confidence set covers the true form in 99% of the 404 runs where it was a candidate (nominal $\ge 95\%$).
+- It cannot detect a search failure whose wrong formula fits the moments: 46% of the search failures pass as identified, mostly D3 with the kink and saturation laws. Statistical failures it misses (70%) are near-duplicates within 0.2 sd of the truth, where the function is right and only the tree is not minimal.
 
 ### 12.5 Phase 6: applications
 
@@ -667,7 +672,7 @@ Three experiments on the saved Phase 4 fronts, no new searches. Full tables: [`e
 
 - **Demand curves are recovered.** With a cost shifter, the constant-elasticity and log-linear demand curves are recovered in every run, with the oracle's error and the right price elasticity; plain PySR never recovers them (its picks carry the simultaneity bias, errors 0.3–0.6 sd). The hyperbolic demand $6/(1 + p)$ is recovered in 70% of runs; the misses are near-duplicates such as $3.3p^{-0.74}$, with the elasticity still right.
 - **Backward-bending labour supply exposes a limit.** With $\pi = 0.5$ only 7% of wages lie past the peak of the quadratic-in-logs law, and the law is never recovered: in 7 of the 9 runs where it was a candidate, a simpler wrong formula beat it (Theorem 2's separation channel), and the selected formulas are worse in sample than plain PySR's (0.35 vs. 0.30 sd). The hump law, whose peak sits inside the data, is recovered in 75% of runs with near-oracle error.
-- **The control shows what identification needs.** With $\pi = 1$ and the quadratic's peak at the median wage, recovery rises only to 20%, and now every miss is a search failure: the 3-constant form was a candidate in just 20% of runs, and whenever it was, it was selected. The hump stays at 75%, again equal to its coverage. So for these shapes the binding constraint is the search's coverage of 3-constant forms, not selection.
+- **The control shows what identification needs.** With $\pi = 1$ and the quadratic's peak at the median wage, recovery rises only to 20%, and now every miss is a search failure: the 3-constant form was a candidate in just 20% of runs, and whenever it was, it was selected. The hump stays at 75%, again equal to its coverage. So for these shapes the binding constraint is the search's coverage of 3-constant forms, not selection; supplying the quadratic as a template raises recovery to 75%, and an eight-fold search budget to 60% (§12.6).
 - **What the identification diagnostic says.** Every demand run is "identified". The hump runs are "weakly identified" in 85% of cases at $\pi = 0.5$ and in 95% at $\pi = 1$, even where the form was recovered: candidates 0.2–0.4 sd away fit the moments as well as the truth (in one run better: $S = 3.5$ against 11.1), because a bump is a feature that the smoothing of $E[\cdot \mid Z]$ nearly erases. So the recovered hump is correct but not pinned down by the data, and the method says so. For the quadratic at $\pi = 0.5$, 45% of the wrong selections fail their own S test and another 30% are flagged as weakly identified; 25% pass as identified. Building this environment also exposed a weakness of the S test, a formula that misfits 2% of the sample badly inflates its own robust weight and escapes rejection, which is now handled by winsorizing the residuals inside the weight (THEORY.md §3.2).
 
 **Engel curves (§8.3): the method reports shapes and tests, not a confident formula.** Blundell, Chen & Kristensen's FES 1995 sample (1,655 married couples; 628 without children, 1,027 with; `experiments/phase6_engel.py`; full output in [experiments/phase6/engel.md](experiments/phase6/engel.md)): budget share on log total expenditure, instrumented by the head's log earnings ($K = 9$–$12$ spline instruments; first-stage $F$ = 31–59). Candidates from plain PySR, distillation, the library path and the template library, pooled; selection by BIC + structure; then the identification report, and the S tests of the Working–Leser (linear in log expenditure) and quadratic forms with an AR interval for the quadratic term. On synthetic FES-like data with a planted Working–Leser share the same pipeline recovers `0.452 − 0.060 log x` from `0.45 − 0.06 log x` and reports "identified".
@@ -693,20 +698,31 @@ Three experiments on the saved Phase 4 fronts, no new searches. Full tables: [`e
 - *The diagnostic says "weakly identified" with both sets.* Every other candidate survives its S test (25 of 25 with 30 instruments; 23 of 23 with 3), the farthest 1.1–1.3 sd from the selected formula. The identification-robust AR interval for the linear return is $[-0.01, 0.44]$ against the Wald interval $[0.06, 0.16]$ with 30 instruments, and $[-0.01, 0.26]$ against $[0.03, 0.18]$ with 3: 2–5 times wider, and including zero. With 3 instruments ($K = 4$) any formula with four constants fits the moments exactly (Proposition 4); with 30, the compulsory-schooling variation is too small to tell shapes apart. A confident formula would have been wrong here; the method does not give one.
 - The sieve-2SLS curve shows the NPIV instability the plan anticipated: with 3 instruments it moves by $-1.0$ log points between 8 and 12 years and by $+2.5$ between 12 and 16.
 
-### 12.6 Before the paper: search budget and templates (in progress)
+### 12.6 Before the paper: search budget and templates
 
-The cells where the Phase 2–6 search rarely proposed the law (§11, "Before the paper"): D1 and D3 × the kink and saturation laws (seeds 0–11, paired with the Phase 4 runs) and the two quadratic labour-supply laws (seeds 0–19, paired with Phase 6). Four arms per run: the base budget (40 iterations, size ≤ 15, from the saved fronts), base + the template library (`symiv.templates`: 11 textbook shapes with free constants, scored like any candidate), a large budget (200 iterations, 40 populations, size ≤ 25, two restarts pooled), and large + templates. Plain PySR and distillation only, plus the library path; the one-step front is left out so the arms compare. Script `experiments/phase7_budget.py`; tables in [experiments/phase7/budget.md](experiments/phase7/budget.md). **The large-budget searches run after the seeds job; the base arms are done:**
+The cells where the Phase 2–6 search rarely proposed the law (§11, "Before the paper"): D1 and D3 × the kink and saturation laws (seeds 0–11, paired with the Phase 4 runs) and the two quadratic labour-supply laws (seeds 0–19, paired with Phase 6); 88 runs, four arms each, 352 analyses. Arms: the **base** budget (40 iterations, 31 populations, size ≤ 15, from the saved fronts); base **+ templates** (`symiv.templates`: 11 textbook shapes with free constants, scored like any candidate); a **large** budget (200 iterations, 40 populations, size ≤ 25, two restarts pooled: about eight times the compute, 2–2.7 minutes per run instead of 6–19 seconds); and large + templates. Plain PySR and distillation only, plus the library path; the one-step front is left out so the arms compare. Selection by BIC + structure. Script `experiments/phase7_budget.py`; full tables with intervals and paired tests in [experiments/phase7/budget.md](experiments/phase7/budget.md).
 
-| Cell | Law | Base: coverage → recovery | Base + templates: coverage → recovery |
-|---|---|---|---|
-| D1 | $x - 0.8\max(x - 1.5, 0)$ | 0% → 0% | 100% → **0%** |
-| D1 | $3x/(1 + x)$ | 50% → 42% | 100% → **67%** (+3 / −0) |
-| D3 | $x - 0.8\max(x - 1.5, 0)$ | 0% → 0% | 100% → **0%** |
-| D3 | $3x/(1 + x)$ | 25% → 0% | 100% → 8% |
-| Labour, $\pi = 0.5$ | $5 + 2\log w - 0.6(\log w)^2$ | 45% → 0% | 100% → **0%** |
+**Coverage → recovery** (pooled candidates; coverage = some candidate has the true form):
 
-- **Templates solve coverage and expose separation.** With the true form guaranteed to be a candidate, the kink law is still never selected: a one- or two-constant formula such as $x^{0.54}$ beats the three-constant kink under BIC + structure, because the moments barely distinguish them (the kink pays about 22 more in penalty than $x^{c}$ and gains less than that in $J$). In D3 only 6% of the regressor's mass lies past the kink, and the identity $x$ wins 6 of 12 runs. The quadratic labour law at $\pi = 0.5$ loses the same way (Theorem 2's channel (I)). The saturation law, whose shape the moments do see, gains: 42% → 67% in D1.
-- So for the threshold and quadratic laws at $n = 2000$ the binding constraint is separation, not search; a larger budget cannot fix it, and the paper should say so. Whether the large budget raises coverage without templates, and whether it helps the saturation law, is what the running arm will show.
+| Cell | Law | Base | Base + templates | Large | Large + templates |
+|---|---|---|---|---|---|
+| D1 | $x - 0.8\max(x - 1.5, 0)$ | 0% → 0% | 100% → 0% | 8% → 0% | 100% → 0% |
+| D1 | $3x/(1 + x)$ | 50% → 42% | 100% → **67%** | 42% → 17% | 100% → 50% |
+| D3 | $x - 0.8\max(x - 1.5, 0)$ | 0% → 0% | 100% → 0% | 0% → 0% | 100% → 0% |
+| D3 | $3x/(1 + x)$ | 25% → 0% | 100% → 8% | 42% → 17% | 100% → 8% |
+| Labour, $\pi = 0.5$ | $5 + 2\log w - 0.6(\log w)^2$ | 45% → 0% | 100% → 0% | 90% → 5% | 100% → 0% |
+| Labour, $\pi = 1$ | $5 + 0.5\log w - 0.6(\log w)^2$ | 20% → 20% | 100% → **75%** | 95% → 60% | 100% → 60% |
+| **All 88 runs** | | 25% → 10% | 100% → **27%** | 55% → 19% | 100% → 22% |
+| Recovery given coverage | | 41% | 27% | 35% | 22% |
+| Candidates per run (median) | | 24–30 | 34–40 | 57–68 | 68–80 |
+| Wrong formulas that outscore the truth, per run | | 2.9 | 3.8 | 4.8 | 5.8 |
+
+Paired on the same data: large vs. base, coverage +33 / −7 runs ($p < 0.001$), recovery +13 / −5 ($p = 0.10$); base + templates vs. base, recovery +15 / −0 ($p < 0.001$); large + templates vs. large, +4 / −2 ($p = 0.69$).
+
+1. **A larger search budget buys coverage, not recovery.** Eight times the compute raised coverage from 25% to 55% of runs, and found the three-constant quadratic labour law in 90–95% of runs instead of 20–45%. Recovery rose only from 10% to 19%, not significantly, because the extra candidates bring extra wrong formulas that outscore the truth: 4.8 per run instead of 2.9, and recovery given coverage fell from 41% to 35%. In the D1 saturation cell the large budget *lost* 4 runs the base budget had recovered (42% → 17%). This is Theorem 2's complexity channel and the Phase 4 pooling result again: the size of the candidate pool is a cost in itself.
+2. **Templates buy coverage for free, and recovery where the moments separate the law.** With the true form always a candidate, the quadratic labour law at $\pi = 1$ went from 20% to 75% ($p = 0.001$; the template or an equivalent rearrangement is the pick in 15 of 20 runs) and the saturation law in D1 from 42% to 67%. Base + templates is the best arm overall (27%), at the base cost. Adding the large budget's candidates to the templates makes things worse (22%): more candidates, more beaters.
+3. **Where nothing helps, the limit is separation.** The kink law is never recovered: even with the template in the pool, a one- or two-constant formula such as $x^{0.54}$ beats the three-constant kink under BIC + structure, because the moments barely distinguish them (the kink pays about 22 more in penalty and gains less than that in $J$); in D3, where only 6% of the regressor's mass lies past the kink, the identity $x$ wins. The quadratic labour law at $\pi = 0.5$ is found by the large budget in 90% of runs and selected in 5%: only 7% of wages lie past its peak (§12.5). The paper states both as limits: a threshold or a bend has to be inside the data and inside the instrument's reach.
+4. **The method to present:** cheap generators (plain PySR and distillation at the base budget) plus the template library, selection by BIC + structure, then the identification diagnostic. A larger free search is optional; if used, its candidates should be pruned before pooling, not added wholesale.
 
 ## 13. Code
 
