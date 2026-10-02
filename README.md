@@ -2,9 +2,7 @@
 
 Symbolic regression that recovers the **structural** relation $f(X)$ rather than the conditional mean $E[y \mid X]$, by scoring the formula search with instrumental-variable moment conditions.
 
-**Status (2026-10-02): the computations and the theory for the paper are complete; the paper draft and the package release remain (§11, Phase 7).** Results: §12 (Phase 2 Monte Carlo, §12.1; Phase 3 baselines, §12.2; Phase 4 full grid with 50-seed headline cells, §12.3; Phase 5 simulations of the theory, §12.4; Phase 6 applications: simulated demand and labour supply, Engel curves, Angrist–Krueger, §12.5; the search-budget and template experiment, §12.6). Theory, with proofs and a referee log: [THEORY.md](THEORY.md). Code layout and setup: §13. Replication guide (exact versions, data provenance, measured runtimes, what reproduces exactly, where every table comes from): [REPLICATION.md](REPLICATION.md).
-
-**The method, as it stands after Phases 2–6:** generate candidate formulas cheaply (plain PySR, PySR distilled from a sieve-2SLS curve, a projected-Lasso library path, and a fixed library of economic-shape templates); refit every candidate's constants by two-step GMM on instrument moments; select by MMSC-BIC with a per-node structure term; then report the identification diagnostic (first-stage $F$, Anderson–Rubin intervals, the formula confidence set and a verdict). The sections below keep the original plan, with each revision dated in place (§4, §7, §11).
+Results: §12. Theory, with proofs and a referee log: [THEORY.md](THEORY.md). Code layout and setup: §13. Replication guide (exact versions, data provenance, measured runtimes, what reproduces exactly, where every table comes from): [REPLICATION.md](REPLICATION.md).
 
 ---
 
@@ -34,11 +32,11 @@ $$E[\,y - f(X) \mid Z\,] = 0.$$
 Two neighbours come close and must be beaten, not ignored (§3.2):
 
 - **Sparse IV over a term library** selects terms under endogeneity, but only for laws that are linear in their parameters over a library chosen in advance: $a + b\log x$ yes; $x^{\theta}$ with unknown $\theta$, a kink at an unknown point, or $ax/(b+x)$ no.
-- **Nonparametric IV followed by symbolic distillation** (fit $\hat f$ with KIV or DeepIV, then run SR on $(X, \hat f(X))$) does produce a formula, but inherits the instability of the NPIV fit and has no selection theory. Phase 3 (§12.2) makes this precise:
+- **Nonparametric IV followed by symbolic distillation** (fit $\hat f$ with KIV or DeepIV, then run SR on $(X, \hat f(X))$) does produce a formula, but inherits the instability of the NPIV fit and has no selection theory. The baseline comparison (§12.2) makes this precise:
   - with SR's own choice of formula, distillation rarely recovers the law;
   - with the formula chosen by our moment criterion on the original data, it recovers the law more often than the one-step search.
 
-  Phase 4 (§12.3) goes further: even plain SR's own list of candidates, scored by the moment criterion, usually contains and selects the law. The missing piece is IV-based *selection* among formulas, and its theory.
+  The full grid (§12.3) goes further: even plain SR's own list of candidates, scored by the moment criterion, usually contains and selects the law. The missing piece is IV-based *selection* among formulas, and its theory.
 
 ## 2. Why it matters
 
@@ -67,10 +65,10 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
 | Literature | What it does | Why it matters here | What we do |
 |---|---|---|---|
 | **Sparse / high-dimensional IV:** STIV ([Gautier & Rose](https://arxiv.org/abs/1105.2454)), penalized FGMM ([Fan & Liao 2014](https://doi.org/10.1214/13-AOS1202)), two-stage regularization ([Lin, Feng & Li 2015](https://doi.org/10.1080/01621459.2014.908125)), Lasso-GMM ([Caner 2009](https://doi.org/10.1017/S0266466608090099)) | Selects a sparse subset of many regressors under endogeneity | This is "SINDy with instruments" in all but name. If the law is linear in its parameters over a known library ($a + b\log x$), it already solves the problem | Main competitor for such laws. Add a **library + sparse IV** baseline (§8.1). Include laws outside any finite library ($x^{\theta}$, kink at unknown $c$, saturation): the contribution rests on these. Report honestly where the library wins |
-| **NPIV, then symbolic distillation** (the pattern of [Cranmer et al. 2020](https://arxiv.org/abs/2006.11287), applied to an NPIV fit) | Fit $\hat f$ by sieve IV, KIV or DeepIV; run plain SR on $(X, \hat f(X))$ | The obvious two-step alternative built from existing tools | Main baseline. Hypothesis: one-step wins when the NPIV fit is unstable (weak instruments, small $n$, extrapolation). If it does not, reposition the paper around distillation plus the selection theory of §7. **Phase 3: it did not.** With PySR's own pick, distillation recovered the form in 2–52% of runs. Scored by MMSC on the original data, the same candidates recovered it in 74–100%, more often than the one-step search (paired $p < 0.001$). Repositioned accordingly (§4) |
+| **NPIV, then symbolic distillation** (the pattern of [Cranmer et al. 2020](https://arxiv.org/abs/2006.11287), applied to an NPIV fit) | Fit $\hat f$ by sieve IV, KIV or DeepIV; run plain SR on $(X, \hat f(X))$ | The obvious two-step alternative built from existing tools | Main baseline. Hypothesis: one-step wins when the NPIV fit is unstable (weak instruments, small $n$, extrapolation). If it does not, reposition the paper around distillation plus the selection theory of §7. **It did not (§12.2).** With PySR's own pick, distillation recovered the form in 2–52% of runs. Scored by MMSC on the original data, the same candidates recovered it in 74–100%, more often than the one-step search (paired $p < 0.001$). Repositioned accordingly (§4) |
 | **Model and moment selection in GMM:** [Andrews 1999](https://doi.org/10.1111/1468-0262.00036); [Andrews & Lu 2001](https://doi.org/10.1016/S0304-4076(00)00077-4); [Hong, Preston & Shum 2003](https://doi.org/10.1017/S0266466603196028) | Consistent, BIC-type criteria for choosing among moment-condition models | Gives a principled complexity penalty in place of an ad hoc $\lambda \cdot C(f)$ | Select from the Pareto front with MMSC (§6.3). Theorem 1 (§7) extends Andrews–Lu to formula classes |
 | **Conditional vs. unconditional moments:** [Domínguez & Lobato 2004](https://doi.org/10.1111/j.1468-0262.2004.00545.x) | Shows that finitely many unconditional moments can lose the identification that $E[u \mid Z] = 0$ provides | Explains the finite-$K$ problem of criterion (b) | Let $K$ grow with $n$ or use kernel MMR (§6.2); report sensitivity to $K$ |
-| **Parametric specification test under IV:** [Horowitz 2006](https://doi.org/10.1111/j.1468-0262.2006.00670.x) | Tests a given parametric form against the nonparametric alternative | The natural check of a discovered formula | Cited only (§11, Phase 0): the specification-test role is played by Hansen's $J$ and the $S$ tests of Proposition 5 (§6.4) |
+| **Parametric specification test under IV:** [Horowitz 2006](https://doi.org/10.1111/j.1468-0262.2006.00670.x) | Tests a given parametric form against the nonparametric alternative | The natural check of a discovered formula | Cited only: the specification-test role is played by Hansen's $J$ and the $S$ tests of Proposition 5 (§6.4) |
 | **Identification theory:** completeness is not testable ([Canay, Santos & Shaikh 2013](https://doi.org/10.3982/ECTA10851)); discrete instruments and shape restrictions ([Freyberger & Horowitz 2015](https://doi.org/10.1016/j.jeconom.2015.06.020)) | Limits of what data can say about identification in NPIV | Frames what "identification within the formula class" can claim | State restricted identification as an assumption (§5); design D4 with discrete instruments; conjecture in §7 |
 | **Shape-restricted NPIV:** [Chetverikov & Wilhelm 2017](https://doi.org/10.3982/ECTA13639); [Blundell, Horowitz & Parey 2012](https://doi.org/10.3982/QE91) | Regularizes NPIV with monotonicity or Slutsky restrictions instead of a formula class | An alternative way to tame ill-posedness | Cite as the competing regularization; their gasoline estimates would be the benchmark for the gasoline application, which is deferred (§8.3, §11) |
 | **Misspecified GMM:** [Hall & Inoue 2003](https://doi.org/10.1016/S0304-4076(03)00089-7) | Pseudo-true values under misspecification depend on the moments and the weight matrix | On real data the "best" formula depends on the instrument basis and $W$ | Report stability across bases and weights (§6.5) |
@@ -92,7 +90,7 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
 | Full reading (2026-09-27): SRIT (Yan et al.) and Kuang & Lin 2026 | Complete texts | Neither overlaps; see §3.1 |
 | Review (2026-09-30): econometrics literatures not covered by the searches above | High-dimensional IV, GMM model selection, NPIV testing and identification, symbolic distillation | No free-form formula search; library-based sparse IV and NPIV → distillation become the main baselines (§3.2) |
 | Web search (2026-09-30): `symbolic regression instrumental variables endogeneity moment conditions 2026`; `SINDy instrumental variable sparse regression endogeneity library` | General web | Nothing new |
-| Web search (2026-10-01), the Phase 0 queries left open: `"symbolic regression" "instrumental variable(s)"`, `... endogeneity OR "unobserved confounders"`, `... "method of moments" OR GMM`; `SINDy "instrumental variables"`; `"sparse instrumental variables" dictionary OR library`; `"equation discovery" "instrumental variables" confounding` | General web | Nothing new. The 2026 references of §3.1 verified against their publishers |
+| Web search (2026-10-01), the queries left open by the first searches: `"symbolic regression" "instrumental variable(s)"`, `... endogeneity OR "unobserved confounders"`, `... "method of moments" OR GMM`; `SINDy "instrumental variables"`; `"sparse instrumental variables" dictionary OR library`; `"equation discovery" "instrumental variables" confounding` | General web | Nothing new. The 2026 references of §3.1 verified against their publishers |
 
 **Blind spots:** Semantic Scholar was rate-limited; OpenAlex undercounts citations to ML conference papers; very recent preprints may not be indexed yet; the searches used SR vocabulary, so work phrased as "sparse IV over a dictionary" was found only by the review.
 
@@ -108,14 +106,14 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
 
 **Target:** a **search over free-form formulas scored by instrument moment conditions** $E[y - f(X) \mid Z] = 0$, for **structural endogeneity** (unobserved confounding, simultaneity, choice) with **external instruments**, with a **consistent selection rule** and a finite-sample account of when recovery succeeds. This is exactly the setting that SRIT's authors leave open ("causal insufficiency"). The contribution must show gains over (i) library-based sparse IV on laws that are nonlinear in their parameters and (ii) NPIV → distillation, in finite samples and under weak instruments.
 
-**Revised after Phase 3 (§12.2).**
+**Revised after the baseline comparison (§12.2).**
 - **The core of the method is the selection rule.** It is MMSC, on the original data, over free-form candidate formulas, together with its theory (§7) and the failure diagnostics. The candidates can come from any generator: the one-step search, or PySR distilling an NPIV fit.
 - **Distilling a sieve-2SLS fit gave better candidates than the one-step search.** Scored by the same rule, they recovered the true form in 74–100% of runs against 66–92%.
 - **The selection rule is what beats the literature.** Distillation with PySR's own choice (the literature's version) recovered the form in 2–52% of runs; library IV and SRIT-style did no better.
-- **The method to present:** pool the candidates from several generators and score all of them by MMSC (tested in Phase 4).
+- **The method to present:** pool the candidates from several generators and score all of them by MMSC (tested on the full grid, §12.3).
 - **Unchanged:** the theorems of §7 are about the selection rule, so they apply to any generator whose candidates include the true form.
 
-**Revised after Phase 4 (§12.3).**
+**Revised after the full grid (§12.3).**
 - **The instrument does its work when formulas are scored, not when they are generated.** Plain PySR's squared-error front, scored by MMSC, recovered the law as often as the IV-specific generators in designs D1, D2 and D4. In the strong-endogeneity power-law cell, PySR's own pick never recovered the form (0/12 at every $n$), yet its front contained the form in every run and MMSC selected it in 67–100% of runs. IV-specific generators matter where endogeneity changes the shape of $E[y \mid X]$ (simultaneity, D3).
 - **Pooling did not beat the distilled front alone.** It adds coverage, but also wrong formulas that outscore the truth.
 - **The selection rule needs a structure term.** Plain BIC lets near-duplicates of the law win even at $n = 50\,000$. Adding $w \cdot \text{nodes} \cdot \ln m$ (a per-node version of Theorem 2's $\log\lvert\mathcal S_L\rvert$) raised recovery from 51% to 60% and gave 98–100% from $n = 5000$ in the $n$-scaling cells.
@@ -123,13 +121,13 @@ Two neighbours come close and must be beaten, not ignored (§3.2):
 
 **Revised after the budget experiment (§12.6, 2026-10-02).**
 - **A fixed template library of economic shapes joins the candidate generators.** Scored like any candidate, it gives full coverage of the textbook shapes at no search cost and raises recovery where the moments separate the law (the quadratic labour law 20% → 75%; the saturation law 42% → 67%).
-- **A larger free search does not.** Eight times the budget raised coverage from 25% to 55% of runs but recovery only from 10% to 19%: the extra candidates bring extra wrong formulas that outscore the truth, Theorem 2's complexity channel and the Phase 4 pooling result again. The size of the candidate pool is a cost; candidates should be pruned before pooling, not added wholesale.
+- **A larger free search does not.** Eight times the budget raised coverage from 25% to 55% of runs but recovery only from 10% to 19%: the extra candidates bring extra wrong formulas that outscore the truth, Theorem 2's complexity channel and the pooling result of §12.3 again. The size of the candidate pool is a cost; candidates should be pruned before pooling, not added wholesale.
 - **Two limits are stated, not fixed:** a threshold law whose kink the instruments barely see (the kink law in D1–D3), and a bend that lies at the edge of the data ($\pi = 0.5$ labour supply). The diagnostic of §6.4 flags part of these cases; the rest are honest failures of identification, not of the method.
 
 ## 5. Model and identification
 
 - **Model:** $y = f_0(X) + u$ with $E[u \mid Z] = 0$; the target is $f_0$. The error is **additive**. Non-separable models (random coefficients, e.g. $y = w \cdot h$ with heterogeneous $w$) violate this and are out of scope for the paper; IV quantile regression ([Chernozhukov & Hansen 2005](https://doi.org/10.1111/j.1468-0262.2005.00570.x)) is the route to an extension *(beyond the paper)*.
-- **Plain SR is biased:** at best it is consistent for $E[y \mid X] = f_0(X) + E[u \mid X]$. In design D1 (§8.1), $E[u \mid X] = \frac{\rho}{1+\pi^2}\log X$: for the log law the conditional mean has the right form with a biased coefficient; for every other law it has an extra $\log X$ term. Whether plain SR shows that term depends on its size relative to $f_0$. At the D1 defaults ($\pi = 1$, $\rho = 0.8$) it is $0.4\log X$, small next to $2x^{0.7}$, and in Phase 2 plain PySR's own pick had the right power form in every default-setting run, with $a$ biased by 6% (§12.1).
+- **Plain SR is biased:** at best it is consistent for $E[y \mid X] = f_0(X) + E[u \mid X]$. In design D1 (§8.1), $E[u \mid X] = \frac{\rho}{1+\pi^2}\log X$: for the log law the conditional mean has the right form with a biased coefficient; for every other law it has an extra $\log X$ term. Whether plain SR shows that term depends on its size relative to $f_0$. At the D1 defaults ($\pi = 1$, $\rho = 0.8$) it is $0.4\log X$, small next to $2x^{0.7}$, and in the first Monte Carlo plain PySR's own pick had the right power form in every default-setting run, with $a$ biased by 6% (§12.1).
 - **Identification within the class.** Let $\mathcal F_L$ be the formula class (§6.1). We need only **restricted identification**:
 
 $$f \in \mathcal F_L,\quad E[f(X) - f_0(X) \mid Z] = 0 \text{ a.s.} \;\Rightarrow\; f = f_0.$$
@@ -163,9 +161,9 @@ PySR returns a Pareto front (the best criterion at each complexity). Select from
 
 - Refit the constants of each front member by efficient GMM and compute $\mathrm{MMSC}_n(s) = J_n(s) - (K - p_s)\ln n$ ([Andrews & Lu 2001](https://doi.org/10.1016/S0304-4076(00)00077-4)), where $J_n$ is Hansen's statistic and $p_s$ is the **number of free constants**, not the node count (nodes only break ties). With $K$ fixed across candidates this is $J_n(s) + p_s \ln n$ up to a constant.
 - For MMR: $n\,Q_n(s) + c\, p_s \ln n$, with $c$ calibrated by simulation.
-- Cross-check: the moment criterion on held-out data (not held-out MSE, which favours $E[y \mid X]$). Phase 4: as a selection rule it did worse than BIC (§12.3).
-- Phase 2 (§12): BIC recovered the true form most often (66–92%), then HQIC (52–68%), then AIC (28–40%). Even BIC lets contrived formulas with one extra constant through, because it does not account for the search over formula structures (§7).
-- Phase 4 (§12.3):
+- Cross-check: the moment criterion on held-out data (not held-out MSE, which favours $E[y \mid X]$). As a selection rule it did worse than BIC (§12.3).
+- First Monte Carlo (§12.1): BIC recovered the true form most often (66–92%), then HQIC (52–68%), then AIC (28–40%). Even BIC lets contrived formulas with one extra constant through, because it does not account for the search over formula structures (§7).
+- Full grid (§12.3):
   - **Add a structure term.** BIC plus $w \cdot \text{nodes} \cdot \ln m$, with $m$ the number of symbols and $w = 0.5$, is the best rule tested: 60% recovery against 51% for BIC on the pooled candidates (46 runs won, 8 lost; $p < 0.001$). It removes the near-duplicates that BIC admits at any $n$. It costs recovery on the saturation law, whose true form is long.
   - **What did not help:** the cross-fitted moment criterion (28%), because over-parameterized formulas that contain the truth tie on held-out moments; doubling $K$ (no change).
   - **Kernel instruments (criterion (c))** were slightly better than splines (54% vs. 51%, $p = 0.015$).
@@ -175,13 +173,13 @@ PySR returns a Pareto front (the best criterion at each complexity). Select from
 Selection and inference use different data:
 
 1. Split the sample: part A for search and selection, part B for everything reported.
-2. On B: refit the selected formula's constants by efficient GMM; standard errors; Hansen $J$ test; weak-identification-robust (Anderson–Rubin type, [Stock & Wright 2000](https://doi.org/10.1111/1468-0262.00151)) confidence sets for the constants. The specification-test role that a [Horowitz (2006)](https://doi.org/10.1111/j.1468-0262.2006.00670.x) test would play is taken by $J$ and by the $S$ tests of item 4; Horowitz is cited, not run (§11, Phase 0).
+2. On B: refit the selected formula's constants by efficient GMM; standard errors; Hansen $J$ test; weak-identification-robust (Anderson–Rubin type, [Stock & Wright 2000](https://doi.org/10.1111/1468-0262.00151)) confidence sets for the constants. The specification-test role that a [Horowitz (2006)](https://doi.org/10.1111/j.1468-0262.2006.00670.x) test would play is taken by $J$ and by the $S$ tests of item 4; Horowitz is cited, not run.
 3. This is valid conditional on the selected formula. Uniformly valid inference after selection without splitting is not claimed ([Leeb & Pötscher 2005](https://doi.org/10.1017/S0266466605050036); [Berk et al. 2013](https://doi.org/10.1214/12-aos1077)) *(beyond the paper)*.
-4. **Identification diagnostic** (Phase 5; `symiv.identification`; [THEORY.md](THEORY.md) Proposition 5). After selection, report the first-stage $F$ of $X$ on the instruments, Anderson–Rubin intervals for the constants, and the **formula confidence set**: the candidate formulas whose Stock–Wright $S$ statistic the data do not reject. It contains the true form with probability at least $1 - \alpha$ whatever the instrument strength, so when a wrong formula is selected while the true form was a candidate, the set shows a second formula with probability at least $1 - \alpha$. The verdict is "identified", "weakly identified" (listing the formulas the data also allow) or "rejected" (no candidate of the selected form fits the moments). Under the weak instrument (D5) the method then reports weak identification instead of a formula (§12.4).
+4. **Identification diagnostic** (`symiv.identification`; simulations in §12.4; [THEORY.md](THEORY.md) Proposition 5). After selection, report the first-stage $F$ of $X$ on the instruments, Anderson–Rubin intervals for the constants, and the **formula confidence set**: the candidate formulas whose Stock–Wright $S$ statistic the data do not reject. It contains the true form with probability at least $1 - \alpha$ whatever the instrument strength, so when a wrong formula is selected while the true form was a candidate, the set shows a second formula with probability at least $1 - \alpha$. The verdict is "identified", "weakly identified" (listing the formulas the data also allow) or "rejected" (no candidate of the selected form fits the moments). Under the weak instrument (D5) the method then reports weak identification instead of a formula (§12.4).
 
 ### 6.5 Interpretation on real data
 
-Real laws are rarely exactly in $\mathcal F_L$. Under misspecification, the GMM pseudo-true formula depends on the instrument basis and on $W$ ([Hall & Inoue 2003](https://doi.org/10.1016/S0304-4076(03)00089-7)); unlike least squares, there is no single natural projection. Report the selected formula across several bases (polynomial, spline, kernel) and weights, and treat stability as part of the evidence. As an empirical counterpart of $\delta_L$, report the criterion gap between the selected formula and the runner-up. **Done (Phase 6, §12.5):** the Engel application uses one basis (splines, $K = 9$–$12$) with the two-step weight, and reports the formula confidence set and the fixed-form $S$ tests in place of a basis comparison; the stability check across bases and weights is left for the paper's robustness appendix *(beyond the paper)*.
+Real laws are rarely exactly in $\mathcal F_L$. Under misspecification, the GMM pseudo-true formula depends on the instrument basis and on $W$ ([Hall & Inoue 2003](https://doi.org/10.1016/S0304-4076(03)00089-7)); unlike least squares, there is no single natural projection. Report the selected formula across several bases (polynomial, spline, kernel) and weights, and treat stability as part of the evidence. As an empirical counterpart of $\delta_L$, report the criterion gap between the selected formula and the runner-up. **Done (§12.5):** the Engel application uses one basis (splines, $K = 9$–$12$) with the two-step weight, and reports the formula confidence set and the fixed-form $S$ tests in place of a basis comparison; the stability check across bases and weights is left for the paper's robustness appendix *(beyond the paper)*.
 
 ### 6.6 Implementation (PySR)
 
@@ -196,14 +194,14 @@ Real laws are rarely exactly in $\mathcal F_L$. Under misspecification, the GMM 
 
 ## 7. Theory plan
 
-> **Phase 5 status ([THEORY.md](THEORY.md); three passes: the author's two, then two fresh-context referees, with a review log of what each pass found).**
+> **What is proved ([THEORY.md](THEORY.md); three passes: the author's two, then two fresh-context referees, with a review log of what each pass found).**
 > - **Theorem 1 (i)–(iii) is proved.** It holds for any candidate generator whose candidates contain a minimal true formula. Corollary 1.1 gives the parametric rate when the law is in the class. The split-sample intervals, $J$ test and AR sets of (iii) were simulated (§12.4): nominal on fresh samples, distorted on the selection sample, and only the AR sets survive the weak instrument.
 > - **Theorem 2 is proved with explicit constants**, for GMM with orthonormal instruments, sub-Gaussian errors and a bounded Lipschitz class, with two failure channels:
 >   - a separation margin $n\delta_s/\sigma^2 - (p_0 - p_s)\kappa_n$, plus deviation terms of the same order $\log n$, for wrong formulas;
 >   - a complexity condition for longer or more heavily parameterized formulas.
 >
 >   A per-node structure penalty makes the bound uniform in $L$ (Corollary 2.2; the theory's $w \approx 5$ is conservative against the empirical $0.5$). Proposition 2.4 extends the bound to the code's sample-orthonormalized criterion and an estimated scale. Corollary 2.3 (candidates from an independent sample) was simulated: the mechanism holds, but the structure term on the full sample does better (§12.4).
-> - **Proposition 5** (new): an Anderson–Rubin confidence set for the formula, valid whatever the instrument strength, is the identification diagnostic of §6.4. On the Phase 4 runs it flags every weak-instrument run and 4% of the strong-instrument runs whose selection was right, and covers the true form in 99% of the runs where it was a candidate (§12.4).
+> - **Proposition 5** (new): an Anderson–Rubin confidence set for the formula, valid whatever the instrument strength, is the identification diagnostic of §6.4. On the full-grid runs it flags every weak-instrument run and 4% of the strong-instrument runs whose selection was right, and covers the true form in 99% of the runs where it was a candidate (§12.4).
 > - **Discrete instruments** (Proposition 4, parts (a)–(b)): formulas with $J$ or more constants can zero the criterion. Part (c) is a conjecture with its transversality hypothesis stated.
 > - **Theorem 3(a)** (fixed $L$, misspecified) and **Theorem 3(b)** (growing $L$, compact support, any number of regressors) are proved; `max` gives a spline sieve for one regressor and Bernstein polynomials give one for several. Proposition 3.3 reduces rates to a modulus of continuity on the formula sieve; bounding it is open.
 >
@@ -229,13 +227,13 @@ Let $T h = E[h(X) \mid Z]$.
 - Guarantees for the genetic-programming search itself. The theorems concern the global minimizer, or any near-minimizer within $o_p(\mathrm{pen}_n)$. The Monte Carlo separates **search failures** (the true formula has a lower penalized criterion than the one found) from **statistical failures** (the estimator itself prefers a wrong formula).
 - Uniformly valid inference after selection without sample splitting.
 
-**Phase 2 evidence (§12.1).** Failures were statistical, not search failures (2 of 200 runs). Both kinds of error that Theorem 2 has to cover appeared:
+**Evidence from the first Monte Carlo (§12.1).** Failures were statistical, not search failures (2 of 200 runs). Both kinds of error that Theorem 2 has to cover appeared:
 - a simpler wrong formula winning when separation is small ($x + c$ against $2x^{0.7}$ with $\pi = 0.7$, $n = 2000$);
 - a contrived formula with one extra constant winning because it fits the moments slightly better. The best of many structures beats a per-constant $\ln n$ penalty, which is why the bound carries a $\log\lvert\mathcal S_L\rvert$ term.
 
-**Phase 3 evidence (§12.2).** The theorems are about the selection rule, not the search. Phase 3 shows that is where the value lies: the same rule applied to candidates from a distilled NPIV fit did better than the one-step search. For the theory, the candidate set can come from any generator; what matters is whether it contains the true form and how many competitors it adds (the $\lvert\mathcal S\rvert$ in Theorem 2).
+**Evidence from the baselines (§12.2).** The theorems are about the selection rule, not the search. The baseline comparison shows that is where the value lies: the same rule applied to candidates from a distilled NPIV fit did better than the one-step search. For the theory, the candidate set can come from any generator; what matters is whether it contains the true form and how many competitors it adds (the $\lvert\mathcal S\rvert$ in Theorem 2).
 
-**Phase 4 evidence (§12.3).**
+**Evidence from the full grid (§12.3).**
 - **Theorem 1 holds in the data only with a structure term.**
   - With BIC + structure, recovery reached 98–100% at $n = 5000$ (50 seeds) and 100% from $n = 10\,000$ to $50\,000$ for every generator in the $n$-scaling cells.
   - With BIC alone, 1–3 of 12 runs still chose a near-duplicate at every $n$. These formulas have the same number of constants as $f_0$ but more nodes. An example is $(x\,e^{x/\max(c,\,x)})^{\theta}$, which equals $e^{\theta}x^{\theta}$ wherever $x > c$.
@@ -275,7 +273,7 @@ The econometrician sees only $(y, X, Z)$.
 | Saturation | $a x/(b + x)$ | No |
 | Two regressors | $A\,x_1^{\alpha} x_2^{\beta}$, two instruments | No |
 
-**Vary** (as planned): instrument strength $\pi$; $n \in \{10^3, 10^4, 10^5\}$; endogeneity $\rho$; noise; $J$ (D4); constant bound $C$; operator set; $K$ for (b) and bandwidth for (c). **Varied in Phases 2–4:** $\pi$ and $\rho$ jointly (default, strong and weak settings); $n$ from 1,000 to 50,000; the operator set (without `max`); $K$ (Phase 2, and $2K$ at selection); $C$ (Phase 2); spline against kernel instruments. **Not varied:** the noise level, $J$ in D4, $\rho$ on its own and $C$ beyond Phase 2: a robustness appendix if cheap (§9.1).
+**Vary** (as planned): instrument strength $\pi$; $n \in \{10^3, 10^4, 10^5\}$; endogeneity $\rho$; noise; $J$ (D4); constant bound $C$; operator set; $K$ for (b) and bandwidth for (c). **Varied (§12.1–§12.3):** $\pi$ and $\rho$ jointly (default, strong and weak settings); $n$ from 1,000 to 50,000; the operator set (without `max`); $K$ (in the first Monte Carlo, and $2K$ at selection); $C$ (first Monte Carlo); spline against kernel instruments. **Not varied:** the noise level, $J$ in D4, $\rho$ on its own and $C$ beyond the first Monte Carlo: a robustness appendix if cheap (§9.1).
 
 **Metrics**
 
@@ -299,26 +297,26 @@ The econometrician sees only $(y, X, Z)$.
 | **Library + sparse IV** (PySR-style term library; Lasso on instrument-projected data; STIV cited, not implemented) | Main competitor for laws linear in parameters (§3.2) |
 | Control-function SR, variant (a) | Cheap alternative; should win on D1 and lose on D2 |
 
-**Expected results** (stated so that they can fail), with outcomes from Phases 2–4 (§12):
+**Expected results** (stated so that they can fail), with outcomes from §12.1–§12.3:
 
 - Plain SR returns a wrong formula or the right form with biased constants, depending on how large the endogeneity term is relative to $f_0$. **Confirmed.**
   - Its bias matches $\rho/(1+\pi^2)$.
-  - Phase 4: wherever it finds the log-law form, its slope is 2.38–2.80 against a true value of 2; under simultaneity (D3) it never finds the form.
+  - On the full grid (§12.3): wherever it finds the log-law form, its slope is 2.38–2.80 against a true value of 2; under simultaneity (D3) it never finds the form.
 - Library IV matches symbolic IV on the log law and fails on power, kink and saturation. **Confirmed once the library is scored by MMSC.**
   - Its Lasso path scored by MMSC recovers the log law in 75–100% of runs in D1–D4.
-  - Cross-validated Lasso managed only 28–52% (Phase 3).
+  - Cross-validated Lasso managed only 28–52% (§12.2).
   - It never recovers the other laws.
-- One-step symbolic IV beats NPIV → distillation when the NPIV fit is unstable (weak instruments, small $n$, extrapolation). If it does not, the paper is repositioned (§3.2). **Refuted when the distilled candidates are scored by MMSC; repositioned (§4).** In Phase 4, even plain SR's candidates did as well when scored by MMSC.
+- One-step symbolic IV beats NPIV → distillation when the NPIV fit is unstable (weak instruments, small $n$, extrapolation). If it does not, the paper is repositioned (§3.2). **Refuted when the distilled candidates are scored by MMSC; repositioned (§4).** On the full grid (§12.3), even plain SR's candidates did as well when scored by MMSC.
 - Control-function SR wins on D1 and loses on D2 (§8.1 baselines table). **Confirmed.**
   - It gives the lowest errors on D1; on D2 its form recovery falls to 0% (power law) and 42% (log law).
   - Raising $\gamma$ did not make it fail more, because $\gamma$ also strengthens the first stage (§12.3).
 - Recovery tracks $n\,\delta_L^2$. **Supported in a corrected form (§7, §12.3):** recovery tracks a penalty-adjusted margin over wrong formulas with at most $p_0$ constants, not $\delta_L$ over all trees.
-- Degradation under weak instruments is documented as part of the contribution. **Documented.** With $\pi = 0.1$ (D5), recovery is 0–2% for every law over 50 seeds, and selected formulas err by 0.3–1.0 sd in sample. Since Phase 5 the identification diagnostic (§6.4) flags every D5 run, so the method reports weak identification there instead of a formula (§12.4).
+- Degradation under weak instruments is documented as part of the contribution. **Documented.** With $\pi = 0.1$ (D5), recovery is 0–2% for every law over 50 seeds, and selected formulas err by 0.3–1.0 sd in sample. The identification diagnostic (§6.4) flags every D5 run, so the method reports weak identification there instead of a formula (§12.4).
 
 ### 8.2 Simulated economic environments
 
-- **Supply and demand with endogenous prices** (D3): in the simulation the target is the supply curve, identified by a demand shifter. **Phase 6** adds the mirror image, design **D6**: quantity $= f_0(p) + u$ is a decreasing demand curve, the supply equation $q = \kappa\log p + \gamma Z + e$ is shifted by a cost shifter $Z$, and the price is set by equilibrium. Demand laws: constant elasticity $3p^{-0.5}$, log-linear $6 - 1.5\log p$ (in the library), hyperbolic $6/(1 + p)$. Results in §12.5.
-- **Labour supply:** hours $= f_0(w) + u$ with a backward-bending $f_0$. The wage is endogenous because unobserved taste for work is correlated with productivity; the instrument is an exogenous wage shifter (e.g., a simulated tax reform). **Phase 6:** design D1 with $\pi = 0.5$ and the laws $8w\,e^{-0.5w}$ (a hump) and $5 + 2\log w - 0.6(\log w)^2$ (the textbook quadratic in logs, in the library); neither shape was in the Phase 4 grid. Results in §12.5.
+- **Supply and demand with endogenous prices** (D3): in the simulation the target is the supply curve, identified by a demand shifter. The applications (§12.5) add the mirror image, design **D6**: quantity $= f_0(p) + u$ is a decreasing demand curve, the supply equation $q = \kappa\log p + \gamma Z + e$ is shifted by a cost shifter $Z$, and the price is set by equilibrium. Demand laws: constant elasticity $3p^{-0.5}$, log-linear $6 - 1.5\log p$ (in the library), hyperbolic $6/(1 + p)$. Results in §12.5.
+- **Labour supply:** hours $= f_0(w) + u$ with a backward-bending $f_0$. The wage is endogenous because unobserved taste for work is correlated with productivity; the instrument is an exogenous wage shifter (e.g., a simulated tax reform). **Simulated (§12.5):** design D1 with $\pi = 0.5$ and the laws $8w\,e^{-0.5w}$ (a hump) and $5 + 2\log w - 0.6(\log w)^2$ (the textbook quadratic in logs, in the library); neither shape was in the grid of §12.3. Results in §12.5.
 - *Dropped:* earnings $=$ wage $\times$ hours with heterogeneous wages. It is not additive: $u = (w - \bar w)\,h$, and $E[u \mid Z] \neq 0$ because hours respond to $w$. In logs it becomes additive, but then the "law" is an identity with coefficient 1. The motivation that earnings risk partly reflects hours choices ([Halvorsen et al. 2024](https://academic.oup.com/jeea/article-abstract/22/2/617/7251473); [Kaplan & Violante 2010](https://www.aeaweb.org/articles?id=10.1257%2Fmac.2.4.53)) belongs to the non-separable extension (§5).
 
 ### 8.3 Real applications with known answers
@@ -326,18 +324,18 @@ The econometrician sees only $(y, X, Z)$.
 | Application | Data | Instrument | Known answer | Role |
 |---|---|---|---|---|
 | **Engel curves** ([Blundell, Chen & Kristensen 2007](https://doi.org/10.1111/j.1468-0262.2007.00808.x)) | Public: BCK's own FES 1995 extract, the `Engel95` data frame shipped with the R package [`np`](https://cran.r-project.org/package=np) (1,655 married couples with an employed head aged 25–55; 7 budget shares, log total expenditure, the head's log earnings, a children indicator). No registration or affiliation is needed: extract `np/data/Engel95.rda` from the CRAN tarball and convert it with `pyreadr` into `data/engel95.csv` (git-ignored) | Household head's earnings, for log total expenditure | Budget shares linear in log expenditure (Working–Leser) for food; quadratic in log expenditure for some goods ([Banks, Blundell & Lewbel 1997](https://doi.org/10.1162/003465397557015)) | **Primary:** continuous instrument and a formula-shaped answer |
-| **Gasoline demand** ([Blundell, Horowitz & Parey 2012](https://doi.org/10.3982/QE91); earlier nonparametric estimates in [Hausman & Newey 1995](https://doi.org/10.2307/2171777)) | US National Household Travel Survey 2001 (public) | Distance from the Gulf of Mexico (price shifter) | Price responsiveness that varies with price and income | **Secondary:** comparison with shape-restricted NPIV. Not run; deferred (§11, Phase 6) |
+| **Gasoline demand** ([Blundell, Horowitz & Parey 2012](https://doi.org/10.3982/QE91); earlier nonparametric estimates in [Hausman & Newey 1995](https://doi.org/10.2307/2171777)) | US National Household Travel Survey 2001 (public) | Distance from the Gulf of Mexico (price shifter) | Price responsiveness that varies with price and income | **Secondary:** comparison with shape-restricted NPIV. Not run; deferred (§11) |
 | Returns to schooling ([Angrist & Krueger 1991](https://doi.org/10.2307/2937954)) | Public: the Mastering 'Metrics extract `ak91.dta` (329,509 men born 1930–39), downloaded by `fetch_data.py` into `data/` (git-ignored) | Quarter of birth | None usable for functional form | **Stress test only.** The instruments are weak ([Bound, Jaeger & Baker 1995](https://doi.org/10.1080/01621459.1995.10476536)), discrete, and shift schooling only near the compulsory-schooling margin, so they cannot identify a functional form over the whole range. Success means the method reports weak identification instead of a confident formula |
 
 ## 9. Deliverables and venues
 
-- **Open-source package:** symbolic IV on top of PySR: the criteria (a)–(c), the candidate generators including the template library, MMSC selection with the structure term, split-sample inference and the identification diagnostic (all in `src/symiv`, §13), plus the Monte Carlo benchmark suite (designs D1–D6 × laws). The public API and its documentation are the remaining Phase 7 work (§11).
+- **Open-source package:** symbolic IV on top of PySR: the criteria (a)–(c), the candidate generators including the template library, MMSC selection with the structure term, split-sample inference and the identification diagnostic (all in `src/symiv`, §13), plus the Monte Carlo benchmark suite (designs D1–D6 × laws). The public API and its documentation remain to be written (§11).
 - **Paper:** an ML venue (NeurIPS / ICML causality tracks) needs §8 plus Theorems 1–2. An econometrics journal (*Journal of Econometrics*, *The Econometrics Journal*) needs full proofs of Theorems 1–2, and ideally the consistency part of Theorem 3.
 - **Data:** no confidential data and no institutional access. Both applications use public extracts (the `Engel95` data of the R package `np` for the Engel curves; the Mastering 'Metrics extract for Angrist–Krueger), downloaded by the user into `data/` and not redistributed. The full FES/LCF files at the UK Data Service are not needed.
 
 ### 9.1 Scope of the paper
 
-**In the paper:** the selection rule with the structure term, the template library and the identification diagnostic (§6.3–§6.4, §12.6); Theorems 1 and 2 with their corollaries, Proposition 5, Theorem 3 (a) and (b) on a compact support, and Proposition 4 (a)–(b) ([THEORY.md](THEORY.md)); the Monte Carlo of Phases 2–5 and the budget experiment (§12.1–§12.4, §12.6); the simulated economic environments, the Engel curves and the Angrist–Krueger stress test (§12.5).
+**In the paper:** the selection rule with the structure term, the template library and the identification diagnostic (§6.3–§6.4, §12.6); Theorems 1 and 2 with their corollaries, Proposition 5, Theorem 3 (a) and (b) on a compact support, and Proposition 4 (a)–(b) ([THEORY.md](THEORY.md)); the Monte Carlo and the budget experiment (§12.1–§12.4, §12.6); the simulated economic environments, the Engel curves and the Angrist–Krueger stress test (§12.5).
 
 **Beyond the paper**, stated there as open problems or future work and marked *(beyond the paper)* wherever they appear in this file and in THEORY.md:
 - rates of convergence for growing formula size (THEORY.md Proposition 3.3 reduces them to a sieve modulus; bounding it is open);
@@ -347,25 +345,27 @@ The econometrician sees only $(y, X, Z)$.
 - the reinforcement-learning search variant (§6.6);
 - non-separable models and the IV-quantile extension (§5, §10);
 - uniformly valid inference after selection without sample splitting (§6.4);
-- the remaining Phase 4 variations ($\rho$, the noise level, $J$ in D4, the bound $C$): a robustness appendix if cheap, not a requirement.
+- the remaining Monte Carlo variations ($\rho$ on its own, the noise level, $J$ in D4, the bound $C$): a robustness appendix if cheap, not a requirement.
 
 ## 10. Risks
 
 | Risk | Mitigation |
 |---|---|
-| Weak instruments; identification failure (completeness not holding) | Designs D4–D5; weak-ID-robust confidence sets; report the criterion gap to the runner-up; Angrist–Krueger stress test. **Phase 5:** the identification diagnostic of §6.4 flags every D5 run and 4% of the strong-instrument runs whose selection was right (§12.4) |
+| Weak instruments; identification failure (completeness not holding) | Designs D4–D5; weak-ID-robust confidence sets; report the criterion gap to the runner-up; Angrist–Krueger stress test. **Outcome:** the identification diagnostic of §6.4 flags every D5 run and 4% of the strong-instrument runs whose selection was right (§12.4) |
 | Oscillatory formulas exploit ill-posedness | Bounded constants, restricted operators, nesting constraints (§6.1) |
 | Criterion ties at zero with finite $K$ | $K$ much larger than the number of constants and growing with $n$, or MMR (§6.2) |
-| Noisier, non-convex search (the moment criterion is flatter than MSE) | Several restarts; seed with the plain-SR front; report search failures separately (§7). Phase 2: only 2 of 200 failures were search failures at $n = 2000$ |
-| Selection, not search, is the bottleneck: a penalty too weak for the size of the search space (contrived formulas win) or too strong for weak separation (simpler wrong formulas win) | **Phase 4:** a structure term fixes the first failure (60% vs. 51% recovery; 98–100% from $n = 5000$). The cross-fitted criterion, larger $K$ and dropping `max` did not help. The second failure is what the separation margin measures (§12.3) |
-| The search never proposes the law (laws with a threshold or a ratio) | **Realized in Phase 4:** no generator produced the kink law in more than 33% of runs, and the saturation law appeared in 8–58% of runs. **Tested (§12.6):** a fixed library of economic-shape templates gives full coverage and recovers the quadratic labour law (20% → 75%) and the saturation law (42% → 67%) where the moments separate them; an eight-fold search budget raises coverage (25% → 55%) but not recovery (10% → 19%), because more candidates bring more wrong formulas that outscore the truth. The kink law stays unrecovered: a limit the paper states |
-| Library IV or NPIV → distillation match the method | Laws outside any finite library; if the one-step method does not win, reposition (§3.2). **Realized for distillation (Phase 3):** distillation + MMSC beat the one-step search, so the contribution was repositioned to IV-scored selection over candidates (§4) |
+| Noisier, non-convex search (the moment criterion is flatter than MSE) | Several restarts; seed with the plain-SR front; report search failures separately (§7). **Outcome (§12.1):** only 2 of 200 failures were search failures at $n = 2000$ |
+| Selection, not search, is the bottleneck: a penalty too weak for the size of the search space (contrived formulas win) or too strong for weak separation (simpler wrong formulas win) | **Outcome (§12.3):** a structure term fixes the first failure (60% vs. 51% recovery; 98–100% from $n = 5000$). The cross-fitted criterion, larger $K$ and dropping `max` did not help. The second failure is what the separation margin measures (§12.3) |
+| The search never proposes the law (laws with a threshold or a ratio) | **Realized (§12.3):** no generator produced the kink law in more than 33% of runs, and the saturation law appeared in 8–58% of runs. **Tested (§12.6):** a fixed library of economic-shape templates gives full coverage and recovers the quadratic labour law (20% → 75%) and the saturation law (42% → 67%) where the moments separate them; an eight-fold search budget raises coverage (25% → 55%) but not recovery (10% → 19%), because more candidates bring more wrong formulas that outscore the truth. The kink law stays unrecovered: a limit the paper states |
+| Library IV or NPIV → distillation match the method | Laws outside any finite library; if the one-step method does not win, reposition (§3.2). **Realized for distillation (§12.2):** distillation + MMSC beat the one-step search, so the contribution was repositioned to IV-scored selection over candidates (§4) |
 | Misspecification on real data | Stability across instrument bases and weights (§6.5) |
 | Additive-error assumption fails | Out of scope for the paper; IV quantile extension (§5) *(beyond the paper)* |
 | Inference after the search has selected the formula ([Berk et al. 2013](https://doi.org/10.1214/12-aos1077); [Belloni et al. 2012](https://doi.org/10.3982/ecta9626); [Chernozhukov et al. 2018](https://doi.org/10.1111/ectj.12097)) | Sample splitting (§6.4) |
 | Compute: exact MMR is $O(n^2)$ per evaluation | Low-rank factor (§6.2) |
 
 ## 11. Checkpoints
+
+The work was organized in eight phases, from the literature check (Phase 0) to the paper and the package (Phase 7). Each list below records what a phase set out to do, what was done and when, and what remains. The results are in §12, whose subsections name the phase that produced them.
 
 ### Phase 0: literature and novelty
 - [x] OpenAlex, arXiv, GitHub and web searches (2026-09-26)
@@ -473,7 +473,7 @@ See §9.1: listed there so they do not read as blockers, and marked *(beyond the
 
 Every number in this section is produced by the scripts of §13 from the committed run records in `experiments/phase*/`. [REPLICATION.md](REPLICATION.md) §6 maps each table and figure to its script and output file, and its §5 says how to regenerate them.
 
-### 12.1 Phase 2 Monte Carlo
+### 12.1 First Monte Carlo (Phase 2)
 
 Design D1, $n = 2000$, 50 seeds per cell; the same PySR budget and operators for both methods; formulas selected by BIC-type rules after refitting constants (§6.3). Full tables, including HQIC and AIC, oracle fits and outcome counts: [`experiments/phase2/summary.md`](experiments/phase2/summary.md). Errors are RMS$(\hat f - f_0)$ in units of the in-sample sd of $f_0$; extrapolation is on $[q_{99}, 3q_{99}]$ of $X$.
 
@@ -503,7 +503,7 @@ Design D1, $n = 2000$, 50 seeds per cell; the same PySR budget and operators for
    - The bound $C \in \{3, 10, 100\}$ made no detectable difference ($p = 0.75$), as expected without oscillatory operators.
 6. **Cost:** median 26 s per symbolic-IV search against 4 s for plain PySR ($n = 2000$, 8 threads).
 
-### 12.2 Phase 3: baselines
+### 12.2 Baselines (Phase 3)
 
 The Phase 2 D1 cells (same data) plus design D2, where the control-function assumption fails but the IV condition holds. There are 50 seeds per cell ($n = 2000$), except DeepIV (20). Full tables, including oracle and wrong-form IV, elasticities, extrapolation, runtimes, and each method's paired win rate against symbolic IV: [`experiments/phase3/summary.md`](experiments/phase3/summary.md).
 
@@ -537,7 +537,7 @@ Each formula entry is: true form recovered, then median in-sample error (units o
 5. **Guessing the form is costly.** IV fits of an assumed linear, log or power form have in-sample errors of 0.3–2.4 and extrapolation errors of 1.9–9.3.
 6. **SRIT-style pruning does not fix endogeneity.** It keeps Z in all 300 runs, because Z is informative about $y$ given $X$ when $X$ is confounded. Its implied $f$ carries the confounding term, with errors of 0.12–0.60: usually worse than plain SR.
 
-### 12.3 Phase 4: full grid
+### 12.3 Full grid (Phase 4)
 
 **Searches:** 1,098: the 528 of the Phase 4 run, 12 seeds per cell (about 12 hours), plus 570 run on 2026-10-02 to raise the 15 headline cells to 50 seeds (`phase4.py --grid headline`, about 8 hours; §11, "Before the paper"). Every Pareto front was saved, and the selection rules were applied afterwards to the same fronts. Comparisons across rules and candidate sets (the second and third tables below, the ablation and the separation analysis) use the balanced grid of 12 seeds; the per-cell tables use every seed. The grids:
 - **Breadth:** five laws × designs D1–D5 at $n = 2000$.
@@ -629,7 +629,7 @@ The columns cover different runs: the plain front exists only up to $n = 10\,000
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="experiments/phase4/fig_separation_dark.png"><img alt="Recovery given coverage against the penalty-adjusted separation margin, one point per cell. Cells with a positive margin mostly recover the law; cells with a negative margin mostly do not. The numbers are in experiments/phase4/summary.md, section 7." src="experiments/phase4/fig_separation_light.png"></picture>
 
-### 12.4 Phase 5: simulations of the theory
+### 12.4 Simulations of the theory (Phase 5)
 
 Three experiments on the saved Phase 4 fronts, no new searches. Full tables: [`experiments/phase5/summary.md`](experiments/phase5/summary.md); details and interpretation: [THEORY.md §7.1](THEORY.md).
 
@@ -661,7 +661,7 @@ Three experiments on the saved Phase 4 fronts, no new searches. Full tables: [`e
 - The confidence set covers the true form in 99% of the 404 runs where it was a candidate (nominal $\ge 95\%$).
 - It cannot detect a search failure whose wrong formula fits the moments: 46% of the search failures pass as identified, mostly D3 with the kink and saturation laws. Statistical failures it misses (70%) are near-duplicates within 0.2 sd of the truth, where the function is right and only the tree is not minimal.
 
-### 12.5 Phase 6: applications
+### 12.5 Applications (Phase 6)
 
 **Simulated economic environments (§8.2).** 20 seeds per law, $n = 2000$; candidates from plain PySR, PySR distilled from a sieve-2SLS curve and the library path, pooled; selection by BIC + structure. Full table: [`experiments/phase6/summary.md`](experiments/phase6/summary.md).
 
@@ -703,7 +703,7 @@ Three experiments on the saved Phase 4 fronts, no new searches. Full tables: [`e
 - *The diagnostic says "weakly identified" with both sets.* Every other candidate survives its S test (25 of 25 with 30 instruments; 23 of 23 with 3), the farthest 1.1–1.3 sd from the selected formula. The identification-robust AR interval for the linear return is $[-0.01, 0.44]$ against the Wald interval $[0.06, 0.16]$ with 30 instruments, and $[-0.01, 0.26]$ against $[0.03, 0.18]$ with 3: 2–5 times wider, and including zero. With 3 instruments ($K = 4$) any formula with four constants fits the moments exactly (Proposition 4); with 30, the compulsory-schooling variation is too small to tell shapes apart. A confident formula would have been wrong here; the method does not give one.
 - The sieve-2SLS curve shows the NPIV instability the plan anticipated: with 3 instruments it moves by $-1.0$ log points between 8 and 12 years and by $+2.5$ between 12 and 16.
 
-### 12.6 Before the paper: search budget and templates
+### 12.6 Search budget and templates
 
 The cells where the Phase 2–6 search rarely proposed the law (§11, "Before the paper"): D1 and D3 × the kink and saturation laws (seeds 0–11, paired with the Phase 4 runs) and the two quadratic labour-supply laws (seeds 0–19, paired with Phase 6); 88 runs, four arms each, 352 analyses. Arms: the **base** budget (40 iterations, 31 populations, size ≤ 15, from the saved fronts); base **+ templates** (`symiv.templates`: 11 textbook shapes with free constants, scored like any candidate); a **large** budget (200 iterations, 40 populations, size ≤ 25, two restarts pooled: about eight times the compute, 2–2.7 minutes per run instead of 6–19 seconds); and large + templates. Plain PySR and distillation only, plus the library path; the one-step front is left out so the arms compare. Selection by BIC + structure. Script `experiments/phase7_budget.py`; full tables with intervals and paired tests in [experiments/phase7/budget.md](experiments/phase7/budget.md).
 
