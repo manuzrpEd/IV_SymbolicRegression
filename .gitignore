@@ -21,3 +21,6 @@ logs/
 
 # Third-party data for the applications: downloaded by the scripts, kept local, not redistributed
 data/
+
+# Committed results moved aside by replication/clear_results.py --move-to replication/reference
+replication/reference/

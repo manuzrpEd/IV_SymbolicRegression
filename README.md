@@ -2,7 +2,7 @@
 
 Symbolic regression that recovers the **structural** relation $f(X)$ rather than the conditional mean $E[y \mid X]$, by scoring the formula search with instrumental-variable moment conditions.
 
-Results so far: §12 (Phase 2 Monte Carlo; Phase 3 baselines; Phase 4 full grid; Phase 5 simulations of the theory). Theory, with proofs and a review log: [THEORY.md](THEORY.md) (Phase 5). Code layout and setup: §13.
+Results so far: §12 (Phase 2 Monte Carlo; Phase 3 baselines; Phase 4 full grid; Phase 5 simulations of the theory). Theory, with proofs and a review log: [THEORY.md](THEORY.md) (Phase 5). Code layout and setup: §13. Replication guide (exact versions, data provenance, measured runtimes, what reproduces exactly, where every table comes from): [REPLICATION.md](REPLICATION.md).
 
 ---
 
@@ -446,7 +446,7 @@ The econometrician sees only $(y, X, Z)$.
 
 ### Before the paper (required)
 - [x] Weak-identification diagnostic (2026-10-01): first-stage $F$, AR intervals for the constants and the formula confidence set of THEORY.md Proposition 5, in `symiv.identification`; evaluated on every Phase 4 breadth run (§12.4)
-- [x] **More seeds in the headline cells** (done 2026-10-02; §12.3). The 15 cells the paper leans on (D1 default and strong × log and power; D3 × log and power; D5 × all five laws; the $n$-scaling cells at $n \le 5000$) now have 50 seeds: 570 extra searches in 11 hours, no errors. The headline numbers moved little and their intervals shrank to ±7–14 points: D1 100% for both laws; D3 88% (log) and 60% (power, from 33% at 12 seeds, with coverage 84%); D5 0–2% for every law; $n$-scaling with the structure term 50% → 74% → 98% for the power law and 90% → 94% → 100% for the log law at $n = 1000, 2000, 5000$
+- [x] **More seeds in the headline cells** (done 2026-10-02; §12.3). The 15 cells the paper leans on (D1 default and strong × log and power; D3 × log and power; D5 × all five laws; the $n$-scaling cells at $n \le 5000$) now have 50 seeds: 570 extra searches in 8 hours, no errors. The headline numbers moved little and their intervals shrank to ±7–14 points: D1 100% for both laws; D3 88% (log) and 60% (power, from 33% at 12 seeds, with coverage 84%); D5 0–2% for every law; $n$-scaling with the structure term 50% → 74% → 98% for the power law and 90% → 94% → 100% for the log law at $n = 1000, 2000, 5000$
 - [x] The simulated economic environments (demand with a cost shifter; labour supply) and the Angrist–Krueger stress test are done (§12.5)
 - [x] One real application with a known functional form (2026-10-01): the Engel curves on BCK 2007's public FES 1995 extract (§12.5). The food share is compatible with Working–Leser in all three samples, the motor share needs a quadratic term, and on 628–1,655 households the method reports weak identification rather than a confident formula
 - [x] **A search budget that reaches three-constant formulas.** Selection chose the true form whenever it was a candidate, but the search proposed the quadratic-in-logs labour law in only 20–45% of runs, the kink law in at most 33% and the saturation law in 8–58% (§12.3, §12.5): the Phase 2–6 budget (40 iterations, maximum size 15, default operators) is what every result so far was obtained with. Before the paper, rerun the cells with a three-constant or threshold law under a larger budget (more iterations and populations, size up to 25, restarts with different seeds) and with templates for the economic shapes (`a + b log w + c (log w)^2`, `a x + b max(x − c, 0)`); report coverage before and after, since coverage, not selection, is the binding constraint in those cells. **Done 2026-10-02** (`experiments/phase7_budget.py`, §12.6): an eight-fold budget raised coverage from 25% to 55% of runs but recovery only from 10% to 19% ($p = 0.10$), because the extra candidates bring extra beaters; the template library (`symiv.templates`) gave full coverage and raised recovery to 27% overall and to 75% for the quadratic labour law with the strong shifter, at no extra search cost. The kink law stays unrecovered under every arm, and the quadratic law at $\pi = 0.5$ is found but not selected: separation, not search, is the limit there, and the paper says so. Templates join the method; a larger search does not
@@ -534,7 +534,7 @@ Each formula entry is: true form recovered, then median in-sample error (units o
 
 ### 12.3 Phase 4: full grid
 
-**Searches:** 1,098: the 528 of the Phase 4 run, 12 seeds per cell (about 12 hours), plus 570 run on 2026-10-02 to raise the 15 headline cells to 50 seeds (`phase4.py --grid headline`, about 11 hours; §11, "Before the paper"). Every Pareto front was saved, and the selection rules were applied afterwards to the same fronts. Comparisons across rules and candidate sets (the second and third tables below, the ablation and the separation analysis) use the balanced grid of 12 seeds; the per-cell tables use every seed. The grids:
+**Searches:** 1,098: the 528 of the Phase 4 run, 12 seeds per cell (about 12 hours), plus 570 run on 2026-10-02 to raise the 15 headline cells to 50 seeds (`phase4.py --grid headline`, about 8 hours; §11, "Before the paper"). Every Pareto front was saved, and the selection rules were applied afterwards to the same fronts. Comparisons across rules and candidate sets (the second and third tables below, the ablation and the separation analysis) use the balanced grid of 12 seeds; the per-cell tables use every seed. The grids:
 - **Breadth:** five laws × designs D1–D5 at $n = 2000$.
 - **$n$-scaling:** power and log laws in the D1 strong setting, $n = 1000$ to $50\,000$.
 - **Operator ablation:** no `max`.
@@ -690,7 +690,7 @@ Three experiments on the saved Phase 4 fronts, no new searches. Full tables: [`e
 - **The known answers hold.** The food share is compatible with Working–Leser in all three samples: the linear-in-log-expenditure form is never rejected and the quadratic term's AR interval always contains zero. The motor share needs a quadratic term: its AR interval excludes zero in all three samples and the Working–Leser form is rejected in two, the case Banks, Blundell & Lewbel (1997) make for some goods. Fuel sits at the margin in the with-children sample. Leisure is a luxury (increasing), food and fuel necessities (decreasing); catering and fares are flat within the data's power.
 - **No share is "identified".** With 628–1,655 households and shares whose noise dwarfs their structural variation, 24–40 candidates per share pass the S test, up to 0.25–2.8 sd of the selected curve apart; the report lists them instead of claiming one formula. The selection itself fails its own S test three times (motor twice, fares once); the pick restricted to the confidence set is then reported, a kinked hyperbola for motor and a line through the origin for fares.
 - **Plain PySR's own pick coincides with the IV selection** for food, fuel and motor in the full sample (`0.747^x`, `0.60^x`, `0.69^x`): on these data the conditional-mean and the structural shapes are close in the bulk of the sample, so the instrument's work shows in the tests and the set, not in the pick. The templates changed one pick (alcohol, all couples: the Working–Leser template replaced a quadratic in the level of log expenditure).
-- Cost: 21 runs in about 45 minutes, searches included.
+- Cost: 21 runs in about 15 minutes: 13 minutes of searches, 3 of selection and tests.
 
 **Angrist–Krueger (1991) stress test (§8.3): the method reports weak identification, as it should.** 329,509 men born 1930–39; log weekly wage demeaned within birth year; schooling instrumented by quarter of birth (`experiments/phase6_ak.py`; full output in [experiments/phase6/ak.md](experiments/phase6/ak.md)).
 - *Replication.* With the 30 within-cohort quarter-of-birth contrasts (AK's Table V), the first-stage $F$ is 4.9 (Bound, Jaeger & Baker report 4.7–4.9), the OLS return 0.071 and the 2SLS return 0.089 (AK: 0.071 and 0.089). With the 3 overall contrasts, $F = 34$ and 2SLS gives 0.103.
@@ -725,6 +725,8 @@ Paired on the same data: large vs. base, coverage +33 / −7 runs ($p < 0.001$),
 4. **The method to present:** cheap generators (plain PySR and distillation at the base budget) plus the template library, selection by BIC + structure, then the identification diagnostic. A larger free search is optional; if used, its candidates should be pruned before pooling, not added wholesale.
 
 ## 13. Code
+
+For referees and replicators, [REPLICATION.md](REPLICATION.md) has the exact software versions (`replication/requirements-frozen.txt`, the Julia manifest), the data provenance with checksums, the measured runtime of every step, the seeds and what reproduces exactly, a table-to-script map for every result in §12, and the scripts that rerun the whole chain.
 
 ```
 src/symiv/
@@ -780,17 +782,17 @@ python experiments/phase3.py --shard 0 --of 2     # and --shard 1 --of 2 in para
 python experiments/phase3_report.py
 python experiments/phase4.py --grid breadth nscale nomax cf --shard 0 --of 2   # and --shard 1 --of 2 in parallel,
                                                   # each with PYTHON_JULIACALL_THREADS=4; about 6 hours of wall time
-python experiments/phase4_analysis.py --workers 8               # about 1 hour
-python experiments/phase4_analysis.py --separation --workers 8  # about 10 minutes
+python experiments/phase4_analysis.py --workers 8               # about 2.5 hours for all 1,098 fronts
+python experiments/phase4_analysis.py --separation --workers 8  # about 25 minutes
 python experiments/phase4_report.py
 python experiments/phase5_inference.py --workers 8  # minutes; then phase5_split.py and phase5_report.py
 python experiments/phase5_identification.py --workers 8; python experiments/phase5_report.py
 python experiments/phase6_simulated.py --part search; then --part analyze --workers 8; --part report   # about 1 hour
 python experiments/fetch_data.py                  # ak91.dta and engel95.csv into data/ (needs ".[apps]")
-python experiments/phase6_ak.py; python experiments/phase6_engel.py --data data/engel95.csv            # about 2 hours
-python experiments/phase4.py --grid headline      # the paper's cells to 50 seeds: about 15 hours; then phase4_analysis.py,
+python experiments/phase6_ak.py; python experiments/phase6_engel.py --data data/engel95.csv            # about 30 minutes
+python experiments/phase4.py --grid headline      # the paper's cells to 50 seeds: about 8 hours; then phase4_analysis.py,
                                                   # phase4_report.py, phase5_identification.py, phase5_report.py
-python experiments/phase7_budget.py --part search; then --part analyze --workers 8; --part report      # about 6 hours
+python experiments/phase7_budget.py --part search; then --part analyze --workers 8; --part report      # about 5 hours
 ```
 
 Phase 4 runs for longer than a terminal session should be trusted with. On Windows, start each search as a detached process with logs, e.g. `Start-Process .venv\Scripts\python.exe -ArgumentList "-u","experiments\phase4.py",... -WindowStyle Hidden -RedirectStandardOutput experiments\phase4\logs\search-0.out.log -RedirectStandardError experiments\phase4\logs\search-0.err.log`; elsewhere use `nohup ... &`. Every script skips finished runs, so an interrupted job resumes where it stopped. `logs/` is git-ignored.
