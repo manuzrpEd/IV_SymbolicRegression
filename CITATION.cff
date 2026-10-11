@@ -8,6 +8,7 @@ authors:
     given-names: Manuel
     email: manuzrp@gmail.com
     affiliation: "Independent researcher"
+    orcid: "https://orcid.org/0000-0002-2976-2733"
 version: 0.1.0
 date-released: 2026-10-11
 repository-code: "https://github.com/manuzrpEd/IV_SymbolicRegression"
@@ -30,6 +31,7 @@ preferred-citation:
   authors:
     - family-names: Sanchez
       given-names: Manuel
+      orcid: "https://orcid.org/0000-0002-2976-2733"
   year: 2026
   month: 10
   notes: "Working paper, preliminary draft. Posted on SSRN, 11 October 2026."
