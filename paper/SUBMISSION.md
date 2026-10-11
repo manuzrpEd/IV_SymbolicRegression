@@ -88,6 +88,8 @@ Two ways. Both give a DOI and a timestamp; the second needs the repository to be
 
 ## 5. After posting
 
+Record of what is posted: SSRN, submitted and visible 11 October 2026 at https://papers.ssrn.com/abstract=7598359 (DOI 10.2139/ssrn.7598359 once SSRN processes it). MPRA and Zenodo: pending.
+
 - Put the SSRN DOI, the MPRA URL and the Zenodo DOI into `CITATION.cff` (`identifiers`), into
   `paper/LICENSE.md` (suggested citation) and into the title-page footnote; rebuild and commit.
 - Make the GitHub repository public when the first preprint is live, so that the links in the PDF resolve.

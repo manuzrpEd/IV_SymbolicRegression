@@ -2,7 +2,7 @@
 
 Symbolic regression that recovers the **structural** relation $f(X)$ rather than the conditional mean $E[y \mid X]$, by scoring the formula search with instrumental-variable moment conditions.
 
-Results: §12. Theory, with proofs and a referee log: [THEORY.md](THEORY.md). Working paper (LaTeX source and compiled PDF): [paper/](paper/). Code layout and setup: §13. Replication guide (exact versions, data provenance, measured runtimes, what reproduces exactly, where every table comes from): [REPLICATION.md](REPLICATION.md). Licences: MIT for the code ([LICENSE](LICENSE)), CC BY 4.0 for the paper ([paper/LICENSE.md](paper/LICENSE.md)); citation in [CITATION.cff](CITATION.cff).
+Results: §12. Theory, with proofs and a referee log: [THEORY.md](THEORY.md). Working paper (LaTeX source and compiled PDF): [paper/](paper/); posted on SSRN on 11 October 2026: https://papers.ssrn.com/abstract=7598359. Code layout and setup: §13. Replication guide (exact versions, data provenance, measured runtimes, what reproduces exactly, where every table comes from): [REPLICATION.md](REPLICATION.md). Licences: MIT for the code ([LICENSE](LICENSE)), CC BY 4.0 for the paper ([paper/LICENSE.md](paper/LICENSE.md)); citation in [CITATION.cff](CITATION.cff).
 
 ---
 
