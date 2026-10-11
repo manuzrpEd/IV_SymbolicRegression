@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this code or build on the paper, please cite it as below."
+type: software
+title: "Symbolic IV: Discovering Structural Equations under Endogeneity"
+abstract: "Symbolic regression scored by instrumental-variable moment conditions: candidate formulas from cheap generators, constants refitted by two-step GMM, selection by a GMM model-selection criterion with a per-node structure penalty, and an identification-robust confidence set over formulas. Code, Monte Carlo benchmark suite, run records and a replication guide."
+authors:
+  - family-names: Sanchez
+    given-names: Manuel
+    email: manuzrp@gmail.com
+    affiliation: "Independent researcher"
+version: 0.1.0
+date-released: 2026-10-11
+repository-code: "https://github.com/manuzrpEd/IV_SymbolicRegression"
+license: MIT
+keywords:
+  - symbolic regression
+  - instrumental variables
+  - nonparametric IV
+  - GMM model selection
+  - weak identification
+  - equation discovery
+  - econometrics
+preferred-citation:
+  type: unpublished
+  title: "Symbolic IV: Discovering Structural Equations under Endogeneity"
+  authors:
+    - family-names: Sanchez
+      given-names: Manuel
+  year: 2026
+  month: 10
+  notes: "Working paper, preliminary draft."
+  url: "https://github.com/manuzrpEd/IV_SymbolicRegression"

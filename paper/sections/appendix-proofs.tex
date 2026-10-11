@@ -1,0 +1,220 @@
+\section{Proofs}
+\label{app:proofs}
+
+Throughout, $P_n$ denotes the empirical measure and $(P_n - P)[h] = n^{-1}\sum_ih(W_i) - \E h(W)$.
+
+\subsection{Lemma 1}
+
+\begin{proof}
+(a) If $\theta_k \to \theta$ in $\Theta_s$, then $f_s(x;\theta_k) \to f_s(x;\theta)$ for every $x$, and $\abs{f_s(x;\theta_k) - f_s(x;\theta)}^2 \le 4F(x)^2$. Dominated convergence gives $L^2$ convergence. A continuous image of a compact set is compact, and a finite union of compact sets is compact.
+
+(b) $\theta \mapsto \norm{T(f_s(\cdot;\theta) - f_0)}^2$ is continuous, by (a) and $\norm{T} \le 1$. It is positive on $\Theta_s$ by (A2), because a wrong tree never equals $f_0$. A positive continuous function on a compact set has a positive minimum.
+
+(c) The set $\{f \in \Fc_L : \norm{f - f_0} \ge \varepsilon\}$ is closed in the compact $\Fc_L$, hence compact. The map $f \mapsto \norm{T(f - f_0)}^2$ is continuous, and by (A2) it is positive there.
+\end{proof}
+
+\subsection{Lemma 2}
+
+\begin{proof}
+\emph{(a), (C2).} The uniform law of large numbers \citep[Lemma 2.4]{neweymcfadden1994} applies to $\theta \mapsto b(z)(y - f_s(x;\theta))$ on each compact $\Theta_s$: the map is continuous, with integrable envelope $\norm{b(z)}(\abs{y} + F(x))$ (integrable by Cauchy--Schwarz). There are finitely many trees, and $\hat W \to_p W$.
+
+\emph{(a), (C3).} $\sqrt n\,\hat g(f_0) = n^{-1/2}\sum_ib(Z_i)u_i$ has mean zero, because $\E[bu] = \E[b\,\E(u \mid Z)] = 0$. Its second moment is $\E[\norm{b}^2u^2] < \infty$, so it is $O_p(1)$ by Chebyshev's inequality.
+
+\emph{(a), (C1).} $Q(f) = 0$ if and only if $g(f) = 0$, if and only if $\Pi_KT(f_0 - f) = 0$. Continuity follows from $\norm{g(f) - g(f')} \le (\E\norm{b}^2)^{1/2}\norm{f - f'}$.
+
+\emph{(b), (C2).} Write $Q_n(f) = \norm{n^{-1}\sum_ir_i\varphi(Z_i)}_{\Hc}^2$ with $\varphi(z) = k(z, \cdot)$ and $\norm{\varphi(z)}_{\Hc} \le \sqrt{\bar\kappa}$. The same uniform-law argument works in the separable Hilbert space $\Hc$, using Mourier's strong law at the grid points.
+
+\emph{(b), (C3).} $\E\norm{n^{-1/2}\sum_iu_i\varphi(Z_i)}_{\Hc}^2 = \E[u^2k(Z,Z)] \le \bar\kappa\E[u^2]$; the cross terms vanish because $\E[u\varphi(Z)] = 0$.
+
+\emph{(b), (C1).} $Q(f) = \norm{\E[T(f_0 - f)(Z)\varphi(Z)]}_{\Hc}^2$. Continuity: $\norm{\E[h\varphi]}_{\Hc} \le \sqrt{\bar\kappa}\norm{h}$ and $\norm{T} \le 1$. For an integrally strictly positive definite kernel, $\norm{\E[h(Z)\varphi(Z)]}_{\Hc} = 0$ only if the finite signed measure $h\,dP_Z$ vanishes, i.e.\ $h = 0$ almost surely \citep{zhang2020,muandet2020}.
+\end{proof}
+
+\subsection{Theorem 1, Corollary 1.1 and Theorem 1(iii)}
+
+\begin{proof}[Proof of \res{Theorem}{1}]
+\emph{Setup.} Let $R_n := \sup_{f \in \Fc_L}\abs{Q_n(f) - Q(f)} = o_p(1)$, by (C2). Let $E_n$ be the coverage event. On $E_n$, pick $s^* \in \hat\Sc \cap \Sc_0$ (for (ii), in $\Sc_0^{\min}$) and $\theta^* \in \Theta_{s^*}^0$. Then $\hat Q_{s^*} \le Q_n(f_0)$, so
+\begin{equation}
+\crit_n(s^*) \le \frac{nQ_n(f_0)}{\hat\sigma^2} + \pen_n(s^*) = O_p(1) + O(\kappa_n).
+\label{eq:crit-star}
+\end{equation}
+
+\emph{(i).} Because $\hat s$ minimizes $\crit_n$ over $\hat\Sc$ and penalties are nonnegative, $n\hat Q_{\hat s}/\hat\sigma^2 \le \crit_n(s^*)$. Then $\hat Q_{\hat s} \le \hat\sigma^2\crit_n(s^*)/n = o_p(1)$ by~\eqref{eq:crit-star} and $\kappa_n/n \to 0$, hence $Q(\hat f) \le \hat Q_{\hat s} + R_n = o_p(1)$. Fix $\varepsilon > 0$. By (C1) and \res{Lemma}{1}(a), $\eta(\varepsilon) := \inf\{Q(f) : f \in \Fc_L,\ \norm{f - f_0} \ge \varepsilon\} > 0$, the infimum of a positive continuous function over a compact set. So $P(\norm{\hat f - f_0} \ge \varepsilon) \le P(Q(\hat f) \ge \eta(\varepsilon)) + P(E_n^c) \to 0$.
+
+\emph{(ii), wrong trees.} For a wrong $s$, $\delta_s^Q := \min_\theta Q(f_s(\cdot;\theta)) > 0$, by (C1) and compactness. On $E_n$, $\crit_n(s) \ge n\hat Q_s/\hat\sigma^2 \ge n(\delta_s^Q - R_n)/\hat\sigma^2$, which exceeds $\crit_n(s^*) = O_p(\kappa_n) = o_p(n)$ with probability tending to one. There are finitely many wrong trees, so $P(\hat s \notin \Sc_0) \to 0$.
+
+\emph{(ii), over-parameterized true trees.} For $s \in \Sc_0$ with $p_s > p_0$, since $\hat Q_s \ge 0$,
+\begin{align*}
+\crit_n(s) - \crit_n(s^*) &\ge (p_s - p_0)\kappa_n + w(\ell_s - \ell_{s^*})\log m - \frac{nQ_n(f_0)}{\hat\sigma^2} \\
+&\ge \kappa_n - wL\log m - O_p(1) \to \infty.
+\end{align*}
+So $P(\hat s \in \Sc_0,\ p_{\hat s} > p_0) \to 0$. Every tree outside $\Sc_0^{\min}$ is wrong or over-parameterized, there are finitely many, and each loses to $s^*$ with probability tending to one; therefore $P(\hat s \in \Sc_0^{\min}) \to 1$.
+\end{proof}
+
+\begin{proof}[Proof of \res{Corollary}{1.1}]
+For a fixed $s \in \Sc_0^{\min}$, $\hat\theta_s$ is a GMM estimator (first step, or the two-step one) of a correctly specified moment model whose population moment vanishes exactly on the finite set $\Theta_s^0$, by (A2$_K$) and (A5)(a). Consistency to that set, $\dist(\hat\theta_s, \Theta_s^0) \to_p 0$, follows from the uniform law of \res{Lemma}{2}(a) and compactness as in \citet[Theorem 2.1]{neweymcfadden1994}; with probability tending to one $\hat\theta_s$ then lies in a neighbourhood of a single zero $\theta_{0s}$, on which the moment model is identified, and the local argument of their Theorem~3.4, with the regularity (A5)(b)--(d), gives $\sqrt n(\hat\theta_s - \theta_{0s}) = O_p(1)$. Then, for any $M$,
+\[
+P\bigl(\sqrt n\norm{\hat\theta_{\hat s} - \theta_{0\hat s}} > M\bigr) \le \sum_{s \in \Sc_0^{\min}}P\bigl(\sqrt n\norm{\hat\theta_s - \theta_{0s}} > M\bigr) + P(\hat s \notin \Sc_0^{\min}),
+\]
+which is small for $M$ and then $n$ large. The function bound follows from the Lipschitz property.
+\end{proof}
+
+\begin{proof}[Proof of \res{Theorem}{1(iii)}]
+\emph{Fixed tree.} Fix $s \in \Sc_0^{\min}$. On $B$, $\tilde\theta(s)$ is the efficient GMM estimator of a fixed, correctly specified moment model. (A2$_K$) and (A5)(a) give identification up to the finite set $\Theta_s^0$ of isolated zeros, and the asymptotics are those of the zero nearest $\tilde\theta(s)$, as in the proof of \res{Corollary}{1.1}. Normality and the $J$ limit are then \citet{hansen1982} and \citet[Theorems 2.6 and 3.4]{neweymcfadden1994}; the consistency of $\hat\Omega$ and $\hat V$ uses $\E[\norm{b}^2\sup_\theta(y - f_s(X;\theta))^2] < \infty$, which \res{Lemma}{2}(a)'s setting provides.
+
+\emph{Selected tree.} $\hat s$ is a function of $A$, and $A$ is independent of $B$ because the split does not depend on the data. So for any bounded continuous $\phi$, with $S_B(s)$ the studentized statistic for tree $s$,
+\[
+\bigl\lvert\E\phi(S_B(\hat s)) - \E\phi(N)\bigr\rvert \le \sum_{s \in \Sc_0^{\min}}P(\hat s = s)\bigl\lvert\E\phi(S_B(s)) - \E\phi(N)\bigr\rvert + 2\norm{\phi}_\infty P(\hat s \notin \Sc_0^{\min}) \to 0.
+\]
+
+\emph{Other statistics.} The same argument covers $J_B$ and $\AR_B$. The AR limit uses only the CLT for $\sqrt{n_B}\,\bar u_B$ and $\hat\Omega_B \to_p \Omega$.
+\end{proof}
+
+\subsection{Proposition 5 and the two guards}
+\label{app:prop5}
+
+\begin{proof}
+(a) At $(s_0, \theta_0)$ the residuals are $u_i$, so $\hat g(s_0,\theta_0) = \bar u := n^{-1}\sum_ib_iu_i$ and $\hat\Omega_{s_0}(\theta_0) = n^{-1}\sum_ib_ib_i'u_i^2 \to_p \Omega$ by the law of large numbers. By (A1), $\E[bu] = 0$, and $\sqrt n\,\bar u \to_d N(0, \Omega)$ by the central limit theorem; Slutsky's lemma gives the $\chi^2_K$ limit. Since $\theta_0 \in \Theta_{s_0}$, $S_{s_0} \le \AR_{s_0}(\theta_0)$, so $\{s_0 \in \hat\Sc,\ s_0 \notin \Cc_\alpha\} \subseteq \{\AR_{s_0}(\theta_0) > \chi^2_{K,1-\alpha}\}$, whatever the (random) candidate set.
+
+(b) The event is contained in $\{s_0 \in \hat\Sc,\ s_0 \notin \Cc_\alpha\}$, so (a) applies.
+
+(c) For $f = f_s(\cdot;\theta) \in \Gc_\alpha$, $\norm{\hat\Omega_s(\theta)} \le \zeta_K^2n^{-1}\sum_i(y_i - f(X_i))^2 \le 2\zeta_K^2n^{-1}\sum_i(y_i^2 + F(X_i)^2) =: B_n$, and $B_n = O_p(1)$ by (A3) and $\E[y^2] < \infty$. Then $\norm{\hat g(s,\theta)}^2 \le \chi^2_{K,1-\alpha}B_n/n$, so $Q(f) \le \norm{\hat g}^2 + R_n \to_p 0$ uniformly over $\Gc_\alpha$, with $R_n$ the uniform deviation of (C2). \res{Lemma}{1}(c) with $\Pi_KT$ in place of $T$ (which is where (A2$_K$) enters) gives $\norm{f - f_0} \to 0$ uniformly.
+\end{proof}
+
+\medskip\noindent\emph{The sample envelope.} The implementation restricts $\Theta_s$ to $\{\theta : \max_i\abs{f_s(X_i;\theta)} \le 3\max_i\abs{y_i}\}$, a sample version of (A3)'s envelope. Without it, $\AR_s(\theta)$ can be small at absurd constants: when a few observations dominate the residuals, $\hat\Omega_s(\theta)$ is dominated by them and the statistic collapses to roughly the number of those observations. The envelope is data-dependent, so for the true tree to stay feasible it needs
+\[
+\textbf{(E)}\qquad P\bigl(\max_i\abs{f_0(X_i)} \le 3\max_i\abs{y_i}\bigr) \to 1,
+\]
+which (A1) alone does not imply: an error that systematically offsets the law where it is largest (for instance $u = -0.9(X - \E[X \mid Z])$, which satisfies (A1)) can violate it. (E) holds when the error at the observation with the largest $\abs{f_0}$ is at most two thirds of that value with probability tending to one, and for a bounded $f_0$ whenever $P(\abs{y} > \norm{f_0}_\infty/3) > 0$, since some observation then exceeds the threshold with probability tending to one. It holds in every Monte Carlo design of this paper. On the event in (E), $\theta_0$ is feasible, so (a) and (b) hold for the enveloped statistic with the same bound; (c) holds for the enveloped set a fortiori, since it is smaller.
+
+\medskip\noindent\emph{The winsorized weight.} Inside $\hat\Omega_s(\theta)$ only, the residuals are winsorized at $c_n$ robust standard deviations of the formula's own residuals at its two-step fit (never below their 99.5\% quantile), with $c_n := \max(5, \sqrt{2\ln n})$; the moments $\hat g$ keep the full residuals. A formula that misfits 2\% of the sample by five or more standard deviations would otherwise inflate its own weight by a factor near two and halve the power of the test against it (observed in the labour-supply environment). Let $\tilde\Omega_{s_0}(\theta_0) := n^{-1}\sum_ib_ib_i'\min(u_i^2, c^2)$ for a cap $c$ and write $\Omega_c := \E[bb'\min(u^2, c^2)] \preceq \Omega$. For a fixed cap, $\tilde\Omega \to_p \Omega_c$, so the capped statistic converges in distribution to $\xi'\Omega^{1/2}\Omega_c^{-1}\Omega^{1/2}\xi$ with $\xi \sim N(0, I_K)$, which stochastically dominates $\chi^2_K$: the capped set under-covers, with asymptotic size at most $P(\chi^2_K > \lambda_{\min}(\Omega_c\Omega^{-1})\chi^2_{K,1-\alpha})$. The loss is governed by the share of $\E[bb'u^2]$ beyond the cap, not of $\E[u^2]$. For Gaussian errors and a cap at five standard deviations the share is below $10^{-4}$ and the size is $\alpha$ to three decimals; for $t_3$ errors about a third of the variance lies beyond the 99.5\% quantile, which inflates the statistic by a factor near $1.5$ and a nominal 5\% test rejects the truth about 10--15\% of the time. With $c_n \to \infty$, $\tilde\Omega - \hat\Omega \to_p 0$ whenever $\E[\norm{b}^2u^2] < \infty$ (the omitted mass is $\E[\norm{b}^2u^2\ind\{\abs{u} > c_n\}] \to 0$), so (a)--(b) hold exactly in the limit; at the sample sizes used here the cap is five robust standard deviations ($\sqrt{2\ln n} < 5$ for $n < 270{,}000$) and the finite-sample size is the one just stated. The cap is computed from the formula's own two-step fit, so this also presumes that fit converges at the true tree, which (A5) gives. The centred weight $\hat\Omega - \hat g\hat g'$ of \citet{hansenheatonyaron1996} does not address the problem the cap addresses: with $q := \hat g'\hat\Omega^{-1}\hat g$ it changes the statistic to $nq/(1 - q)$, a negligible change when $\AR \ll n$, whereas the inflation comes from a few large residuals inside $\hat\Omega$ itself.
+
+\subsection{Theorem 2 and its corollaries}
+\label{app:thm2}
+
+\begin{proof}[Proof of \res{Proposition}{2.1}]
+\emph{Reduction.} $\crit_n(s^*) \le \norm{U}^2 + \pen(s^*) \le \norm{U}^2 + \overline{\pen}_0$, so it suffices to show $J_n(s) > \norm{U}^2 - \pi_s$. By~\eqref{eq:decomp},
+\[
+J_n(s) = \min_\theta\norm{U + G(\theta) + E(\theta)}^2, \qquad G(\theta) := \sqrt n\,g(s,\theta)/\sigma.
+\]
+The minimum is attained, as $\theta \mapsto \norm{U + G(\theta) + E(\theta)}^2$ is continuous on the compact $\Theta_s$, so a strict inequality at every $\theta$ gives a strict inequality for $J_n(s)$.
+
+\emph{(I).} $\norm{G(\theta)} \ge a := \sqrt{n\delta_s}/\sigma$ for every $\theta$, so $\norm{U + G + E} \ge a - z - d > z + \sqrt{(-\pi_s)_+} \ge 0$. Squaring, $J_n(s) > (z + \sqrt{(-\pi_s)_+})^2 \ge z^2 + (-\pi_s)_+ \ge \norm{U}^2 - \pi_s$.
+
+\emph{(II), outside the localized set.} Here $\pi_s > 0$. If $\theta \notin \Theta_s(r)$, then $\norm{U + G + E} \ge \norm{G} - z - d > r - z - d = z \ge \norm{U}$.
+
+\emph{(II), inside the localized set.} Let $\theta \in \Theta_s(r)$ with $G \ne 0$, and $v = G/\norm{G}$. Minimizing over the length $\norm{G} \ge 0$,
+\[
+\norm{U + G}^2 = \norm{U}^2 + 2\norm{G}\langle U, v\rangle + \norm{G}^2 \ge \norm{U}^2 - \langle -U, v\rangle_+^2 \ge \norm{U}^2 - W_s^2,
+\]
+which also holds when $G = 0$. Now let $a := ((\norm{U}^2 - W_s^2)_+)^{1/2} \le \norm{U} \le z$ and $\Delta := \norm{E(\theta)} \le \dloc_s$. Using $(a - \Delta)_+^2 \ge a^2 - 2a\Delta$,
+\[
+\norm{U + G + E}^2 \ge (a - \Delta)_+^2 \ge a^2 - 2a\Delta \ge \norm{U}^2 - W_s^2 - 2z\,\dloc_s > \norm{U}^2 - \pi_s.
+\]
+
+\emph{The projection bound.} For $v \in \Dc_s(r) \subseteq V_s$ with $\norm{v} = 1$, $\langle -U, v\rangle = \langle -P_{V_s}U, v\rangle \le \norm{P_{V_s}U}$.
+\end{proof}
+
+\begin{result}[Lemma3]{Lemma 3 (concentration)}
+Assume (F1)--(F3) and let $t > 0$, with $\varepsilon_n(t)$ and $z_t$ as defined in Section~\ref{sec:thm2}.
+(a) $P(\norm{\hat\Sigma - I_K} > \varepsilon_n(t)) \le e^{-t}$, where $\hat\Sigma := n^{-1}\sum_ib(Z_i)b(Z_i)'$.
+(b) On the event in (a), $P(\norm{U}^2 > z_t^2 \mid Z_{1:n}) \le e^{-t}$.
+(c) Let $h(x;\theta)$, $\theta \in \Theta' \subseteq [-C, C]^p$, satisfy $\abs{h} \le M'$ and be $\Lambda$-Lipschitz in $\theta$ in the sup norm. Then
+\[
+P\Bigl(\sup_{\theta \in \Theta'}\sqrt n\,\bignorm{(P_n - P)[b\,h(\cdot;\theta)]} > M'\bigl[\sqrt K + 2\zeta_K + \zeta_K\sqrt{8(t + p\log(1 + 2C\Lambda\sqrt n/M'))}\bigr]\Bigr) \le e^{-t}.
+\]
+(d) Let $V \subseteq \R^K$ be a fixed subspace of dimension $k$ and $P_V$ the orthogonal projection onto it. On the event in (a), $P(\norm{P_VU}^2 > \nu(1 + \varepsilon_n(t))(k + 2\sqrt{kt} + 2t) \mid Z_{1:n}) \le e^{-t}$.
+\end{result}
+
+\begin{proof}
+(a) Matrix Bernstein \citep[Theorem 1.4]{tropp2012} for the sum of $(b_ib_i' - I)/n$. Each summand has norm at most $(\zeta_K^2 + 1)/n$, and the variance proxy is at most $\zeta_K^2/n$, because $\E(bb' - I)^2 = \E[\norm{b}^2bb'] - I \preceq \zeta_K^2I$. Solving $2K\exp\{-x^2/(2v + 2Rx/3)\} = e^{-t}$ for $x$ gives $x \le \sqrt{2v(t + \log 2K)} + 2R(t + \log 2K)/3$.
+
+(b) Conditionally on $Z_{1:n}$, the $u_i$ are independent with $\E[e^{\alpha'u} \mid Z_{1:n}] \le e^{\norm{\alpha}^2\bar\sigma^2/2}$. Write $\sqrt n\,\bar u = Mu$, where $M := n^{-1/2}[b(Z_1), \dots, b(Z_n)]$ and $MM' = \hat\Sigma$. Theorem~1 of \citet{hsukakadezhang2012} bounds $\norm{Mu}^2$ by $\bar\sigma^2(\tr\hat\Sigma + 2\sqrt{\tr(\hat\Sigma^2)t} + 2\norm{\hat\Sigma}t)$ with probability at least $1 - e^{-t}$. On (a), $\tr\hat\Sigma \le K(1 + \varepsilon)$, $\tr\hat\Sigma^2 \le K(1 + \varepsilon)^2$ and $\norm{\hat\Sigma} \le 1 + \varepsilon$. Divide by $\sigma^2$.
+
+(c) \emph{Cover.} A cover of the cube at sup-radius $\eta/2$ gives a cover of $\Theta'$ at radius $\eta$ with centres in $\Theta'$ and at most $(1 + 2C/\eta)^p$ points; take $\eta = M'/(\Lambda\sqrt n)$. \emph{One centre.} At a fixed centre, $Y_i := b(Z_i)h(X_i) - \E[bh]$ are independent with $\norm{Y_i} \le 2\zeta_KM'$. The norm $F := \norm{\sum_iY_i}$ changes by at most $4\zeta_KM'$ when one observation changes, and $\E F \le (n\E\norm{bh}^2)^{1/2} \le \sqrt n\,M'\sqrt K$, because $\E\norm{b}^2 = \tr I_K = K$. McDiarmid's inequality \citep{mcdiarmid1989} gives $P(F > \sqrt nM'\sqrt K + \zeta_KM'\sqrt{8nu}) \le e^{-u}$. \emph{All centres.} A union bound over the centres, with $u = t + p\log(1 + 2C\Lambda\sqrt n/M')$. \emph{Between centres.} Within a ball, $\norm{(P_n - P)[b(h(\theta) - h(\theta_k))]} \le 2\zeta_K\Lambda\eta = 2\zeta_KM'/\sqrt n$.
+
+(d) Conditionally on $Z_{1:n}$, $P_VU = \sigma^{-1}(P_VM)u$ is a linear image of a sub-Gaussian vector. The bound of Hsu, Kakade and Zhang applies with $\Sigma := M'P_VM$, for which $\tr\Sigma = \tr(P_V\hat\Sigma) \le k\norm{\hat\Sigma}$, $\tr\Sigma^2 = \tr((P_V\hat\Sigma P_V)^2) \le k\norm{\hat\Sigma}^2$ (a matrix of rank at most $k$ and norm at most $\norm{\hat\Sigma}$) and $\norm{\Sigma} \le \norm{\hat\Sigma}$. On (a), $\norm{\hat\Sigma} \le 1 + \varepsilon_n(t)$.
+\end{proof}
+
+\begin{proof}[Proof of \res{Theorem}{2}]
+Intersect five events, all controlled by \res{Lemma}{3}: (a), with probability at least $1 - e^{-t}$; (b), at least $1 - e^{-t}$; (c) with $h = f_0 - f_s$ on each $\Theta_s$, at level $t_L$, with a union bound over $\Sc_L$, so that $\sup_{s,\theta}\norm{E_s(\theta)} \le d_t$, at least $1 - e^{-t}$; (c) on each deterministic set $\Theta_s(r_t)$ with $M' = M_s$, at level $t_L$, with a union bound over $\Sc_L$, so that $\sup_{\theta \in \Theta_s(r_t)}\norm{E_s(\theta)} \le \dloc_{s,t}$ for every $s$, at least $1 - e^{-t}$; and (d) on each deterministic subspace $V_s = \mathrm{span}\,\Dc_s(r_t)$, at level $t_L$, with a union bound over $\Sc_L$, so that $\norm{P_{V_s}U}^2 \le \nu(1 + \varepsilon_n(t))(k_s + 2\sqrt{k_st_L} + 2t_L)$ for every $s$, at least $1 - e^{-t}$. On the intersection, \res{Proposition}{2.1} applies to every tree with $z = z_t$, $d = d_t$ and $\dloc_s = \dloc_{s,t}$, and with $W_s^2 \le \norm{P_{V_s}U}^2$. So every $s \notin \Sc_0^{\min}$ has $\crit_n(s) > \crit_n(s^*)$. Because the bounds are uniform over $\Sc_L$, this holds whichever candidate set the search produced. The three union bounds may also run at tree-specific levels $t_s$ with $\sum_{s \in \Sc_L}e^{-t_s} \le e^{-t}$; then $d_t$, $r_t$ and $\dloc_{s,t}$ become $d_{s,t}$, $r_{s,t} := 2z_t + d_{s,t}$ and $\dloc_{s,t_s}$, which the remark after \res{Proposition}{2.1} allows.
+\end{proof}
+
+\medskip\noindent\emph{A cruder (II) that needs no union bound.} Since $\norm{P_{V_s}U} \le \norm{U} \le z_t$, condition (II) can be replaced by $\pi_s > z_t^2 + 2z_t\dloc_{s,t}$, at the price of comparing the penalty gap with the whole moment noise $z_t^2 \approx \nu K$ instead of its projection on $k_s$ directions.
+
+\medskip\noindent\emph{Over-parameterized true trees.} For $s \in \Sc_0$ with $p_s > p_0$, $\delta_s = 0$, so only (II) can exclude it. As $n$ grows, $\Theta_s(r_t) = \{\theta : \norm{g(s,\theta)} \le \sigma r_t/\sqrt n\}$ shrinks to the zero set $\Theta_s^0$. If the moment map is regular there, $\norm{g(s,\theta)} \ge c\,\dist(\theta, \Theta_s^0)$ near $\Theta_s^0$, then $M_s \le \Lambda\sigma r_t/(c\sqrt n) = O(\sqrt{\log n/n})$ and $\dloc_{s,t} = O(\log n/\sqrt n) \to 0$. For a tree linear in its constants, $f_s = \sum_k\theta_k\psi_k$, every direction $g(s,\theta)/\norm{g(s,\theta)}$ lies in the span of the $p_s$ vectors $\E[b\,\psi_k(X)]$, so $k_s \le p_s$ exactly. For a tree nonlinear in $\theta$ the same bound is false at any finite $n$: with $g(\theta) = (\theta, \theta^2)$ and $\Theta_s^0 = \{0\}$, the normalized directions over $\Theta_s(r) \setminus \{0\}$ span $\R^2$ for every $r > 0$ although $p_s = 1$; the directions approach the Jacobian span $V_J := \mathrm{span}\{\partial_\theta g(s,\theta) : \theta \in \Theta_s^0\}$, of dimension at most $p_s$, only as $r_t/\sqrt n \to 0$. What holds is a first-order version: for unit $v \in \Dc_s(r_t)$, $\langle -U, v\rangle \le \norm{P_{V_J}U} + \norm{U}\dist(v, V_J)$, so $W_s \le \norm{P_{V_J}U} + z_t\eta_s$ with $\eta_s := \sup_{v \in \Dc_s(r_t)}\dist(v, V_J)$, and $W_s^2 \le \norm{P_{V_J}U}^2 + 3z_t^2\eta_s$ when $\eta_s \le 1$. If the moment map is $C^2$ and regular near $\Theta_s^0$, then $\eta_s = O(r_t/\sqrt n)$, and \res{Lemma}{3}(d) applied to the fixed subspace $V_J$ gives (II) with $k_s$ replaced by $\dim V_J \le p_s$ plus a remainder $O(z_t^2r_t/\sqrt n) \to 0$.
+
+\begin{proof}[Derivation of \res{Corollary}{2.2}]
+\emph{Weighted union bound.} In the union bounds of \res{Lemma}{3}(c)--(d), use weights proportional to $(3m)^{-\ell_s}/L$ instead of uniform ones. They sum to at most one, because there are at most $(3m)^{\ell}$ trees of size $\ell$. Then $t_L$ becomes the tree-specific $t_s := t + \log L + \ell_s\log(3m)$ in every bound that concerns tree $s$: in $d_{s,t}$ (the deviation level $d_t$ with $t_s$ in place of $t_L$, which the remark after \res{Proposition}{2.1} and the last sentence of the proof of \res{Theorem}{2} allow), in $\dloc_{s,t_s}$ and in (II). \emph{Expand (II).} Using $2\sqrt{k_st_s} \le k_s + t_s$, (II) holds if
+\begin{multline*}
+(p_s - p_0)\kappa_n + w(\ell_s - \bar\ell_0)\log m \\ > \nu(1 + \varepsilon_n(t))(2k_s + 3t + 3\log L) + 3\nu(1 + \varepsilon_n(t))\ell_s\log(3m) + 2z_t\dloc_{s,t_s}.
+\end{multline*}
+\emph{Cancel the size terms.} If $w \ge 3\nu(1 + \varepsilon_n(t))\log(3m)/\log m$, the terms in $\ell_s$ cancel, and (II) holds whenever $(p_s - p_0)\kappa_n > w\bar\ell_0\log m + \nu(1 + \varepsilon_n(t))(2k_s + 3t + 3\log L) + 2z_t\dloc_{s,t_s}$, a condition that no longer depends on the size of $s$ apart from $k_s$ and the local deviation (which vanishes for true trees).
+\end{proof}
+
+\medskip\noindent\emph{Numbers.} One regressor, $m = 10$, $n = 2000$, $K = 13$, $\nu = 1$, $t = 3$, so $\varepsilon_n(t) \approx 0.3$ and $\kappa_n = \ln 2000 \approx 7.6$. The corollary asks for $w \ge 4.4\nu(1 + \varepsilon_n(t)) \approx 5.7$, since $\log(3m)/\log m = 1.48$. Uniformity in $L$ is bought with the leftover term $w\bar\ell_0\log m$: for the log law ($\bar\ell_0 = 6$) it is $5.7 \times 6 \times 2.3 \approx 79$, so a tree with one extra constant is excluded only if $\kappa_n = 7.6 > 79 + \nu(1 + \varepsilon)(2k_s + 3t + 3\log L) + \dots$, which needs $\kappa_n$ in the hundreds. Without the term ($w = 0$) the picture is the same with the size of the wrong tree in place of $\bar\ell_0$: a 15-node tree has $3\nu(1 + \varepsilon)\ell_s\log(3m) \approx 199$ on the right. The same $w$ enters channel (I): for a wrong tree shorter than the true one, $(-\pi_s)_+ \approx w(\bar\ell_0 - \ell_s)\log m$ is added to the separation required, about $39$ for a tree three nodes shorter at $w = 5.7$, against $3.5$ at $w = 0.5$.
+
+\begin{proof}[Proof of \res{Corollary}{2.3}]
+\res{Lemma}{3} holds conditionally on $\hat\Sc$, because the selection sample is independent of it, and the union bounds in the proof of \res{Theorem}{2} need only cover the trees that can be selected.
+\end{proof}
+
+\begin{proof}[Proof of \res{Proposition}{2.4}]
+With $\theta^*$ feasible for $s^*$, $\tilde J_n(s^*) \le n\hat g(s^*,\theta^*)'\hat W\hat g(s^*,\theta^*) \le \lambda_+\norm{U}^2$, and $\tilde J_n(s) \ge \lambda_-J_n(s)$. So it suffices that
+\begin{equation}
+J_n(s) > \frac{\lambda_+}{\lambda_-}\norm{U}^2 - \frac{\pi_s}{\lambda_-}.
+\label{eq:perturbed}
+\end{equation}
+Under (I$'$): as in \res{Proposition}{2.1}, $J_n(s) \ge (\sqrt{n\delta_s}/\sigma - z - d)^2 > (\lambda_+/\lambda_-)z^2 + (-\pi_s)_+/\lambda_-$, which implies~\eqref{eq:perturbed}. Under (II$'$), which forces $\pi_s > 0$: outside $\Theta_s(r')$, $\norm{U + G + E} > r' - z - d = z\sqrt{\lambda_+/\lambda_-} \ge \norm{U}\sqrt{\lambda_+/\lambda_-}$, so the squared norm exceeds $(\lambda_+/\lambda_-)\norm{U}^2$, which implies~\eqref{eq:perturbed}. Inside $\Theta_s(r')$, the argument of \res{Proposition}{2.1} gives $\norm{U + G + E}^2 \ge \norm{U}^2 - W_s^2 - 2z\dloc_s$, and~\eqref{eq:perturbed} follows if $\pi_s/\lambda_- > (\lambda_+/\lambda_- - 1)\norm{U}^2 + W_s^2 + 2z\dloc_s$, which (II$'$) implies because $\norm{U}^2 \le z^2$.
+\end{proof}
+
+\medskip\noindent\emph{\res{Corollary}{2.5}.} On the event of \res{Lemma}{3}(a) with $\varepsilon < 1$, $\hat\Sigma$ has eigenvalues in $[1 - \varepsilon, 1 + \varepsilon]$, so $\hat W = \hat\Sigma^{-1}/\sigma^2$ satisfies the sandwich with $\lambda_- = (1 + \varepsilon)^{-1}$ and $\lambda_+ = (1 - \varepsilon)^{-1}$; the estimated-scale clause multiplies the bounds by $(1 \pm \eta)^{-1}$ on the stated event (for instance the residual variance of a fixed pilot formula, by Bernstein's inequality under (F2)). A scale computed from each candidate's own residuals is a candidate-dependent weight and is not covered.
+
+\medskip\noindent\emph{General weights and the kernel criterion.} For a fixed positive definite weight $W$, rotate the instruments: $b_W := W^{1/2}b$ and $\Sigma_W := \E[b_Wb_W']$, no longer the identity. \res{Lemma}{3} goes through with $I_K$ replaced by $\Sigma_W$ in (a), $K$ replaced by $\tr\Sigma_W$ and $\norm{\hat\Sigma}$ by $\norm{\hat\Sigma_W}$ in (b) and (d), and $\sqrt K$, $\zeta_K$ replaced by $\sqrt{\tr\Sigma_W}$, $\zeta_K\norm{W^{1/2}}$ in (c); an estimated weight then enters through \res{Proposition}{2.4} with $\lambda_\pm$ from the eigenvalues of $W^{-1/2}\hat WW^{-1/2}$. The code's kernel criterion is the Nystr\"om approximation $Q_n = \norm{\Phi'r}^2/n^2$ with $\Phi$ the $n \times K$ feature matrix of $K$ landmarks; with landmarks fixed in advance, or drawn from an independent sample and conditioned upon, $\varphi(z) = K_{LL}^{-1/2}k(L, z)$ is a fixed bounded function and $Q_n = \norm{n^{-1}\sum_i\varphi(Z_i)r_i}^2$ is a GMM criterion with $K$ instruments, so \res{Theorem}{2} applies through the previous remark. The exact kernel criterion is a degenerate V-statistic at the truth and is left open.
+
+\subsection{Proposition 4 and Conjecture 4(c)}
+\label{app:prop4}
+
+\begin{proof}[Proof of \res{Proposition}{4}]
+(a) $\mu(f_s(\cdot;\theta) - f_0) = \Psi\theta - \mu(f_0) = 0$.
+(b) This is the surjective-derivative (Lyusternik--Graves) theorem \citep{graves1950}: a $C^1$ map whose derivative at $\bar\theta$ is onto maps $B(\bar\theta, r_0)$ onto a set containing $B(F(\bar\theta), cr_0)$, for some $r_0, c > 0$ with $B(\bar\theta, r_0) \subseteq \Theta_s$. Take $r = cr_0$.
+\end{proof}
+
+\medskip\noindent\phantomsection\label{res:Conjecture4(c)}\emph{Conjecture 4(c).} Let $p_s < J$. Suppose the design is indexed by $\xi$ in an open set $\Xi \subseteq \R^q$, such that $F(\theta, \xi) := \mu_\xi(f_s(\cdot;\theta) - f_0)$ is $C^1$ on $\mathrm{int}\,\Theta_s \times \Xi$ with $0$ as a regular value, and likewise on each face of $\Theta_s$. Then for Lebesgue-almost every $\xi$, $F(\theta, \xi) \ne 0$ for all $\theta \in \Theta_s$: the wrong tree is identified. \emph{Proof under the hypothesis.} By the parametric transversality theorem \citep[\S 2.3]{guilleminpollack1974}, for almost every $\xi$ the map $F(\cdot, \xi)$ is transverse to $\{0\}$ on $\mathrm{int}\,\Theta_s$, so its zero set is a submanifold of dimension $p_s - J < 0$: empty. The same holds on each face, which has lower dimension, and there are finitely many faces and finitely many wrong trees. \emph{What is open.} The derivative of $F$ at a zero is a $J \times (p_s + q)$ matrix, so $0$ can be a regular value only if $q \ge J - p_s$: the design family must have at least $J - p_s$ parameters that move the conditional moments in independent directions at every zero. Families built from the law's own constants have $q = p_0$, too few when $p_s + p_0 < J$; a family that perturbs each conditional distribution $P_{X \mid Z = z_j}$ separately has $q = J$ and is the natural candidate, but the regular-value condition then has to be checked at the zeros, which is a statement about the tree.
+
+\subsection{Theorem 3, Lemma 4 and Proposition 3.3}
+
+\begin{proof}[Proof of \res{Theorem}{3(a)}]
+Exactly as in \res{Theorem}{1}(i), $\hat Q_{\hat s} \le Q_n(f^*) + \hat\sigma^2\max_s\pen_n(s)/n$. Hence $Q(\hat f) \le Q^* + 2R_n + o_p(1)$, and $Q(\hat f) \ge Q^*$ by definition. By compactness and continuity, $\inf\{Q(f) : f \in \Fc_L,\ \inf_{g \in \Fc^*}\norm{f - g} \ge \varepsilon\} > Q^*$ for every $\varepsilon > 0$.
+\end{proof}
+
+\begin{proof}[Proof of \res{Theorem}{3(b)}]
+\emph{Step 1 (identification modulus, uniform in $K$).} For $\varepsilon > 0$ let $\omega(\varepsilon) := \inf\{\norm{T(f - f_0)}^2 : f \in \Hc,\ \norm{f - f_0} \ge \varepsilon\}$. The set over which the infimum is taken is closed in the compact $\Hc$, hence compact; $f \mapsto \norm{T(f - f_0)}^2$ is continuous and, by (S2), positive on it; so $\omega(\varepsilon) > 0$. The set $G := \{T(f - f_0) : f \in \Hc\}$ is compact in $L^2(P_Z)$, as the continuous image of a compact set. Strong convergence of the projections is uniform on compact sets: given $\delta > 0$, cover $G$ by finitely many balls of radius $\delta$; for $n$ large, $\norm{(I - \Pi_{K_n})h_j} \le \delta$ at every centre $h_j$, and then $\norm{(I - \Pi_{K_n})h} \le 3\delta$ for every $h \in G$, since $\norm{I - \Pi_{K_n}} \le 1$. Hence there is $n_0(\varepsilon)$ such that for $n \ge n_0(\varepsilon)$ and every $f \in \Hc$ with $\norm{f - f_0} \ge \varepsilon$,
+\begin{equation}
+\norm{\Pi_{K_n}T(f - f_0)} \ge \norm{T(f - f_0)} - \tfrac12\sqrt{\omega(\varepsilon)} \ge \tfrac12\sqrt{\omega(\varepsilon)}, \qquad\text{i.e.}\qquad Q_{K_n}(f) \ge \omega(\varepsilon)/4.
+\label{eq:modulus}
+\end{equation}
+
+\emph{Step 2 (uniform deviation).} Write $\hat g(f) = \bar u + g_{K_n}(f) + D_n(f)$ with $\bar u := n^{-1}\sum_ib^{(n)}(Z_i)u_i$, $g_{K_n}(f) := \E[b^{(n)}(Z)(f_0 - f)(X)]$ and $D_n(f) := (P_n - P)[b^{(n)}(f_0 - f)]$. Then $Q_n(f) = \norm{\hat g(f)}^2$ and $Q_{K_n}(f) = \norm{g_{K_n}(f)}^2$, with $\norm{g_{K_n}(f)} \le \norm{f - f_0} \le M$ on $\Hc_n$. First, $\E\norm{\bar u}^2 = \E[\norm{b^{(n)}}^2u^2]/n \le \zeta_n^2\E[u^2]/n \to 0$ by (S6), so $\norm{\bar u} \to_p 0$. Second, apply \res{Lemma}{3}(c) to each tree $s \in \Sc_{L_n}$ with $h = f_0 - f_s$ on $\Theta' = \{\theta \in \Theta_s : f_s(\cdot;\theta) \in \Hc\}$, $M' = M$, $p = p_s \le L_n$, $\Lambda = \Lambda_n$, $K = K_n$, at level $t + \log\abs{\Sc_{L_n}}$, and take a union bound: with probability at least $1 - e^{-t}$,
+\begin{multline*}
+\sup_{f \in \Hc_n}\norm{D_n(f)} \le \Delta_n(t) \\ := \frac{M}{\sqrt n}\Bigl[\sqrt{K_n} + 2\zeta_n + \zeta_n\sqrt{8\bigl(t + L_n\log(3m) + \log 2 + L_n\log(1 + 2C\Lambda_n\sqrt n/M)\bigr)}\Bigr].
+\end{multline*}
+Since $K_n \le \zeta_n^2$ (because $K_n = \E\norm{b^{(n)}}^2 \le \zeta_n^2$) and $\log\Lambda_n \le a(L_n + \log n)$, (S6) gives $\Delta_n(t) \to 0$ for every fixed $t$; hence $\sup_{\Hc_n}\norm{D_n} \to_p 0$. Therefore $R_n := \sup_{f \in \Hc_n}\abs{Q_n(f) - Q_{K_n}(f)} \le (\norm{\bar u} + \sup\norm{D_n})(2M + \norm{\bar u} + \sup\norm{D_n}) \to_p 0$.
+
+\emph{Step 3 (basic inequality).} By (S3), pick $f_n^* \in \Hc_n$ with $\norm{f_n^* - f_0} \to 0$; then $Q_{K_n}(f_n^*) \le \norm{f_n^* - f_0}^2 \to 0$, and
+\[
+Q_{K_n}(\hat f) \le Q_n(\hat f) + R_n \le Q_n(f_n^*) + \eta_n + R_n \le Q_{K_n}(f_n^*) + 2R_n + \eta_n \to_p 0.
+\]
+
+\emph{Step 4.} Fix $\varepsilon > 0$. For $n \ge n_0(\varepsilon)$, by~\eqref{eq:modulus} and $\hat f \in \Hc$, $P(\norm{\hat f - f_0} \ge \varepsilon) \le P(Q_{K_n}(\hat f) \ge \omega(\varepsilon)/4) \to 0$.
+\end{proof}
+
+\begin{proof}[Proof of \res{Lemma}{4}]
+(a) The piecewise-linear interpolant $I_kf_0$ of $f_0$ at $k + 1$ equally spaced knots is $I_kf_0(x) = a + bx + \sum_{j=1}^{k-1}c_j\max(x - \kappa_j, 0)$, a tree with $5 + 8(k - 1) \le 8k$ nodes: five for $a + bx$ and eight for each hinge. Its constants satisfy $\abs{b} \le \Lambda_0$, $\abs{c_j} \le 2\Lambda_0$, $\abs{\kappa_j} \le \bar x := \max(\abs{x_{\mathrm{lo}}}, \abs{x_{\mathrm{hi}}})$ and $\abs{a} \le A + \Lambda_0\bar x$, so $I_kf_0 \in \Fc_{8k}$ as soon as $C \ge \max(2\Lambda_0, A + \Lambda_0\bar x, \bar x)$. It lies in $\Hc$: its values are convex combinations of values of $f_0$, and its slopes are difference quotients of $f_0$. And $\norm{I_kf_0 - f_0}_\infty \le \Lambda_0(x_{\mathrm{hi}} - x_{\mathrm{lo}})/(2k)$: on a subinterval of width $h := (x_{\mathrm{hi}} - x_{\mathrm{lo}})/k$, at the point $x = \lambda x_j + (1 - \lambda)x_{j+1}$ the error is $\abs{\lambda(f_0(x) - f_0(x_j)) + (1 - \lambda)(f_0(x) - f_0(x_{j+1}))} \le 2\lambda(1 - \lambda)\Lambda_0h \le \Lambda_0h/2$. With $L \ge 8$ nodes, $k = \lfloor(L + 3)/8\rfloor \ge (L - 4)/8$ knots are allowed, so $\inf_{\Fc_L \cap \Hc}\norm{f - f_0} \le 4\Lambda_0(x_{\mathrm{hi}} - x_{\mathrm{lo}})/(L - 4) \le 8\Lambda_0(x_{\mathrm{hi}} - x_{\mathrm{lo}})/L$.
+
+(b) The Bernstein polynomial $B_kf_0(x) = \sum_{j \in \{0, \dots, k\}^d}f_0(j/k)\prod_{i=1}^d\binom{k}{j_i}x_i^{j_i}(1 - x_i)^{k - j_i}$ satisfies: (i) $\norm{B_kf_0}_\infty \le \norm{f_0}_\infty$, as $B_k$ is positive and reproduces constants; (ii) $B_kf_0$ is $\Lambda_0$-Lipschitz in each coordinate, because the one-dimensional Bernstein operator preserves Lipschitz constants \citep{brownelliottpaget1987}, the $d$ one-dimensional operators commute, and each is a positive operator in its own variable, which preserves Lipschitz continuity in the other variables; (iii) $\norm{B_kf_0 - f_0}_\infty \to 0$ as $k \to \infty$ \citep[Ch.~2]{lorentz1953}; a coordinatewise telescoping of the one-dimensional bound gives at most $2d\Lambda_0/\sqrt k$. So $B_kf_0 \in \Hc$. It is a polynomial with $(k + 1)^d$ terms, each a product of $d$ factors of degree at most $k$ times a coefficient $f_0(j/k)\prod_i\binom{k}{j_i}$; writing each binomial coefficient, which is at most $2^k$, as a product of $O(k)$ factors in $[1, C]$ and each value $f_0(j/k) \in [-A, A]$ as a constant, which needs $C \ge \max(A, 1)$ with $C > 1$ (the constant $1$ in $1 - x_i$ must also be admissible), $B_kf_0$ is a tree with $O(dk^{d+1})$ nodes. Hence $\inf_{\Fc_L \cap \Hc}\norm{f - f_0} \to 0$ as $L \to \infty$.
+\end{proof}
+
+In both settings $\Hc$ is a bounded equicontinuous family on a compact set, so it is compact in the sup norm (Arzel\`a--Ascoli), hence in $L^2(P_X)$; (S1) holds, and the bounded-difference part of (S5) holds with $M = 2A$. For an unbounded support one would take $\Hc := \{f : \abs{f(x)} \le A(1 + \norm{x})^{\beta},\ \text{coordinatewise }\Lambda_0\text{-Lipschitz}\}$ with $\E(1 + \norm{X})^{2\beta} < \infty$, which is compact in $L^2(P_X)$ by Arzel\`a--Ascoli on balls with a diagonal argument and a uniform tail bound; the approximants must then respect the growth envelope and \res{Lemma}{3}(c) needs a version with an unbounded envelope. Neither is written out (Section~\ref{sec:limits}).
+
+\begin{proof}[Proof of \res{Proposition}{3.3}]
+If $\norm{\hat f - f_0} = \varepsilon$, then $\omega_n(\varepsilon) \le Q_{K_n}(\hat f)$ by definition, so $\varepsilon \le \omega_n^{-1}(Q_{K_n}(\hat f))$. The second bound is Step~3 of the proof of \res{Theorem}{3(b)}.
+\end{proof}

@@ -1,0 +1,105 @@
+% Symbolic IV: Discovering Structural Equations under Endogeneity
+% Working paper. Build: paper\build.cmd (Windows) or bash paper/build.sh; or open in VS Code with LaTeX Workshop.
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{makecell}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[round,authoryear]{natbib}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\graphicspath{{../experiments/phase4/}}
+\captionsetup{font=small,labelfont=bf}
+\setlist{nosep}
+% Let TeX loosen a line slightly rather than run inline mathematics into the margin.
+\setlength{\emergencystretch}{2em}
+\bibliographystyle{plainnat}
+
+% Results keep the numbering of THEORY.md in the repository (Theorem 1, Proposition 2.1, ...), so the
+% statements are named by hand rather than numbered by LaTeX. The optional argument is a label key
+% (Theorem1, Proposition2.1, Theorem3(a), ...) that \res links to.
+\newenvironment{result}[2][]{\par\medskip\noindent%
+  \if\relax\detokenize{#1}\relax\else\phantomsection\label{res:#1}\fi%
+  \textbf{#2.}\ \itshape\ignorespaces}{\par\medskip}
+% \res{Theorem}{1} prints "Theorem 1" with the number linked to the statement, as Section~\ref{} does.
+\DeclareRobustCommand{\resnum}[2]{\hyperref[res:#1#2]{#2}}
+\DeclareRobustCommand{\res}[2]{#1~\resnum{#1}{#2}}
+\newenvironment{remarks}{\par\medskip\noindent\emph{Remarks.}}{\par\medskip}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\newcommand{\bignorm}[1]{\bigl\lVert #1\bigr\rVert}
+\newcommand{\abs}[1]{\lvert #1\rvert}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Sc}{\mathcal{S}}
+\newcommand{\Fc}{\mathcal{F}}
+\newcommand{\Hc}{\mathcal{H}}
+\newcommand{\Cc}{\mathcal{C}}
+\newcommand{\Dc}{\mathcal{D}}
+\newcommand{\Gc}{\mathcal{G}}
+\newcommand{\Xc}{\mathcal{X}}
+\newcommand{\Nc}{\mathcal{N}}
+\newcommand{\crit}{\mathrm{crit}}
+\newcommand{\pen}{\mathrm{pen}}
+\newcommand{\dloc}{d^{\mathrm{loc}}}
+\newcommand{\dist}{\mathrm{dist}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\AR}{\mathrm{AR}}
+\newcommand{\Lip}{\mathrm{Lip}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\code}[1]{\texttt{#1}}
+% Shrink a table to the text width only when it is wider than that; never enlarge it.
+\newcommand{\fittable}[1]{\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{#1}}
+
+\title{Symbolic IV: Discovering Structural Equations under Endogeneity}
+\author{Manuel Sanchez\thanks{Independent researcher. E-mail: \href{mailto:manuzrp@gmail.com}{manuzrp@gmail.com}. Code and a replication guide: \url{https://github.com/manuzrpEd/IV_SymbolicRegression}.}}
+\date{11 October 2026\\[4pt]\normalsize Preliminary draft. Comments welcome.}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent Symbolic regression finds the formula that best predicts an outcome, so under endogeneity it returns a formula for the conditional mean, not the structural law. This paper scores the formula search with instrumental-variable moment conditions instead: candidate formulas from cheap generators are refitted by GMM on sieve instruments, selected by a GMM model-selection criterion with a structure penalty, and reported with an Anderson--Rubin confidence set over formulas that says whether the data identify the result. The selection rule is consistent for any generator whose candidates contain the true form, with a finite-sample bound that attributes its failures to weak separation or to fitting moment noise, and the confidence set covers the true form without any rank condition. In a Monte Carlo over five designs and five laws, the method recovers the log, power and two-regressor laws in 92--100\% of runs under confounding and a heteroskedastic first stage, while the squared-error search never recovers the power law under strong endogeneity, and it flags every weak-instrument run as weakly identified or rejected. On the Engel curves of the 1995 Family Expenditure Survey it reproduces the known Working--Leser and quadratic shapes; on Angrist and Krueger's quarter-of-birth instruments it reports weak identification instead of a formula.
+
+\medskip\noindent\textbf{Keywords:} symbolic regression; instrumental variables; nonparametric IV; GMM model selection; weak identification.
+
+\noindent\textbf{JEL:} C14, C26, C52.
+\end{abstract}
+
+\newpage
+
+\input{sections/introduction}
+\input{sections/model}
+\input{sections/theory}
+\input{sections/implementation}
+\input{sections/montecarlo}
+\input{sections/applications}
+\input{sections/budget}
+\input{sections/limits}
+
+\section*{Replication}
+\addcontentsline{toc}{section}{Replication}
+Every number in this paper is produced by the scripts in the repository \url{https://github.com/manuzrpEd/IV_SymbolicRegression} from the run records committed there; the file \code{REPLICATION.md} gives the exact software versions (Python 3.12, PySR 2.6.0, SymbolicRegression.jl 2.5.1, Julia 1.11), the data provenance with checksums, the measured runtime of every step (about 40 hours of compute on a four-core laptop; Table~\ref{tab:compute}), the seeds, and a map from each table and figure to the script and output file that produce it. The searches themselves are stochastic and reproduce the reported rates in distribution; everything downstream of the saved Pareto fronts is deterministic and reproduces the committed files exactly. The two application data sets are public: the \code{Engel95} data frame of the R package \code{np} \citep{bck2007} and the Angrist--Krueger extract distributed with \emph{Mastering 'Metrics}; neither is redistributed. No confidential data were used.
+
+\section*{Acknowledgements}
+\addcontentsline{toc}{section}{Acknowledgements}
+Claude (Anthropic) assisted with this project throughout: it implemented the code under the author's direction, ran the experiments, derived and checked the proofs, and drafted the text; two fresh-context instances read the proofs as referees before this draft. The author designed the study, directed every step, and is responsible for all content and any errors. No funding was received.
+
+\bibliography{references}
+
+\appendix
+\input{sections/appendix-proofs}
+\input{sections/appendix-tables}
+
+\end{document}

@@ -1,0 +1,67 @@
+\section{Applications}
+\label{sec:apps}
+
+\subsection{Simulated economic environments}
+\label{sec:apps-sim}
+
+Two environments extend the grid to shapes that were not in it, with 20 seeds per law at $n = 2000$, candidates from plain PySR, distillation and the library path pooled, and selection by BIC + structure.
+
+\emph{Demand with a cost shifter} (design D6, the mirror image of D3): quantity $q = f_0(p) + u$ is a decreasing demand curve, the supply equation $q = \kappa\log p + \gamma Z + e$ is shifted by a cost shifter $Z$, and the price is set by equilibrium. Demand laws: constant elasticity $3p^{-0.5}$, log-linear $6 - 1.5\log p$ (in the library), and hyperbolic $6/(1 + p)$.
+
+\emph{Backward-bending labour supply}: hours $h = f_0(w) + u$, the wage endogenous because unobserved taste for work is correlated with productivity, the instrument an exogenous wage shifter; design D1 with $\pi = 0.5$ and the laws $8we^{-0.5w}$ (a hump) and $5 + 2\log w - 0.6(\log w)^2$ (the textbook quadratic in logs); and a control with $\pi = 1$ and a flatter quadratic, $5 + 0.5\log w - 0.6(\log w)^2$, whose peak lies near the median wage.
+
+\begin{table}[ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Simulated economic environments: 20 seeds per law, $n = 2000$. ``Plain'' is PySR's own pick (recovered / error); ``Pooled'' pools plain PySR, distillation and the library path; errors in units of sd$(f_0)$; elasticities at the median.}
+\label{tab:environments}
+\fittable{%
+\begin{tabular}{@{}llcccccc@{}}
+\toprule
+Environment & Law & \makecell{Plain:\\recov.\ / error} & \makecell{Pooled\\+ BIC} & \makecell{Pooled + BIC\\+ structure} & \makecell{Error:\\sel.\ / oracle} & \makecell{Elasticity:\\truth / sel.} & $F$ \\
+\midrule
+Demand, D6 & $3p^{-0.5}$ & 0\% / 0.43 & 95\% & \textbf{100\%} & 0.029 / 0.029 & $-0.50$ / $-0.49$ & 332 \\
+Demand, D6 & $6 - 1.5\log p$ & 0\% / 0.33 & 90\% & \textbf{100\%} & 0.024 / 0.024 & $-0.62$ / $-0.62$ & 338 \\
+Demand, D6 & $6/(1 + p)$ & 0\% / 0.57 & 65\% & \textbf{70\%} & 0.041 / 0.025 & $-0.78$ / $-0.77$ & 330 \\
+Labour, $\pi = 0.5$ & $8we^{-0.5w}$ & 0\% / 0.42 & 60\% & \textbf{75\%} & 0.040 / 0.033 & 0.50 / 0.49 & 40 \\
+Labour, $\pi = 0.5$ & $5 + 2\log w - 0.6(\log w)^2$ & 0\% / 0.30 & 10\% & \textbf{0\%} & 0.347 / 0.051 & 0.40 / 0.29 & 40 \\
+Labour, $\pi = 1$ (control) & $8we^{-0.5w}$ & 60\% / 0.21 & 75\% & \textbf{75\%} & 0.027 / 0.025 & 0.50 / 0.51 & 161 \\
+Labour, $\pi = 1$ (control) & $5 + 0.5\log w - 0.6(\log w)^2$ & 10\% / 0.37 & 20\% & \textbf{20\%} & 0.190 / 0.032 & 0.10 / 0.10 & 161 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Demand curves are recovered (Table~\ref{tab:environments}). With a cost shifter, the constant-elasticity and log-linear demand curves are recovered in every run, with the oracle's error and the right price elasticity; plain PySR never recovers them, its picks carrying the simultaneity bias (errors 0.3--0.6 sd). The hyperbolic demand is recovered in 70\% of runs, the misses being near-duplicates such as $3.3p^{-0.74}$ with the elasticity still right. Backward-bending labour supply exposes a limit: with $\pi = 0.5$ only 7\% of wages lie past the peak of the quadratic-in-logs law, and the law is never recovered; in 7 of the 9 runs where it was a candidate a simpler wrong formula beat it (channel (I) of \res{Theorem}{2}), and the selected formulas are worse in sample than plain PySR's. The hump law, whose peak sits inside the data, is recovered in 75\% of runs with near-oracle error. The control shows what identification needs: with $\pi = 1$ and the quadratic's peak near the median wage, recovery rises only to 20\%, and now every miss is a search failure, since the three-constant form was a candidate in just 20\% of runs and, whenever it was, it was selected. For these shapes the binding constraint is the search's coverage of three-constant forms, not selection; Section~\ref{sec:budget} supplies the form as a template and recovery rises to 75\%. The diagnostic says ``identified'' in every demand run, and ``weakly identified'' in 85--95\% of the hump runs even where the form was recovered: candidates 0.2--0.4 sd away fit the moments as well as the truth, because a bump is a feature that the smoothing of $\E[\cdot \mid Z]$ nearly erases. The recovered hump is correct but not pinned down by the data, and the method says so.
+
+\subsection{Engel curves}
+\label{sec:engel}
+
+The primary application has a continuous instrument and a formula-shaped known answer. The data are the public Family Expenditure Survey 1995 sample of \citet{bck2007}, 1{,}655 married couples with an employed head aged 25--55 (628 without children, 1{,}027 with), shipped as the \code{Engel95} data frame of the R package \code{np}: seven budget shares, log total expenditure, the head's log earnings, and a children indicator. Each share is regressed on log total expenditure, instrumented by the head's log earnings ($K = 9$--$12$ spline instruments; first-stage $F$ = 31--59), in the full sample and in the two subsamples. Candidates come from plain PySR, distillation, the library path and the templates, pooled; selection by BIC + structure; then the identification report, and the S tests of the Working--Leser form (share linear in log expenditure) and of the quadratic form, with an AR interval for the quadratic term. The known answers are that food is Working--Leser and that some goods need a quadratic term \citep{bankslewbel1997}. On synthetic FES-like data with a planted Working--Leser share, the same pipeline recovers $0.452 - 0.060\log x$ from $0.45 - 0.06\log x$ and reports ``identified''.
+
+\begin{table}[ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Engel curves on the FES 1995 sample: the selected formula in the full sample, the verdict in the three samples (all couples / no children / with children), whether the Working--Leser form is rejected, and whether the quadratic term's AR interval excludes zero. ``Weak'' is ``weakly identified'', ``rej.'' is ``rejected''.}
+\label{tab:engel}
+\fittable{%
+\begin{tabular}{@{}llllll@{}}
+\toprule
+Share & Selected, all couples & Shape & Verdict & \makecell[l]{Working--Leser\\rejected} & \makecell[l]{Quadratic AR\\excludes 0} \\
+\midrule
+food & $0.747^x$ (share $\propto$ expenditure$^{-0.29}$) & decreasing & weak / weak / weak & no / no / no & no / no / no \\
+catering & constant 0.080 & flat & weak / weak / weak & no / no / no & no / no / no \\
+alcohol & $0.19 - 0.025\log x$ (a template) & decreasing & weak / weak / weak & no / no / no & no / no / no \\
+fuel & $(\log x)^{-5.3}$ & decreasing & weak / weak / weak & no / no / at the margin & no / no / at the margin \\
+motor & $0.693^x$; in the set: $0.025/\max(0.17, x - 5.74)$ & decreasing & \textbf{rej.} / weak / \textbf{rej.} & \textbf{yes} / no / \textbf{yes} & \textbf{yes} / \textbf{yes} / \textbf{yes} \\
+fares & constant 0.015; in the set: $0.0028x$ & flat & \textbf{rej.} / weak / weak & no / no / no & no / no / no \\
+leisure & $0.00051e^x$ (share $\propto$ expenditure) & increasing & weak / weak / weak & no / no / no & no / no / no \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+The known answers hold (Table~\ref{tab:engel}). The food share is compatible with Working--Leser in all three samples: the linear-in-log-expenditure form is never rejected and the quadratic term's AR interval always contains zero. The motor share needs a quadratic term: its AR interval excludes zero in all three samples and the Working--Leser form is rejected in two, the case \citet{bankslewbel1997} make for some goods. Fuel sits at the margin in the with-children sample (18.4 against a critical value of 18.3; AR interval $[0.000, 0.084]$). Leisure is a luxury (increasing), food and fuel necessities (decreasing); catering and fares are flat within the data's power. No share is ``identified'': with 628--1{,}655 households and shares whose noise dwarfs their structural variation, 24--40 candidates per share pass the S test, up to 0.25--2.8 sd of the selected curve apart, and the report lists them instead of claiming one formula. The selection fails its own S test three times (motor twice, fares once); the pick restricted to the confidence set is then reported, a kinked hyperbola for motor and a line through the origin for fares. Plain PySR's own pick coincides with the IV selection for food, fuel and motor in the full sample: on these data the conditional-mean and structural shapes are close in the bulk of the sample, so the instrument's work shows in the tests and the set, not in the pick. The templates changed one pick (alcohol, all couples: the Working--Leser template replaced a quadratic in the level of log expenditure). The 21 runs took about 15 minutes.
+
+\subsection{Angrist--Krueger as a stress test}
+\label{sec:ak}
+
+\citet{angristkrueger1991} instrument schooling by quarter of birth. The instruments are weak \citep{boundjaegerbaker1995}, discrete, and shift schooling only near the compulsory-schooling margin, so they cannot identify a functional form over the whole range; the test of the method is whether it says so. The data are the public \emph{Mastering 'Metrics} extract: 329{,}509 men born 1930--39, log weekly wage demeaned within birth year, schooling as the endogenous regressor. The replication is exact: with the 30 within-cohort quarter-of-birth contrasts (Angrist and Krueger's Table V) the first-stage $F$ is 4.9 (Bound, Jaeger and Baker report 4.7--4.9), the OLS return 0.071 and the 2SLS return 0.089 (Angrist and Krueger: 0.071 and 0.089); with the three overall contrasts, $F = 34$ and 2SLS gives 0.103. Both instrument sets select $\log(0.075(s + 1))$, a concave return profile (0.10 per year at 9 years of schooling, 0.07 at 13, 0.06 at 17), which is also plain PySR's own pick: the moments do not move the formula away from the conditional-mean shape. The diagnostic says ``weakly identified'' with both sets: every other candidate survives its S test (25 of 25 with 30 instruments; 23 of 23 with 3), the farthest 1.1--1.3 sd from the selected formula. The identification-robust AR interval for the linear return is $[-0.01, 0.44]$ against the Wald interval $[0.06, 0.16]$ with 30 instruments, and $[-0.01, 0.26]$ against $[0.03, 0.18]$ with 3: two to five times wider, and including zero. With 3 instruments ($K = 4$) any formula with four constants fits the moments exactly (\res{Proposition}{4}); with 30, the compulsory-schooling variation is too small to tell shapes apart. A confident formula would have been wrong here, and the method does not give one. The sieve-2SLS curve shows the instability of unrestricted NPIV: with 3 instruments it moves by $-1.0$ log points between 8 and 12 years of schooling and by $+2.5$ between 12 and 16.

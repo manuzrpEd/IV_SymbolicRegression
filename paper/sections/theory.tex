@@ -1,0 +1,241 @@
+\section{Theory}
+\label{sec:theory}
+
+This section states the results; the proofs are in Appendix~\ref{app:proofs}. The numbering (\res{Theorem}{1}, \res{Proposition}{2.1}, \res{Corollary}{2.2}, \dots) is that of the theory file in the repository, so that each statement can be matched to its proof and to the simulations that test it. \res{Theorem}{1} says what happens as $n \to \infty$; \res{Theorem}{2} says when selection works at a given $n$ and why it fails; \res{Proposition}{5} is the identification diagnostic; \res{Proposition}{4} covers discrete instruments; \res{Theorem}{3} covers misspecification and a growing formula size.
+
+\subsection{Identification on a bounded formula class}
+
+\begin{result}[Lemma1]{Lemma 1}
+Under (A2)--(A3):
+(a) $\theta \mapsto f_s(\cdot;\theta)$ is continuous from $\Theta_s$ into $L^2(P_X)$, so each $\Fc_s$, and therefore $\Fc_L$, is compact.
+(b) Every wrong tree has a positive separation $\delta_s := \min_{\theta \in \Theta_s}\norm{T(f_s(\cdot;\theta) - f_0)}^2 > 0$. Hence $\delta_L := \min_{s \notin \Sc_0}\delta_s > 0$.
+(c) For every $\varepsilon > 0$,
+\[
+\omega_L(\varepsilon) := \inf\{\norm{T(f - f_0)}^2 : f \in \Fc_L,\ \norm{f - f_0} \ge \varepsilon\} > 0.
+\]
+\end{result}
+
+$\omega_L$ is the modulus of continuity of $T^{-1}$ at $f_0$, restricted to $\Fc_L$. Over a ball of functions the analogous modulus is zero, which is why nonparametric IV is ill-posed; over bounded-constant formulas of bounded size it is positive. It gives no rate: $\omega_L(\varepsilon)$ can be tiny, and it shrinks as $L$ or $C$ grows. The separation constant $\delta_L$ is the part of this modulus that comes from wrong trees.
+
+\subsection{Criteria}
+\label{sec:criteria}
+
+All results use three properties of a sample criterion $Q_n$ and its population limit $Q$:
+\begin{itemize}
+\item[(C1)] $Q \ge 0$, $Q$ is continuous on $\Fc_L$ in the $L^2$ norm, and for $f \in \Fc_L$: $Q(f) = 0 \iff f = f_0$.
+\item[(C2)] $\sup_{f \in \Fc_L}\abs{Q_n(f) - Q(f)} \to_p 0$.
+\item[(C3)] $n\,Q_n(f_0) = O_p(1)$.
+\end{itemize}
+
+\begin{result}[Lemma2]{Lemma 2}
+(a) \emph{Spline GMM.} Fix $K$. The instruments $b(Z) \in \R^K$ have $\E[bb']$ nonsingular, $\E[\norm{b}^2(y^2 + F(X)^2)] < \infty$ and $\E[\norm{b}^2u^2] < \infty$. Let $Q_n(f) = \hat g(f)'\hat W\hat g(f)$ with $\hat g(f) = n^{-1}\sum_i b(Z_i)(y_i - f(X_i))$ and $\hat W \to_p W$ positive definite. With 2SLS weights $\hat W = (n^{-1}\sum_i b_ib_i')^{-1}$ this is the code's $\norm{A'r}^2/n$, and $Q(f) = \norm{\Pi_KT(f_0 - f)}^2$, where $\Pi_K$ projects onto $\mathrm{span}(b)$. Then (C2) and (C3) hold, and (C1) holds if and only if
+\begin{itemize}
+\item[(A2$_K$)] for $f \in \Fc_L$, $\Pi_KT(f - f_0) = 0$ implies $f = f_0$.
+\end{itemize}
+(b) \emph{Kernel MMR.} Let the kernel $k$ be bounded ($\sup_zk(z,z) \le \bar\kappa$), continuous on a separable space of instruments, and integrally strictly positive definite, and let $Q_n(f) = n^{-2}\sum_{i,j}r_ir_j\,k(Z_i, Z_j)$ with $r_i = y_i - f(X_i)$, whose limit is $Q(f) = \E[T(f_0 - f)(Z)\,T(f_0 - f)(Z')\,k(Z, Z')]$ with $Z'$ an independent copy of $Z$. Then (C1) holds under (A2) alone, and (C2)--(C3) hold under (A3) and $\E[y^2] < \infty$.
+\end{result}
+
+(A2$_K$) is stronger than (A2), and it fails for discrete instruments once formulas have many constants (Section~\ref{sec:discrete}). The kernel criterion of \citet{zhang2020} needs only (A2); in the Monte Carlo kernel instruments were also slightly better at selection (54\% against 51\% recovery). Both criteria share one implementation: precompute an $n \times K$ matrix $A$ from $Z$ and score $\norm{A'r}^2$ (Section~\ref{sec:impl}).
+
+\subsection{Consistency, selection and inference}
+
+\begin{result}[Theorem1]{Theorem 1}
+Assume (A0), (A1), (A3), and a criterion satisfying (C1)--(C3). Let $\kappa_n \to \infty$ with $\kappa_n/n \to 0$, let $w \ge 0$ be fixed, and let $\hat\sigma^2 \to_p \sigma_*^2 \in (0, \infty)$. The candidate set $\hat\Sc$ may depend on the data in any way.
+(i) If $P(\hat\Sc \cap \Sc_0 \ne \emptyset) \to 1$, then $\norm{\hat f - f_0} \to_p 0$.
+(ii) If $P(\hat\Sc \cap \Sc_0^{\min} \ne \emptyset) \to 1$, then $P(\hat s \in \Sc_0^{\min}) \to 1$.
+\end{result}
+
+\begin{remarks}
+\begin{enumerate}
+\item \emph{Little is needed near the truth.} The proof needs no interior true constants, no rank condition and no $\chi^2$ limit; it uses only the $O_p(1)$ bound (C3) at the truth and the linear growth of the criterion for wrong trees. Over-parameterized true trees, whose extra constants are unidentified \citep{andrewscheng2012}, do no harm to selection: they lose on the penalty.
+\item \emph{Penalties.} BIC and HQIC satisfy $\kappa_n \to \infty$ and $\kappa_n/n \to 0$; AIC does not. Under AIC, over-parameterized true trees win with probability that does not vanish: when $s \supset s^*$ are nested and regular in the sense of (A5) below, with the same efficient weight (or the 2SLS weight under conditional homoskedasticity), $J_n(s^*) - J_n(s) \to_d \chi^2_{p_s - p_0}$, so $P(\crit_n(s) < \crit_n(s^*)) \to P(\chi^2_k > 2k) > 0$ with $k = p_s - p_0$. The Monte Carlo found AIC the worst rule. The structure term is bounded by $wL\log m$, so it does not affect consistency; its role is in finite samples (\res{Theorem}{2}).
+\item \emph{Any generator works.} (ii) holds for every generator whose candidates contain a minimal true tree with probability tending to one. This is the formal version of the Monte Carlo finding that the instrument is needed when formulas are scored, not when they are generated: the plain squared-error front qualifies whenever it covers, while selecting from it by squared error converges to the conditional-mean formula however large $n$ is.
+\item \emph{Cross-fitting has no $\kappa_n$.} A criterion evaluated on held-out moments lets over-parameterized true trees tie with minimal ones in the limit; it is consistent for $f$ but not for the minimal tree, and the recovery metric ($p \le p_0$) counts those ties as failures (28\% recovery in the Monte Carlo).
+\end{enumerate}
+\end{remarks}
+
+The rate and the inference results need a regularity assumption, (A5) (numbered as in the theory file, which has no (A4)), for a tree $s \in \Sc_0^{\min}$ and the GMM criterion of \res{Lemma}{2}(a) with (A2$_K$):
+\begin{itemize}
+\item[(a)] $\Theta_s^0$ is a finite set of interior points of $\Theta_s$ (a singleton for most trees; a sign-symmetric tree such as $(ax)^2$ has two zeros, $\pm a_0$). Write $\theta_{0s}$ for the element of $\Theta_s^0$ nearest to $\hat\theta_s$.
+\item[(b)] $f_s(x;\cdot)$ is continuously differentiable on a neighbourhood $\Nc$ of each point of $\Theta_s^0$, with $\E[\norm{b(Z)}^2\sup_{\Nc}\norm{\partial_\theta f_s}^2] < \infty$.
+\item[(c)] $G_s := \E[b(Z)\,\partial_\theta f_s(X;\theta)']$ has full column rank $p_0$ at every $\theta \in \Theta_s^0$.
+\item[(d)] $\Omega := \E[b(Z)b(Z)'u^2]$ is positive definite.
+\end{itemize}
+
+\begin{result}[Corollary1.1]{Corollary 1.1 (parametric rate)}
+Under the assumptions of \res{Theorem}{1}(ii), with the GMM criterion of \res{Lemma}{2}(a), (A2$_K$), and (A5) for every $s \in \Sc_0^{\min}$: $\norm{\hat\theta_{\hat s} - \theta_{0\hat s}} = O_p(n^{-1/2})$. If moreover $\norm{f_s(\cdot;\theta) - f_s(\cdot;\theta')} \le \Lambda\norm{\theta - \theta'}$ for $\theta, \theta'$ near $\Theta_s^0$ and every $s \in \Sc_0^{\min}$, then $\norm{\hat f - f_0} = O_p(n^{-1/2})$.
+\end{result}
+
+\begin{result}[Theorem1(iii)]{Theorem 1(iii) (inference after selection)}
+Split the sample into $A$ (size $n_A$) and $B$ (size $n_B = n - n_A$), $n_A/n \to a \in (0,1)$, by a rule that does not depend on the data. Compute $\hat s$ on $A$ only: the candidate generator, the scale $\hat\sigma^2$ and the refits that the selection uses all run on $A$ alone. On $B$, estimate the constants of $\hat s$ by two-step efficient GMM with fixed $K$; call the result $\tilde\theta$. Assume the conditions of (ii) on $A$, (A2$_K$), the setting of \res{Lemma}{2}(a), and (A5) for every $s \in \Sc_0^{\min}$. Then, with $\hat V$ the usual estimator of $V_{\hat s} = (G_{\hat s}'\Omega^{-1}G_{\hat s})^{-1}$,
+\[
+\hat V^{-1/2}\sqrt{n_B}\,(\tilde\theta - \theta_{0\hat s}) \to_d N(0, I_{p_0}), \qquad J_B \to_d \chi^2_{K - p_0}\quad (K > p_0).
+\]
+With (A5)(c) dropped but (A2$_K$) and (A5)(a) kept, the Anderson--Rubin statistic $\AR_B(\theta) = n_B\,\hat g_B(\theta)'\hat\Omega_B(\theta)^{-1}\hat g_B(\theta)$ at $\theta = \theta_{0\hat s}$ converges to $\chi^2_K$, so $\{\theta : \AR_B(\theta) \le \chi^2_{K,1-\alpha}\}$ covers $\theta_{0\hat s}$ with probability tending to $1 - \alpha$ \citep{stockwright2000}.
+\end{result}
+
+The result is pointwise in the data-generating process, not uniform \citep{leebpotscher2005}. Different minimal trees parameterize $f_0$ differently, so the targets to report are tree-invariant: $f_0(x)$ at given points, or elasticities, by the delta method. Two kinds of weak identification must be distinguished: selection needs the \emph{formula} to be strongly identified ($\delta_s$ large relative to $1/n$), while inference about constants can tolerate weakly identified \emph{constants} through AR sets. Under weak instruments it is the first that fails (\res{Theorem}{2}), and \res{Proposition}{5} is the statement that holds without any rank condition. Section~\ref{sec:mc-theory} checks the coverage of these intervals on fresh samples against same-sample inference after selection.
+
+\subsection{A confidence set for the formula}
+\label{sec:prop5}
+
+Selection and the intervals of \res{Theorem}{1(iii)} assume that the formula is identified. Under a weak instrument the selection returns a wrong formula with a good fit, and nothing in the output says so. The Anderson--Rubin statistic is valid without any rank condition, so it can be turned into a diagnostic. Take GMM instruments $b(Z) \in \R^K$ with $K$ fixed, $\E[\norm{b}^2u^2] < \infty$ and $\Omega := \E[bb'u^2]$ positive definite. For a tree $s$ and $\theta \in \Theta_s$,
+\[
+\AR_s(\theta) := n\,\hat g(s,\theta)'\hat\Omega_s(\theta)^{-1}\hat g(s,\theta), \qquad \hat\Omega_s(\theta) := \frac1n\sum_ib(Z_i)b(Z_i)'\bigl(y_i - f_s(X_i;\theta)\bigr)^2,
+\]
+the weight being evaluated at the same $\theta$ (the continuously-updated objective). The \emph{S statistic} of a tree is $S_s := \min_{\theta \in \Theta_s}\AR_s(\theta)$ \citep{stockwright2000}, and the \emph{formula confidence set} of a candidate set $\hat\Sc$ is
+\begin{equation}
+\Cc_\alpha := \{s \in \hat\Sc : S_s \le \chi^2_{K,1-\alpha}\}.
+\label{eq:confset}
+\end{equation}
+
+\begin{result}[Proposition5]{Proposition 5}
+(a) \emph{Coverage, without identification.} Under (A1) and the setting above, for every true tree $s_0 \in \Sc_0$ and $\theta_0 \in \Theta_{s_0}^0$, $\AR_{s_0}(\theta_0) \to_d \chi^2_K$. Hence, for any candidate set $\hat\Sc$, data-dependent or not,
+\[
+\limsup_nP\bigl(s_0 \in \hat\Sc,\ s_0 \notin \Cc_\alpha\bigr) \le \alpha.
+\]
+Neither (A2), nor (A2$_K$), nor a rank condition is used.
+(b) \emph{Detection of statistical failures.} Let $E$ be the event that the selected tree $\hat s$ is wrong while $s_0 \in \hat\Sc$. Then $\limsup_nP(E \cap \{s_0 \notin \Cc_\alpha\}) \le \alpha$: given $E$, the miscoverage is at most $(\alpha + o(1))/P(E)$.
+(c) \emph{Link to identification.} Assume (A3), (A2$_K$), $\sup_z\norm{b(z)} \le \zeta_K$ and (C2) for the identity-weight criterion. Then the set of functions the data do not reject, $\Gc_\alpha := \{f_s(\cdot;\theta) : s \in \Sc_L,\ \theta \in \Theta_s,\ \AR_s(\theta) \le \chi^2_{K,1-\alpha}\}$, satisfies $\sup_{f \in \Gc_\alpha}\norm{f - f_0} \to_p 0$. Without (A2$_K$) nothing forces it to shrink; its width is what the diagnostic measures.
+\end{result}
+
+Part (b) is a joint, not a conditional, statement, because $E$ and $\{\AR_{s_0}(\theta_0) > \chi^2_{K,1-\alpha}\}$ are driven by the same sample; it is informative when $E$ is not rare. In the 630 Monte Carlo runs of Section~\ref{sec:mc-ident}, $E$ occurred 146 times and $\Cc_\alpha$ contained $s_0$ in 145 of them. When $s_0 \in \Cc_\alpha$ is a tree of a form different from $\hat s$'s, the diagnostic reports it as ``a formula the data also allow'' when its S-minimizing fit differs from $\hat f$ by more than $\tau$ standard deviations of $\hat f$, in a trimmed root mean square that discards the 5\% largest differences; the scale is floored at a tenth of the standard deviation of $y$. Near-duplicates within $\tau$ are not reported, by design: the function is then identified even though the tree is not minimal. The implementation adds two guards against a weakness of the robust weight, which discounts exactly the observations a formula misfits most: a sample envelope on the constants and a winsorized weight with a slowly growing cap; Appendix~\ref{app:prop5} states the condition each needs and what it costs. The report returns a verdict: \emph{rejected} when the selected formula fails its own S test ($S_{\hat s} > \chi^2_{K,1-\alpha}$); \emph{weakly identified} when some AR interval of its constants reaches the constant bound, or $\Cc_\alpha$ contains a formula more than $\tau$ away from $\hat f$ (the formulas are listed); \emph{identified} otherwise. It also reports the first-stage $F$ of (log) $X$ on the instruments and the Wald and AR intervals of each constant. A search failure, where no candidate has the true form, is detected only if every candidate fails its S test; if a wrong formula fits the moments, the report says ``identified'' and is wrong about the tree, though usually not about the function.
+
+\subsection{A finite-sample selection bound}
+\label{sec:thm2}
+
+\res{Theorem}{2} says when selection works at a given $n$, and why the two failures seen in the Monte Carlo happen: (I) a wrong formula that the instruments cannot tell apart from $f_0$ wins (weak separation), and (II) a formula with extra constants or nodes wins by fitting moment noise (the contrived winners).
+
+The bound is stated in the simplest setting with explicit constants, Setting (F).
+\begin{itemize}
+\item[(F1)] \emph{Instruments.} GMM with fixed $K$ and population-orthonormal instruments: $\E[bb'] = I_K$ and $\sup_z\norm{b(z)} \le \zeta_K$, so $\zeta_K \ge \sqrt K$. The criterion is $Q_n(s,\theta) = \norm{\hat g(s,\theta)}^2$ with identity weight. The code orthonormalizes on the sample instead; \res{Corollary}{2.5} covers that.
+\item[(F2)] \emph{Errors.} $\E[u \mid Z] = 0$ and $\E[e^{\lambda u} \mid Z] \le e^{\lambda^2\bar\sigma^2/2}$ for all $\lambda$. The $J$ statistic is $J_n(s) = (n/\sigma^2)\min_\theta Q_n(s,\theta)$ with a fixed normalization $\sigma^2 > 0$; write $\nu := \bar\sigma^2/\sigma^2$.
+\item[(F3)] \emph{Formula class.} For all $s$, $\theta, \theta'$ and $x$: $\abs{f_s(x;\theta) - f_0(x)} \le M$ and $\abs{f_s(x;\theta) - f_s(x;\theta')} \le \Lambda\norm{\theta - \theta'}_\infty$.
+\end{itemize}
+(F3) needs a bounded class on the support of $X$; the Monte Carlo designs have lognormal regressors, so for them it is an idealization that holds after truncating the support.
+
+Some notation is needed. The population moments are $g(s,\theta) := \E[b(Z)(f_0 - f_s(\cdot;\theta))(X)]$, so $\norm{g(s,\theta)}^2 = \norm{\Pi_KT(f_s(\cdot;\theta) - f_0)}^2$, and the separation of tree $s$ at this $K$ is $\delta_s := \min_\theta\norm{g(s,\theta)}^2$, positive for wrong trees under (A2$_K$). The penalty gap is $\pi_s := \pen(s) - \overline{\pen}_0$, where $\overline{\pen}_0 := \max_{s' \in \Sc_0^{\min}}\pen(s')$ is the largest penalty of a minimal true tree (the worst case). The moment noise at the truth is $U := \sqrt n\,\bar u/\sigma$ with $\bar u := n^{-1}\sum_ib(Z_i)u_i$; for every $s^* \in \Sc_0^{\min}$, $J_n(s^*) \le \norm{U}^2$. The empirical-process part is $E_s(\theta) := \sqrt n\,(P_n - P)[b(Z)(f_0 - f_s(\cdot;\theta))(X)]/\sigma$, so that for every $s$ and $\theta$
+\begin{equation}
+\frac{\sqrt n\,\hat g(s,\theta)}{\sigma} = U + \frac{\sqrt n\,g(s,\theta)}{\sigma} + E_s(\theta).
+\label{eq:decomp}
+\end{equation}
+
+\begin{result}[Proposition2.1]{Proposition 2.1 (deterministic core)}
+Let $s \notin \Sc_0^{\min}$, and suppose $\norm{U} \le z$ and $\sup_{s,\theta}\norm{E_s(\theta)} \le d$. Then $\crit_n(s) > \crit_n(s^*)$ for every $s^* \in \Sc_0^{\min}$ if either condition holds:
+\begin{itemize}
+\item[(I)] Separation: $\sqrt{n\delta_s}/\sigma > 2z + d + \sqrt{(-\pi_s)_+}$.
+\item[(II)] Complexity: $\pi_s > W_s^2 + 2z\,\dloc_s$,
+\end{itemize}
+where, with $r := 2z + d$, $\Theta_s(r) := \{\theta \in \Theta_s : \sqrt n\norm{g(s,\theta)}/\sigma \le r\}$ is the localized set of constants, $\Dc_s(r) := \{g(s,\theta)/\norm{g(s,\theta)} : \theta \in \Theta_s(r),\ g(s,\theta) \ne 0\}$ the localized directions, $W_s := \sup_{v \in \Dc_s(r)}\langle -U, v\rangle_+$ (or $0$ if $\Dc_s(r)$ is empty), and $\dloc_s \ge \sup_{\theta \in \Theta_s(r)}\norm{E_s(\theta)}$ any bound. Moreover $W_s \le \norm{P_{V_s}U}$, where $V_s := \mathrm{span}\,\Dc_s(r)$.
+\end{result}
+
+The proof uses $d$ only through $\sup_\theta\norm{E_s(\theta)}$ for the tree at hand, so $d$ and $r$ may be tree-specific; \res{Corollary}{2.2} uses that. The concentration inequalities that turn \res{Proposition}{2.1} into a probability statement are collected in \res{Lemma}{3} (Appendix~\ref{app:thm2}): a matrix Bernstein bound for the sample second moment of the instruments \citep{tropp2012}, the quadratic-form bound of \citet{hsukakadezhang2012} for $\norm{U}^2$ and for its projections, and a covering argument with McDiarmid's inequality for the empirical process. They define, for a level $t > 0$,
+\[
+\varepsilon_n(t) := \sqrt{\frac{2\zeta_K^2(t + \log 2K)}{n}} + \frac{2(\zeta_K^2 + 1)(t + \log 2K)}{3n}, \qquad z_t^2 := \nu(1 + \varepsilon_n(t))(K + 2\sqrt{Kt} + 2t).
+\]
+
+\begin{result}[Theorem2]{Theorem 2}
+Assume (A0), (A1), (A2$_K$) and (F1)--(F3). Fix $t > 0$, let $t_L := t + \log\abs{\Sc_L}$, and define
+\[
+d_t := \frac{M}{\sigma}\Bigl[\sqrt K + 2\zeta_K + \zeta_K\sqrt{8\bigl(t_L + p_{\max}\log(1 + 2C\Lambda\sqrt n/M)\bigr)}\Bigr], \qquad r_t := 2z_t + d_t,
+\]
+where $p_{\max} := \max_{s \in \Sc_L}p_s$. For each tree $s$, with the localized set $\Theta_s(r_t)$ and directions $\Dc_s(r_t)$ of \res{Proposition}{2.1}, let $M_s := \sup\{\abs{f_s(x;\theta) - f_0(x)} : x \in \Xc,\ \theta \in \Theta_s(r_t)\}$, $k_s := \dim\mathrm{span}\,\Dc_s(r_t) \le K$, and
+\[
+\dloc_{s,t} := \frac{M_s}{\sigma}\Bigl[\sqrt K + 2\zeta_K + \zeta_K\sqrt{8\bigl(t_L + p_s\log(1 + 2C\Lambda\sqrt n/M_s)\bigr)}\Bigr],
+\]
+with $\dloc_{s,t} := 0$ when $M_s = 0$ and $k_s := 0$ when $\Dc_s(r_t)$ is empty. There is an event of probability at least $1 - 5e^{-t}$ on which, for any candidate set $\hat\Sc \subseteq \Sc_L$ (possibly data-dependent) that contains some $s^* \in \Sc_0^{\min}$, the selected tree is minimal and true, provided every $s \in \Sc_L \setminus \Sc_0^{\min}$ satisfies (I) or (II):
+\begin{itemize}
+\item[(I)] Separation: $n\delta_s/\sigma^2 > \bigl(2z_t + d_t + \sqrt{(-\pi_s)_+}\bigr)^2$.
+\item[(II)] Complexity: $\pi_s > \nu\,(1 + \varepsilon_n(t))\bigl(k_s + 2\sqrt{k_st_L} + 2t_L\bigr) + 2z_t\,\dloc_{s,t}$.
+\end{itemize}
+Consequently
+\[
+P(\hat s \notin \Sc_0^{\min}) \le \underbrace{5e^{-t}}_{\text{statistical failure}} + \underbrace{P(\hat\Sc \cap \Sc_0^{\min} = \emptyset)}_{\text{search failure}}.
+\]
+\end{result}
+
+\res{Theorem}{2} reads as follows. A wrong tree loses if it is separated from $f_0$ by more than the noise plus the penalty it saves (I); a longer or more heavily parameterized tree loses if the penalty it pays exceeds the moment noise it can fit (II). A tree that meets neither condition can win: wrong trees whose separation is small \emph{and} that are no bigger than the minimal true trees, which are the simpler wrong formulas under weak instruments and the same-size near-duplicates when $w = 0$. With $K$ and $L$ fixed, $z_t = O(1)$ and $d_t = O(\sqrt{\log n})$, the latter from the covering term, so (I) holds for a wrong tree as soon as
+\begin{equation}
+\frac{n\delta_s}{\sigma^2} > 2(p_0 - p_s)_+\kappa_n + 2w(\bar\ell_0 - \ell_s)_+\log m + 2(2z_t + d_t)^2,
+\label{eq:margin}
+\end{equation}
+where $\bar\ell_0 := \max_{s^* \in \Sc_0^{\min}}\ell_{s^*}$; $d_t^2 = O(\log n)$ is of the \emph{same} order as $\kappa_n = \ln n$. So the finite-sample condition is the population comparison $n\delta_s/\sigma^2$ against the penalty saved, plus deviation terms of the same order with explicit constants. The population comparison alone, the margin $n\delta_s/\sigma^2 - (p_0 - p_s)\kappa_n$, is what the Monte Carlo computes for every cell (Section~\ref{sec:mc-grid}): among runs whose candidates contained the true form, recovery was 74\% where the margin is positive and 23\% where it is not. For over-parameterized true trees $\delta_s = 0$, so only (II) can exclude them; as $n$ grows the localized set shrinks to the zero set, $\dloc_{s,t} \to 0$, and for a tree linear in its constants $k_s \le p_s$ exactly, so (II) reads $(p_s - p_0)\kappa_n > \nu(1 + \varepsilon)(p_s + 2\sqrt{p_st_L} + 2t_L) + o(1)$: \res{Theorem}{1}(ii) with explicit sample sizes. For trees nonlinear in $\theta$ the bound $k_s \le p_s$ fails at finite $n$ and a first-order version through the Jacobian span holds instead (Appendix~\ref{app:thm2}). The term $2\nu t_L \approx 2\nu(t + L\log 3m)$ is the price of the union bound over all trees; the next corollary is about it.
+
+\begin{result}[Corollary2.2]{Corollary 2.2 (why a structure term)}
+Replace the uniform union bounds in \res{Theorem}{2} by weights proportional to $(3m)^{-\ell_s}/L$, so that $t_L$ becomes the tree-specific $t_s := t + \log L + \ell_s\log(3m)$ in every bound concerning tree $s$. Then (II) holds if
+\begin{multline*}
+(p_s - p_0)\kappa_n + w(\ell_s - \bar\ell_0)\log m \\ > \nu(1 + \varepsilon_n(t))(2k_s + 3t + 3\log L) + 3\nu(1 + \varepsilon_n(t))\,\ell_s\log(3m) + 2z_t\,\dloc_{s,t_s},
+\end{multline*}
+and if $w \ge 3\nu(1 + \varepsilon_n(t))\log(3m)/\log m$, the terms in $\ell_s$ cancel: (II) holds whenever $(p_s - p_0)\kappa_n > w\bar\ell_0\log m + \nu(1 + \varepsilon_n(t))(2k_s + 3t + 3\log L) + 2z_t\dloc_{s,t_s}$, a condition that no longer depends on the size of $s$. The guarantee is then uniform in the maximal size $L$.
+\end{result}
+
+The corollary fixes the direction of the structure term, not its weight. With one regressor, $m = 10$, $n = 2000$, $K = 13$, $\nu = 1$ and $t = 3$, it asks for $w \gtrsim 5.7$, and the leftover term $w\bar\ell_0\log m$ is about $79$ for the log law: nothing is certified at $n = 2000$ for trees of any size, because the union bound over all $(3m)^{\ell}$ trees of each size, with the explicit constants of \res{Lemma}{3}, is vacuous there; without the term the picture is the same with the size of the wrong tree in place of $\bar\ell_0$. The same $w$ enters channel (I) against wrong trees shorter than the true one, so a large $w$ manufactures the ``simpler wrong formula wins'' failure. In the data the structure term raised pooled recovery from 51\% to 60\%, and to 98--100\% from $n = 5000$, with $w = 0.5$ and $w = 1$ doing equally well; what it fixed were same-size near-duplicates of the law ($\pi_s = 0$ when $w = 0$, $\delta_s \approx 0$), the case that falls under neither channel. The data support the direction of the structure term and a weight ten times smaller than the bound asks for.
+
+\begin{result}[Corollary2.3]{Corollary 2.3 (candidates from a separate sample)}
+Suppose $\hat\Sc$ is generated on data independent of the selection sample. Conditionally on $\hat\Sc$, \res{Theorem}{2} holds with every union bound running over $\hat\Sc$ instead of $\Sc_L$: $\log\abs{\Sc_L}$ becomes $\log\abs{\hat\Sc}$ in $t_L$.
+\end{result}
+
+Had the Monte Carlo candidates come from an independent sample, the union bound would run over a median of 28 candidates, $\log\abs{\hat\Sc} \approx 3.3$, instead of $\log\abs{\Sc_{15}} \approx 51$. But generating on one half and selecting on the other halves the selection sample, so $n\delta_s$ in (I) halves too. Section~\ref{sec:mc-split} tests the trade-off: the mechanism is real, but full-sample selection with the structure term recovers more.
+
+\begin{result}[Proposition2.4]{Proposition 2.4 (perturbed weights)}
+Let $\hat W$ be a symmetric matrix, possibly data-dependent, with $\lambda_-\sigma^{-2}I_K \preceq \hat W \preceq \lambda_+\sigma^{-2}I_K$, $0 < \lambda_- \le \lambda_+$, and let the selection use $\tilde J_n(s) := n\min_\theta\hat g(s,\theta)'\hat W\hat g(s,\theta)$. Under the hypotheses of \res{Proposition}{2.1}, with the localization radius $r' := z(1 + \sqrt{\lambda_+/\lambda_-}) + d$ in place of $r$, the conclusion of \res{Proposition}{2.1} holds for the perturbed criterion if either
+(I$'$) $\sqrt{n\delta_s}/\sigma > z + d + \sqrt{(\lambda_+/\lambda_-)z^2 + (-\pi_s)_+/\lambda_-}$, or
+(II$'$) $\pi_s > (\lambda_+ - \lambda_-)z^2 + \lambda_-(W_s^2 + 2z\,\dloc_s)$.
+\end{result}
+
+\begin{result}[Corollary2.5]{Corollary 2.5 (the code's criterion)}
+The code uses sample-orthonormalized instruments, $\hat W = \hat\Sigma^{-1}/\sigma^2$ with $\hat\Sigma := n^{-1}\sum_ib(Z_i)b(Z_i)'$. On the event $\norm{\hat\Sigma - I_K} \le \varepsilon := \varepsilon_n(t) < 1$, $\hat W$ satisfies the sandwich with $\lambda_- = (1 + \varepsilon)^{-1}$ and $\lambda_+ = (1 - \varepsilon)^{-1}$, so \res{Theorem}{2} holds for this criterion on the same event of probability at least $1 - 5e^{-t}$, with (I$'$)--(II$'$) in place of (I)--(II). If the normalization is an estimated scale $\hat\sigma^2$ common to all candidates with $P(\abs{\hat\sigma^2/\sigma^2 - 1} > \eta_n(t)) \le e^{-t}$, $\eta_n(t) \to 0$, then $\lambda_\mp$ are multiplied by $(1 \pm \eta)^{-1}$ on a sixth event and the probability becomes $1 - 6e^{-t}$. The perturbation is $\lambda_+ - \lambda_- \approx 2(\varepsilon + \eta)$ in (II$'$) and a factor $\lambda_+/\lambda_- \approx 1 + 2(\varepsilon + \eta)$ on $z^2$ in (I$'$); $\varepsilon_n(t)$ is of order $\sqrt{\zeta_K^2\log K/n}$.
+\end{result}
+
+For a fixed positive definite weight $W$, such as the efficient $\Omega^{-1}$ under heteroskedasticity, \res{Theorem}{2} goes through with the instruments rotated to $W^{1/2}b$ and the constants changed accordingly; the estimation error of an efficient weight, and the exact (non-Nystr\"om) kernel criterion, which is a degenerate V-statistic at the truth, are left open (Section~\ref{sec:limits}). The constants of \res{Theorem}{2} are explicit but not optimized; with heavy-tailed errors the tails become polynomial; and for wrong trees with small $\delta_s$ the localized set can contain parameters whose functions are far from $f_0$ but have small moments, the ill-posed directions, so $M_s$ stays large and (II) is loose. Those are the hard cases, and no general improvement should be expected.
+
+\subsection{Discrete instruments}
+\label{sec:discrete}
+
+Let $Z$ take $J$ values $z_1, \dots, z_J$ with $P(Z = z_j) > 0$, and write $\mu(h) := (\E[h(X) \mid Z = z_j])_{j=1}^J \in \R^J$. Every function of $Z$ is a step function, so at most $J$ instruments are effective, and with the saturated basis $\Pi_KTh = 0$ if and only if $\mu(h) = 0$.
+
+\begin{result}[Proposition4]{Proposition 4}
+(a) \emph{Linear families.} Let $f_s(x;\theta) = \sum_{k=1}^p\theta_k\psi_k(x)$ with $f_0 \notin \Fc_s$. Suppose $p \ge J$, the $J \times p$ matrix $\Psi = [\E(\psi_k(X) \mid Z = z_j)]$ has rank $J$, and $\Psi\theta = \mu(f_0)$ has a solution in $\Theta_s$. Then (A2$_K$) fails: $f_s(\cdot;\theta) \ne f_0$, yet $\mu(f_s(\cdot;\theta) - f_0) = 0$.
+(b) \emph{General families.} Let $s$ be wrong and $\bar\theta$ interior to $\Theta_s$. Suppose $\theta \mapsto \mu(f_s(\cdot;\theta) - f_0)$ is $C^1$ near $\bar\theta$ with Jacobian of rank $J$ there (so $p_s \ge J$). Then there is $r > 0$ such that $\norm{\mu(f_s(\cdot;\bar\theta) - f_0)} < r$ implies $\mu(f_s(\cdot;\theta) - f_0) = 0$ for some $\theta \in \Theta_s$: the criterion is exactly zero at a wrong formula.
+\end{result}
+
+With a $J$-point instrument the moments cannot exclude wrong trees with $J$ or more constants: their $\delta_s = 0$, and only the penalty can exclude them, through channel (II) of \res{Theorem}{2}. A practical rule is to cap formulas at $J - 1$ constants when the instrument is discrete; the SVD orthonormalization of the instruments already reduces $K$ to $J$, so the degrees of freedom of the criterion are right. Whether a wrong tree with \emph{fewer} than $J$ constants is generically identified is a transversality statement that we state as \res{Conjecture}{4(c)} in Appendix~\ref{app:prop4} and leave open (Section~\ref{sec:limits}). Section~\ref{sec:mc-discrete} shows \res{Proposition}{4} in the data: with a four-point instrument, a wrong four-constant formula sets the criterion to $10^{-33}$--$10^{-32}$ for three of the four one-regressor laws while missing $f_0$ by 0.12--0.42 standard deviations.
+
+\subsection{Misspecification and growing formula size}
+\label{sec:thm3}
+
+\begin{result}[Theorem3(a)]{Theorem 3(a) (fixed $L$, misspecified law)}\label{res:Theorem3}
+Drop (A0) and (A2). Assume (A3), (C2), $Q$ continuous on $\Fc_L$, and $\kappa_n/n \to 0$. Let $Q^* := \min_{f \in \Fc_L}Q(f)$ and $\Fc^* := \argmin_{\Fc_L}Q$, which is nonempty and compact. Suppose $\hat\Sc$ contains, with probability tending to one, a tree of some $f^* \in \Fc^*$. Then $Q(\hat f) \to_p Q^*$ and $\inf_{f \in \Fc^*}\norm{\hat f - f} \to_p 0$.
+\end{result}
+
+Under misspecification the pseudo-true set depends on the instrument basis, on $K$ and on the weight \citep{hallinoue2003}: no formula is best independently of the instruments, which is why the selected formula on real data should be reported across bases. Among trees with the same $Q^*$ but different pseudo-true functions, the $J$ statistics differ by $O_p(\sqrt n)$, so $\kappa_n$ does not decide between them; this is the non-nested comparison problem \citep{vuong1989}.
+
+For a formula class that grows with $n$, $L_n \to \infty$ and $K_n \to \infty$, the estimator minimizes over a compact set of functions, a Lipschitz ball $\Hc$, intersected with the formulas, $\Hc_n := \Fc_{L_n} \cap \Hc$.
+\begin{itemize}
+\item[(S1)] $\Hc \subset L^2(P_X)$ is compact and $f_0 \in \Hc$.
+\item[(S2)] For $f \in \Hc$, $T(f - f_0) = 0$ implies $f = f_0$.
+\item[(S3)] $\inf_{f \in \Hc_n}\norm{f - f_0} \to 0$.
+\item[(S4)] For each $n$, $b^{(n)}(Z) \in \R^{K_n}$ with $\E[b^{(n)}b^{(n)\prime}] = I_{K_n}$ and $\sup_z\norm{b^{(n)}(z)} \le \zeta_n$; the spans are nested with a dense union in $L^2(P_Z)$. The criterion is $Q_n(f) = \norm{n^{-1}\sum_ib^{(n)}(Z_i)(y_i - f(X_i))}^2$, with population version $Q_{K_n}(f) = \norm{\Pi_{K_n}T(f - f_0)}^2$.
+\item[(S5)] $\E[u \mid Z] = 0$ and $\E[u^2] < \infty$. Every $f \in \Hc_n$ satisfies $\abs{f(x) - f_0(x)} \le M$. For every tree $s \in \Sc_{L_n}$, $\theta \mapsto f_s(x;\theta)$ is $\Lambda_n$-Lipschitz in the sup norm on $\{\theta \in \Theta_s : f_s(\cdot;\theta) \in \Hc\}$, uniformly in $x$, with $\log\Lambda_n \le a(L_n + \log n)$.
+\item[(S6)] $\zeta_n^2L_n(L_n + \log n)/n \to 0$, $\max_{s \in \Sc_{L_n}}\pen_n(s)/n \to 0$, and $\hat\sigma^2 = O_p(1)$.
+\end{itemize}
+
+\begin{result}[Theorem3(b)]{Theorem 3(b) (growing size)}
+Under (S1)--(S6), let $\hat f \in \Hc_n$ satisfy $Q_n(\hat f) \le \inf_{f \in \Hc_n}Q_n(f) + \eta_n$ with $\eta_n \to_p 0$; the penalized minimizer qualifies, with $\eta_n = \hat\sigma^2\max_s\pen_n(s)/n$. Then $\norm{\hat f - f_0} \to_p 0$.
+\end{result}
+
+\begin{result}[Lemma4]{Lemma 4 (approximation within a Lipschitz ball)}
+(S3) holds in two settings. (a) One regressor on a compact support $[x_{\mathrm{lo}}, x_{\mathrm{hi}}]$ with operators $+, -, \times, \max$ and $\Hc := \{f : \norm{f}_\infty \le A,\ \Lip(f) \le \Lambda_0\}$: the piecewise-linear interpolant of $f_0$ at $k + 1$ equally spaced knots is a tree with $5 + 8(k - 1) \le 8k$ nodes that lies in $\Hc$ and in $\Fc_{8k}$ once $C \ge \max(2\Lambda_0, A + \Lambda_0\bar x, \bar x)$, with $\bar x$ the largest absolute support point, and $\inf_{\Fc_L \cap \Hc}\norm{f - f_0} \le 8\Lambda_0(x_{\mathrm{hi}} - x_{\mathrm{lo}})/L$ for $L \ge 8$. (b) Any number of regressors on $[0,1]^d$ with operators $+, -, \times$ and $\Hc$ the functions bounded by $A$ and $\Lambda_0$-Lipschitz in each coordinate: the Bernstein polynomial $B_kf_0$ lies in $\Hc$, is a tree with $O(dk^{d+1})$ nodes once $C \ge \max(A, 1)$ with $C > 1$, and $\norm{B_kf_0 - f_0}_\infty \le 2d\Lambda_0/\sqrt k$.
+\end{result}
+
+In both settings $\Hc$ is compact by Arzel\`a--Ascoli, so (S1) holds. \res{Lemma}{4}(a) gives a reason to keep \code{max} in the operator set that the operator ablation of Section~\ref{sec:mc-grid} did not: with bounded constants, \code{max} is what makes one-regressor formulas a free-knot spline sieve. The code does not enforce the Lipschitz constraint; \res{Theorem}{3(b)} says what would be needed for consistency when the law is not a short formula: a bound on the slope of candidate formulas over the support, checked on a grid.
+
+\begin{result}[Proposition3.3]{Proposition 3.3 (rates reduce to a modulus on the sieve)}
+Under (S1)--(S6), with the sieve modulus $\omega_n(\varepsilon) := \inf\{\norm{\Pi_{K_n}T(f - f_0)}^2 : f \in \Hc_n,\ \norm{f - f_0} \ge \varepsilon\}$ and its generalized inverse $\omega_n^{-1}(q) := \sup\{\varepsilon : \omega_n(\varepsilon) \le q\}$,
+\[
+\norm{\hat f - f_0} \le \omega_n^{-1}\bigl(Q_{K_n}(\hat f)\bigr), \qquad Q_{K_n}(\hat f) \le \inf_{f \in \Hc_n}\norm{f - f_0}^2 + 2R_n + \eta_n,
+\]
+with $R_n = O_p(M\norm{\bar u} + M\Delta_n(t))$, $\norm{\bar u} = O_p(\zeta_n/\sqrt n)$ and $\Delta_n(t)$ the uniform deviation bound of the proof.
+\end{result}
+
+For a linear sieve, $\omega_n(\varepsilon) = \varepsilon^2/\tau_n^2$ with $\tau_n$ the sieve measure of ill-posedness of \citet{chenpouzo2012}, and the proposition gives their rate. $\Fc_{L_n} - f_0$ is not a linear space ($\{x^\theta : \theta \in [-C, C]\}$ spans an infinite-dimensional space), so $\omega_n(\varepsilon)$ can fall below any quadratic and the ratio $\norm{f - f_0}/\norm{T(f - f_0)}$ is not bounded on the sieve. Bounding $\omega_n$ for formula sieves is the open rate problem; in the well-specified case the rate is parametric (\res{Corollary}{1.1}).

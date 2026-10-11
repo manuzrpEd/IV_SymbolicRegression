@@ -1,0 +1,14 @@
+# LaTeX build artefacts (main.pdf is kept so that the compiled draft travels with the repository)
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+build.log

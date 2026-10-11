@@ -24,3 +24,6 @@ data/
 
 # Committed results moved aside by replication/clear_results.py --move-to replication/reference
 replication/reference/
+
+# Personal editor settings (LaTeX Workshop recipe with a machine-specific MiKTeX path)
+.vscode/

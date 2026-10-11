@@ -4,6 +4,9 @@ Phase 5 of the plan in [README.md](README.md) (§7, §11). This file states the 
 
 Second pass (2026-10-01): every proof was re-derived line by line; §9 lists what was wrong in the first pass and what changed. Third pass (2026-10-01): two fresh-context referees (separate model instances with no memory of writing the document, one per half) read the proofs cold; §9 lists their findings and the fixes. The theorem statements and proofs stood; Proposition 5 and two informal readings did not, and were repaired. A human reading before submission remains advisable.
 
+Notation in the paper ([paper/](paper/)) differs from this file in three symbols, to avoid clashes with the Monte Carlo designs and the formula alphabet: the variance ratio $ho := ar\sigma^2/\sigma^2$ of Setting (F) is written $
+u$, the moment-noise vector $Z := \sqrt n\,ar u/\sigma$ is written $U$, and the conditional-moment map $m(h)$ of the discrete-instrument section is written $\mu(h)$. Result numbering is the same in both.
+
 **Status**
 
 | Result | What it says | Status |

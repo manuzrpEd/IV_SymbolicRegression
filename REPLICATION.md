@@ -466,7 +466,8 @@ Not in the package: `data/` (§2), `experiments/phase4/logs/` (job logs; the tim
 
 ## 9. Licence, citation and contact
 
-The code is the work of Manuel Sanchez. Its licence will be set at release; the third-party data are not
+The code, scripts and run records are the work of Manuel Sanchez and are released under the MIT licence
+(`LICENSE`); the working paper in `paper/` is under CC BY 4.0 (`paper/LICENSE.md`); the third-party data are not
 redistributed and remain under their sources' terms (§2). Cite the paper and this repository's commit hash
-(`git rev-parse HEAD`) when reporting a replication. For double-blind review, remove this section from the submitted
-copy.
+(`git rev-parse HEAD`), or the Zenodo DOI of the release, when reporting a replication; `CITATION.cff` has the
+citation. For double-blind review, remove this section from the submitted copy.

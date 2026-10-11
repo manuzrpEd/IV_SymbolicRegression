@@ -1,0 +1,38 @@
+\section{Search budget and templates}
+\label{sec:budget}
+
+In the cells where the search rarely proposed the law, D1 and D3 with the kink and saturation laws and the two quadratic labour-supply laws, coverage rather than selection was the binding constraint. This section asks whether a larger search budget or a fixed library of templates repairs that. Four arms on the same data and seeds (88 runs, 352 analyses; the searches are new and the one-step front is not used, so the base rates differ from those of Section~\ref{sec:mc}): the \emph{base} budget (40 iterations, 31 populations, size $\le 15$); base \emph{+ templates} (the eleven shapes of Section~\ref{sec:generators}, scored like any candidate); a \emph{large} budget (200 iterations, 40 populations, size $\le 25$, two restarts pooled: about eight times the compute, 2--2.7 minutes per run instead of 6--19 seconds); and large + templates. Plain PySR and distillation only, plus the library path; selection by BIC + structure.
+
+\begin{table}[ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Coverage $\to$ recovery by cell and arm (pooled candidates; coverage means some candidate has the true form).}
+\label{tab:budget}
+\fittable{%
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+Cell & Law & Base & \makecell{Base +\\templates} & Large & \makecell{Large +\\templates} \\
+\midrule
+D1 & $x - 0.8\max(x - 1.5, 0)$ & 0\% $\to$ 0\% & 100\% $\to$ 0\% & 8\% $\to$ 0\% & 100\% $\to$ 0\% \\
+D1 & $3x/(1 + x)$ & 50\% $\to$ 42\% & 100\% $\to$ \textbf{67\%} & 42\% $\to$ 17\% & 100\% $\to$ 50\% \\
+D3 & $x - 0.8\max(x - 1.5, 0)$ & 0\% $\to$ 0\% & 100\% $\to$ 0\% & 0\% $\to$ 0\% & 100\% $\to$ 0\% \\
+D3 & $3x/(1 + x)$ & 25\% $\to$ 0\% & 100\% $\to$ 8\% & 42\% $\to$ 17\% & 100\% $\to$ 8\% \\
+Labour, $\pi = 0.5$ & $5 + 2\log w - 0.6(\log w)^2$ & 45\% $\to$ 0\% & 100\% $\to$ 0\% & 90\% $\to$ 5\% & 100\% $\to$ 0\% \\
+Labour, $\pi = 1$ & $5 + 0.5\log w - 0.6(\log w)^2$ & 20\% $\to$ 20\% & 100\% $\to$ \textbf{75\%} & 95\% $\to$ 60\% & 100\% $\to$ 60\% \\
+\midrule
+All 88 runs & & 25\% $\to$ 10\% & 100\% $\to$ \textbf{27\%} & 55\% $\to$ 19\% & 100\% $\to$ 22\% \\
+Recovery given coverage & & 41\% & 27\% & 35\% & 22\% \\
+Candidates per run (median) & & 24--30 & 34--40 & 57--68 & 68--80 \\
+Beaters per run (wrong formulas that outscore the truth) & & 2.9 & 3.8 & 4.8 & 5.8 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Paired on the same data (Table~\ref{tab:budget}): large against base, coverage $+33/-7$ runs ($p < 0.001$), recovery $+13/-5$ ($p = 0.10$); base + templates against base, recovery $+15/-0$ ($p < 0.001$); large + templates against large, $+4/-2$ ($p = 0.69$). Four findings.
+
+\begin{enumerate}
+\item \emph{A larger search budget buys coverage, not recovery.} Eight times the compute raised coverage from 25\% to 55\% of runs and found the three-constant quadratic labour law in 90--95\% of runs instead of 20--45\%. Recovery rose only from 10\% to 19\%, not significantly, because the extra candidates bring extra wrong formulas that outscore the truth, 4.8 per run instead of 2.9, and recovery given coverage fell from 41\% to 35\%. In the D1 saturation cell the large budget \emph{lost} four runs the base budget had recovered. This is channel (II) of \res{Theorem}{2} and the pooling result of Section~\ref{sec:mc-grid} again: the size of the candidate pool is a cost in itself.
+\item \emph{Templates buy coverage for free, and recovery where the moments separate the law.} With the true form always a candidate, the quadratic labour law at $\pi = 1$ went from 20\% to 75\% ($p = 0.001$; the template or an equivalent rearrangement is the pick in 15 of 20 runs) and the saturation law in D1 from 42\% to 67\%. Base + templates is the best arm overall (27\%), at the base cost. Adding the large budget's candidates to the templates makes things worse (22\%): more candidates, more beaters.
+\item \emph{Where nothing helps, the limit is separation.} The kink law is never recovered: even with the template in the pool, a one- or two-constant formula such as $x^{0.54}$ beats the three-constant kink under BIC + structure, because the moments barely distinguish them (the kink pays about 22 more in penalty and gains less than that in $J$); in D3, where only 6\% of the regressor's mass lies past the kink, the identity $x$ wins. The quadratic labour law at $\pi = 0.5$ is found by the large budget in 90\% of runs and selected in 5\%: only 7\% of wages lie past its peak. A threshold or a bend has to be inside the data and inside the instrument's reach.
+\item \emph{The method to present:} cheap generators (plain PySR and distillation at the base budget, and the library path) plus the template library, selection by BIC + structure, then the identification diagnostic. A larger free search is optional; if used, its candidates should be pruned before pooling, not added wholesale.
+\end{enumerate}

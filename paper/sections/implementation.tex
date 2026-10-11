@@ -1,0 +1,42 @@
+\section{Implementation}
+\label{sec:impl}
+
+The method is implemented as a Python package, \code{symiv}, on top of PySR \citep{cranmer2023}, whose Julia back end carries out the symbolic-regression searches. This section describes the criteria, the candidate generators, the selection rules that were compared, and the identification report.
+
+\subsection{Criteria}
+\label{sec:impl-criteria}
+
+Residuals are $r_i = y_i - f(X_i)$. Two criteria were implemented, both as $\norm{A'r}^2$ for a precomputed $n \times K$ matrix $A$ built from $Z$.
+\begin{itemize}
+\item \emph{GMM with sieve instruments} (the default). $Q_n(f) = \hat g(f)'W\hat g(f)$ with $\hat g(f) = n^{-1}\sum_ib_K(Z_i)r_i$ and 2SLS weights $W = (B'B/n)^{-1}$, so that $Q_n(f) = \norm{A'r}^2/n$ with $A$ an orthonormal basis of the columns of $B$ (a thin SVD, computed once, which also drops collinear columns when the instrument is discrete). The basis is a cubic B-spline in $\log Z$ with $K \approx n^{1/3}$ columns ($K = 13$ at $n = 2000$); for two instruments a polynomial basis of degree four. $K$ must be much larger than the number of constants, otherwise a formula with $K$ or more constants can make the criterion exactly zero (\res{Proposition}{4}), and a fixed set of unconditional moments can lose identification \citep{dominguezlobato2004}, so $K$ grows with $n$. Doubling $K$ at the selection stage changed nothing in the Monte Carlo.
+\item \emph{Kernel maximum moment restriction} \citep{zhang2020}. $Q_n(f) = n^{-2}r'K_Zr$ with an integrally strictly positive definite kernel, for which $Q = 0$ if and only if $\E[r \mid Z] = 0$. Exact evaluation is $O(n^2)$, so a Nystr\"om factor $K_Z \approx \Phi\Phi'$ is used, giving $Q_n = n^{-2}\norm{\Phi'r}^2$, the same code path.
+\end{itemize}
+The two-step refit of each candidate's constants uses the efficient weight from first-step residuals, with the constants bounded ($\abs{\theta_j} \le C = 10$) and several seeded starts; Hansen's $J$ is the refitted criterion scaled by the residual variance.
+
+PySR accepts a custom loss as a Julia function of the expression tree and the data, and the criterion enters there. The matrix $A$ is passed to Julia as a global before the fit; the search uses multithreading rather than multiprocessing, so every worker sees it; batching is disabled, because the projection needs all rows in their original order; the data set holds only $X$, and $Z$ enters only through $A$, so formulas cannot use the instruments; PySR's constant optimizer minimizes the same loss, so the constants are fitted by the moment criterion with no extra code; the constant bound is enforced inside the loss by a soft penalty. The Julia loss was verified to match the Python criterion to $10^{-6}$ on every Pareto-front formula. This one-step search is one of the candidate generators below; it turned out not to be a necessary one.
+
+\subsection{Candidate generators}
+\label{sec:generators}
+
+Every generator returns a Pareto front, the best formula at each complexity, or a path; all candidates are then refitted and scored by the same rule.
+\begin{itemize}
+\item \emph{Plain PySR}: the squared-error search, 40 iterations, 31 populations, maximum size 15, operators $+, -, \times, \div, \mathrm{pow}, \log, \exp, \max$. Its own pick is the plain-SR baseline; its front is a candidate set.
+\item \emph{One-step IV search}: PySR run on the moment criterion.
+\item \emph{Distillation}: a sieve-2SLS curve (B-splines in $\log x$, with the number of knots chosen by a held-out moment criterion) is fitted first, and plain PySR is run on $(X, \hat f(X))$, the pattern of \citet{cranmer2020} applied to an NPIV fit; Section~\ref{sec:mc-baselines} also distils kernel IV \citep{singh2019} and DeepIV \citep{hartford2017} curves.
+\item \emph{Library path}: a nine-term library ($1, x, x^2, \log x, (\log x)^2, \sqrt x, 1/x, e^{-x}, x\log x$), Lasso on instrument-projected data in the spirit of \citet{linfengli2015}, every model on the path refitted by GMM. This is sparse IV over a dictionary, and the main competitor for laws that are linear in their parameters.
+\item \emph{Templates}: eleven textbook shapes with free constants, linear, semi-log, power, quadratic in logs, kink $ax + b\max(x - c, 0)$, saturation $ax/(b + x)$, hump $axe^{-bx}$, hyperbola, exponential, quadratic and logistic, scored like any other candidate. They give full coverage of these shapes at no search cost (Section~\ref{sec:budget}).
+\end{itemize}
+Pooling the fronts of several generators is possible and was tested; it adds coverage but also wrong formulas that outscore the truth (Section~\ref{sec:mc-grid}). The method as finally presented pools the plain, distilled and library candidates with the templates.
+
+\subsection{Selection rules compared}
+
+The Monte Carlo compared, on the same saved fronts: MMSC with BIC, HQIC and AIC penalties; BIC plus the structure term $w\,\ell_s\log m$ with $w \in \{0.5, 1\}$; BIC with $2K$ instruments; BIC with kernel instruments; and a two-fold cross-fitted criterion (constants fitted on one half, moments evaluated on the other). For the plain-SR baseline the analogous rule is least-squares refit followed by $n\log(\mathrm{RSS}/n) + p\kappa_n$, with PySR's own pick reported alongside.
+
+\subsection{The identification report}
+\label{sec:impl-report}
+
+After selection, \code{identification\_report} computes, on the selection sample: the first-stage $F$ statistic of $\log X$ on the instruments; the Wald and the projected Anderson--Rubin interval of each constant of the selected formula and their width ratio; the S statistic of every candidate, with the two guards of Appendix~\ref{app:prop5} (the sample envelope $\max_i\abs{f_s(X_i;\theta)} \le 3\max_i\abs{y_i}$ on the constants, and residuals winsorized inside the weight at $c_n = \max(5, \sqrt{2\ln n})$ robust standard deviations of the formula's own two-step residuals, never below their 99.5\% quantile); the formula confidence set $\Cc_\alpha$ at $\alpha = 0.05$; and the verdict of Section~\ref{sec:prop5} with $\tau = 0.2$. Because the AR intervals are projections of the $K$-dimensional AR set, their half-width is about $\mathrm{se}\sqrt{\chi^2_{K,1-\alpha} - J}$ even under strong identification, wider than the Wald interval by a factor near $\sqrt{(\chi^2_{K,1-\alpha} - J)/\chi^2_{1,1-\alpha}}$, and the heteroskedasticity-robust weight gives them little power against differences carried by a few observations, a pole or the tail of $X$; that is why the distance between formulas is trimmed, and why the verdict uses only whether an interval reaches the constant bound.
+
+\subsection{Inference}
+
+Inference follows \res{Theorem}{1(iii)}: the sample is split, the search and selection use part $A$, and everything reported, constants, standard errors, Hansen's $J$, AR sets, and tree-invariant quantities such as the function at given points and elasticities by the delta method, is computed on part $B$. On real data, where the law is rarely exactly in the class, the pseudo-true formula depends on the instrument basis and on the weight \citep{hallinoue2003}; the selected formula should then be reported across bases and weights and the criterion gap to the runner-up given as the empirical counterpart of $\delta_L$. The Engel application of Section~\ref{sec:apps} uses one spline basis with the two-step weight and reports the formula confidence set and fixed-form tests; a comparison across bases is not reported.

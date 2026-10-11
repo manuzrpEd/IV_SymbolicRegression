@@ -1,0 +1,23 @@
+{
+  "title": "Symbolic IV: Discovering Structural Equations under Endogeneity (code, run records and working paper)",
+  "upload_type": "software",
+  "description": "Symbolic regression scored by instrumental-variable moment conditions. Candidate formulas come from cheap generators (a squared-error search, a search distilled from a sieve 2SLS curve, a sparse library path and a fixed library of economic shapes); each candidate's constants are refitted by two-step GMM on sieve instruments; the formula is selected by a GMM model-selection criterion with a per-node structure penalty; an Anderson-Rubin confidence set over the candidate formulas reports whether the data identify the result. The repository holds the Python package (symiv, on top of PySR), the Monte Carlo benchmark suite, every run record behind the reported tables, the theory with proofs, the replication guide and the working paper (paper/).",
+  "creators": [
+    {
+      "name": "Sanchez, Manuel",
+      "affiliation": "Independent researcher"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "symbolic regression",
+    "instrumental variables",
+    "nonparametric IV",
+    "GMM model selection",
+    "weak identification",
+    "equation discovery",
+    "econometrics",
+    "PySR"
+  ],
+  "notes": "The paper in paper/ is licensed under CC BY 4.0. The two application data sets are public third-party files that are not included; the scripts download them (see REPLICATION.md)."
+}

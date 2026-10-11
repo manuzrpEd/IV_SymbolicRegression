@@ -1,0 +1,61 @@
+\section{Model, formula class and estimator}
+\label{sec:model}
+
+\subsection{Model and identification}
+
+Observations $W_i = (y_i, X_i, Z_i)$, $i = 1, \dots, n$, are i.i.d.\ copies of $W = (y, X, Z)$ with $X \in \Xc \subseteq \R^d$. The model is
+\begin{equation}
+y = f_0(X) + u, \qquad \E[u \mid Z] = 0, \qquad \E[y^2] < \infty,
+\label{eq:model}
+\end{equation}
+and the target is $f_0$. The error is additive; non-separable models such as $y = w \cdot h$ with heterogeneous $w$ violate this and are out of scope. Write $\norm{\cdot}$ for $L^2$ norms and let $T$ be the conditional-expectation operator $(Th)(z) = \E[h(X) \mid Z = z]$ from $L^2(P_X)$ to $L^2(P_Z)$; it satisfies $\norm{Th} \le \norm{h}$.
+
+Plain SR is biased. At best it is consistent for $\E[y \mid X] = f_0(X) + \E[u \mid X]$. In the baseline Monte Carlo design (Section~\ref{sec:mc}), $X = \exp(\pi Z + v)$ and $u = \rho v + \sigma\varepsilon$, so $\E[u \mid X] = \frac{\rho}{1 + \pi^2}\log X$: for the log law $a + b\log x$ the conditional mean has the right form with a biased slope, $b + \rho/(1 + \pi^2)$; for every other law it has an extra $\log X$ term. Whether an SR search shows that term depends on its size relative to $f_0$; in the Monte Carlo the squared-error search's own pick had the right power form with a 6\% bias in the constant when the term was small, and never had the form when it was large.
+
+Identification is needed only within the formula class. Let $\Fc_L$ be the class defined below; we need only \emph{restricted identification}:
+\begin{equation}
+f \in \Fc_L, \quad \E[f(X) - f_0(X) \mid Z] = 0 \text{ a.s.} \;\Rightarrow\; f = f_0.
+\label{eq:restricted-id}
+\end{equation}
+Completeness of $X$ given $Z$ \citep{dhaultfoeuille2011} is sufficient but not necessary; the restricted condition can hold with discrete instruments, where full nonparametric identification fails \citep{freybergerhorowitz2015}. Completeness is not testable in general \citep{canaysantosshaikh2013}, so we treat~\eqref{eq:restricted-id} as an assumption and measure how close it is to failing through the separation constants of Section~\ref{sec:theory}. Ill-posedness, which makes nonparametric IV unstable, enters only through how well the instruments separate the true formula from its competitors: over a ball of functions the modulus of continuity of $T^{-1}$ is zero, while over bounded-constant formulas of bounded size it is positive (\res{Lemma}{1}). Expression length alone is not enough for this: with $\sin$ in the operator set, $\sin(cx)$ has four nodes, yet for large $c$ it is exactly the kind of high-frequency function that $\E[\cdot \mid Z]$ barely sees; with the operators used here, a narrow bump $\exp(-c(x - 1)^2)$ plays the same role. That is why the constants are bounded.
+
+\subsection{Formulas}
+\label{sec:formulas}
+
+A \emph{tree} $s$ is an expression tree over an alphabet of $m$ symbols: binary and unary operators, the $d$ variables, and a constant placeholder. It has $\ell_s$ nodes and $p_s$ constant placeholders, and defines $f_s(x;\theta)$ for $\theta$ in its parameter set $\Theta_s$. The operators used throughout are $\{+, -, \times, \div, \mathrm{pow}, \log, \exp, \max\}$, with the exponent of a power restricted to a constant or a single variable, and no nested $\exp(\exp(\cdot))$ or $\log(\log(\cdot))$; for one regressor the alphabet has $m = 10$ symbols.
+
+The \emph{parameter set} $\Theta_s$ is a closed subset of $[-C, C]^{p_s}$ on which $f_s(\cdot;\theta)$ is finite on the support of $X$ and Assumption~(A3) below holds; it is compact. Where the formula is finite everywhere, $\Theta_s$ is the whole cube; for $\log(x - c)$ on a support bounded below by $x_{\mathrm{lo}}$ it is $\{c \le x_{\mathrm{lo}} - \eta\}$ for a margin $\eta > 0$. The code discards candidates whose refit gives non-finite residuals, which is the sample version of this restriction. The bound $C$ is required, not cosmetic: without it, oscillating or spiking terms such as $a\sin(bx)$ or $a\exp(-b(x - c)^2)$ with large $b$ can lower the moment criterion by fitting noise in directions the instruments barely see, and the theory needs a compact class.
+
+The \emph{formula class} is built from $\Sc_L$, the set of trees with at most $L$ nodes; $\Fc_s = \{f_s(\cdot;\theta) : \theta \in \Theta_s\}$ and $\Fc_L = \bigcup_{s \in \Sc_L}\Fc_s$. Unary-binary plane trees with $\ell$ nodes are counted by a Motzkin number, which is at most $3^{\ell}$; each node gets one of $m$ labels, so there are at most $(3m)^{\ell}$ trees of size $\ell$ and
+\begin{equation}
+\log\abs{\Sc_L} \le L\log(3m) + \log 2.
+\label{eq:treecount}
+\end{equation}
+
+Under (A0) below, $\Sc_0 = \{s : f_0 \in \Fc_s\}$ is the set of true trees, equality being in $L^2(P_X)$; every other tree in $\Sc_L$ is \emph{wrong}: $f_s(\cdot;\theta) \ne f_0$ for every $\theta \in \Theta_s$. The smallest number of constants that can represent $f_0$ is $p_0 = \min_{s \in \Sc_0}p_s$, and the \emph{minimal true trees} are $\Sc_0^{\min} = \{s \in \Sc_0 : p_s = p_0\}$. For $s \in \Sc_0$, the zero set is $\Theta_s^0 = \{\theta \in \Theta_s : f_s(\cdot;\theta) = f_0\}$. $\Sc_0^{\min}$ usually has several elements: $a + b\log x$ and $\log(cx^{b})$ are both minimal trees for the log law. ``Recovering the form'' means selecting \emph{some} element of $\Sc_0^{\min}$. That is exactly the Monte Carlo's criterion: refit the constants of the selected formula to the noise-free $f_0$, then require an exact fit and $p \le p_0$.
+
+The following assumptions are maintained.
+\begin{itemize}
+\item[(A0)] Well-specified: $f_0 \in \Fc_L$.
+\item[(A1)] $\E[u \mid Z] = 0$.
+\item[(A2)] Restricted identification: for $f \in \Fc_L$, $T(f - f_0) = 0$ implies $f = f_0$.
+\item[(A3)] Regularity: for every $s$ and every $x$, $\theta \mapsto f_s(x;\theta)$ is continuous on $\Theta_s$, and $\sup_{\theta \in \Theta_s}\abs{f_s(x;\theta)} \le F(x)$ with $\E[F(X)^2] < \infty$.
+\end{itemize}
+
+\subsection{The estimator}
+\label{sec:estimator}
+
+Given a sample criterion $Q_n$ (Section~\ref{sec:criteria}), the estimator works in three steps.
+\begin{enumerate}
+\item \textbf{Refit.} Each candidate tree $s$ gets $\hat\theta_s \in \argmin_{\theta \in \Theta_s}Q_n(f_s(\cdot;\theta))$; write $\hat Q_s = Q_n(f_s(\cdot;\hat\theta_s))$.
+\item \textbf{Select.}
+\begin{equation}
+\hat s \in \argmin_{s \in \hat\Sc}\ \crit_n(s), \qquad \crit_n(s) = \frac{n\hat Q_s}{\hat\sigma^2} + \pen_n(s), \qquad \pen_n(s) = p_s\kappa_n + w\,\ell_s\log m.
+\label{eq:crit}
+\end{equation}
+Ties go to fewer constants, then fewer nodes.
+\item \textbf{Estimate.} $\hat f = f_{\hat s}(\cdot;\hat\theta_{\hat s})$.
+\end{enumerate}
+The ingredients: $\hat\Sc \subseteq \Sc_L$ is the candidate set, from any generator (Section~\ref{sec:generators}); $\hat\sigma^2 \to_p \sigma_*^2 \in (0, \infty)$ is the scale that turns $nQ_n$ into a $J$ statistic (exactly so with the 2SLS weight under conditional homoskedasticity, or with the efficient weight; \res{Theorem}{1} needs only an $O_p(1)$ bound at the truth, not the $\chi^2$ calibration); $\kappa_n$ is the per-constant penalty, $\ln n$ (BIC), $2.01\ln\ln n$ (HQIC) or $2$ (AIC); and $w \ge 0$ is the weight of the structure term. With $\kappa_n = \ln n$ and $w = 0$ the rule is the MMSC-BIC of \citet{andrewslu2001}, since $J_n - (K - p)\ln n = \crit_n - K\ln n$, with $p$ the number of free constants, not the node count. ``BIC + structure'' is $w = 0.5$, the value used throughout; $w = 1$ did equally well. Section~\ref{sec:theory} explains the role of each term.
+
+The event $\{\hat\Sc \cap \Sc_0^{\min} \ne \emptyset\}$, that the candidates contain a minimal true tree, is called \emph{coverage}. If it fails, the failure is a \emph{search failure}; if it holds and a wrong or non-minimal tree is selected, the failure is a \emph{statistical failure}. Coverage is a property of the generator, not of the selection rule, and the Monte Carlo reports the two separately.

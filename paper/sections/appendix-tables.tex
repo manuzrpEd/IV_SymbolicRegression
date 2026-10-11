@@ -1,0 +1,62 @@
+\section{Additional tables}
+\label{app:tables}
+
+\begin{table}[ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{\res{Corollary}{2.3} in the data: the same candidates (D1 strong, $n = 1000$ fronts, 12 seeds) selected on the sample they were fitted to, on five fresh samples of $n = 1000$ each, and, as the full-sample reference, same-sample selection at $n = 2000$ on fronts generated at $n = 2000$. Beaters are wrong candidates whose score beats the true form's, per run: same-sample 1000 / split / same-sample 2000.}
+\label{tab:split}
+\fittable{%
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+Law, set & Rule & \makecell{Same-sample\\$n = 1000$} & \makecell{Split\\$1000 + 1000$} & \makecell{Same-sample\\$n = 2000$} & Beaters \\
+\midrule
+$2x^{0.7}$, pooled & BIC & 33\% & 45\% & 33\% & 1.92 / 1.37 / 1.50 \\
+$2x^{0.7}$, pooled & BIC + structure & 42\% & 47\% & \textbf{67\%} & \\
+$2x^{0.7}$, distilled & BIC & 50\% & 73\% & 67\% & 0.50 / 0.33 / 0.42 \\
+$2x^{0.7}$, distilled & BIC + structure & 58\% & 72\% & \textbf{83\%} & \\
+$1 + 2\log x$, pooled & BIC & 58\% & 83\% & 100\% & 0.42 / 0.12 / 0.17 \\
+$1 + 2\log x$, pooled & BIC + structure & 83\% & 92\% & \textbf{100\%} & \\
+$1 + 2\log x$, distilled & BIC & 100\% & 98\% & 92\% & 0.00 / 0.00 / 0.08 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Each cell of Table~\ref{tab:split} has 12 candidate sets, so the split figures (60 selections) are not 60 independent trials. The mechanism of \res{Corollary}{2.3} is real: wrong candidates that beat the true form become rarer when they were not fitted to the selection sample's noise, fewer even than in same-sample selection at $n = 2000$. But with the structure term, same-sample selection on the full sample beats split selection in all three BIC + structure cells, because halving the selection sample halves $n\delta_s$ in channel (I) of \res{Theorem}{2}, and the failures that remain in these cells are separation failures, which splitting makes worse.
+
+\begin{table}[ht]
+\centering\small
+\caption{The identification diagnostic at two values of the distance threshold $\tau$ (630 breadth-grid runs). ``False alarms'' are flagged runs among strong-instrument runs whose selection was right; ``caught'' are statistical failures reported as a different formula.}
+\label{tab:tau}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+& $\tau = 0.2$ (default) & $\tau = 0.1$ \\
+\midrule
+False alarms & 4\% & 14\% \\
+Statistical failures caught & 30\% & 58\% \\
+Weak-instrument runs flagged & 100\% & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering\footnotesize
+\caption{Measured compute on a four-core laptop (Intel i7-1165G7, 32 GB), from the run records and job logs. Searches are stochastic; everything after the saved fronts is deterministic.}
+\label{tab:compute}
+\fittable{%
+\begin{tabular}{@{}lcl@{}}
+\toprule
+Step & Runs & Time \\
+\midrule
+First Monte Carlo (Section~\ref{sec:mc-first}) & 280 & 2.4 h of search \\
+Baselines (Section~\ref{sec:mc-baselines}) & 300 & 8.0 h over all baselines and variants \\
+Full grid, 12 seeds (Section~\ref{sec:mc-grid}) & 528 & 11.8 h of search \\
+Headline cells to 50 seeds & 570 & 8.2 h of search \\
+Analysis of the 1{,}098 fronts, separation margins & & 2 h 20 min + 25 min, 8 workers \\
+Simulations of the theory (Sections~\ref{sec:mc-theory}--\ref{sec:mc-discrete}) & 5{,}802 fits & about 25 min \\
+Simulated environments (Section~\ref{sec:apps-sim}) & 140 & 20 min of search + 12 min of analysis \\
+Engel curves, Angrist--Krueger (Sections~\ref{sec:engel}--\ref{sec:ak}) & 21 + 2 & 15 min + 15 min \\
+Search budget and templates (Section~\ref{sec:budget}) & 88 $\times$ 2 restarts & 3 h 20 min of search + 1 h 26 min of analysis \\
+\bottomrule
+\end{tabular}}
+\end{table}
