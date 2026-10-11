@@ -13,6 +13,9 @@ version: 0.1.0
 date-released: 2026-10-11
 repository-code: "https://github.com/manuzrpEd/IV_SymbolicRegression"
 identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23304890"
+    description: "Zenodo archive of the repository at v0.1 (code, run records and working paper), 11 October 2026"
   - type: url
     value: "https://papers.ssrn.com/abstract=7598359"
     description: "Working paper on SSRN (SSRN assigns the DOI 10.2139/ssrn.7598359 once the paper is processed)"
