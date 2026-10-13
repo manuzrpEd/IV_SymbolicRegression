@@ -14,5 +14,5 @@ that are not redistributed here (see `REPLICATION.md`, section 2).
 Suggested citation:
 
 > Sanchez, M. (2026). *Symbolic IV: Discovering Structural Equations under Endogeneity.* Working paper,
-> SSRN, https://papers.ssrn.com/abstract=7598359. Code and run records:
+> SSRN, https://doi.org/10.2139/ssrn.7598359. Code and run records:
 > https://github.com/manuzrpEd/IV_SymbolicRegression, archived at https://doi.org/10.5281/zenodo.23304890

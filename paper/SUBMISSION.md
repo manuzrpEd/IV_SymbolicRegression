@@ -88,7 +88,7 @@ Two ways. Both give a DOI and a timestamp; the second needs the repository to be
 
 ## 5. After posting
 
-Record of what is posted: SSRN, submitted and visible 11 October 2026 at https://papers.ssrn.com/abstract=7598359 (DOI 10.2139/ssrn.7598359 once SSRN processes it). Zenodo: published 11 October 2026, DOI 10.5281/zenodo.23304890 (record of the v0.1 archive and the PDF). MPRA: deposited 11 October 2026, awaiting the editor's check.
+Record of what is posted: SSRN, submitted and visible 11 October 2026 at https://papers.ssrn.com/abstract=7598359 (DOI 10.2139/ssrn.7598359, registered and resolving by 13 October 2026). Zenodo: published 11 October 2026, DOI 10.5281/zenodo.23304890 (record of the v0.1 archive and the PDF). MPRA: deposited 11 October 2026, awaiting the editor's check.
 
 - Put the SSRN DOI, the MPRA URL and the Zenodo DOI into `CITATION.cff` (`identifiers`), into
   `paper/LICENSE.md` (suggested citation) and into the title-page footnote; rebuild and commit.
