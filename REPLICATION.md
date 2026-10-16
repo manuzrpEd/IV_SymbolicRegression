@@ -471,3 +471,9 @@ The code, scripts and run records are the work of Manuel Sanchez and are release
 redistributed and remain under their sources' terms (§2). Cite the paper and this repository's commit hash
 (`git rev-parse HEAD`), or the Zenodo DOI of the release, when reporting a replication; `CITATION.cff` has the
 citation. For double-blind review, remove this section from the submitted copy.
+
+## 10. Machine-checked proofs (Lean 4)
+
+The deterministic content of the theory (THEORY.md; Appendix A of the paper) is formalized in Lean 4 with Mathlib under `lean/`: one file per result (except Lemma 2, Corollary 1.1 and Lemma 4(b), whose proofs apply cited theorems) in `lean/SymbolicIV/`, the specification of what each file proves in `lean/FORMALIZATION_PLAN.md`, and the outcome in `lean/REPORT.md`. The probabilistic tools that Mathlib does not provide (the matrix Bernstein inequality, the Hsu–Kakade–Zhang quadratic-form inequality, McDiarmid's inequality, the central limit theorem and Slutsky's lemma) enter as named hypotheses; everything from those tools onward is checked by the kernel.
+
+To re-check: install elan (https://github.com/leanprover/elan), then from `lean/` run `lake exe cache get` (downloads the prebuilt Mathlib, about 7 GB, into the git-ignored `lean/.lake/`) and `lake build`. The toolchain is pinned by `lean/lean-toolchain` (Lean 4.35.0) and `lean/lake-manifest.json` (Mathlib v4.35.0). A successful build ends with `Build completed successfully`; every `#print axioms` line in the output must list only `propext`, `Classical.choice` and `Quot.sound`. On the author's laptop the full build takes about two minutes after the cache download.

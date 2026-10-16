@@ -27,3 +27,6 @@ replication/reference/
 
 # Personal editor settings (LaTeX Workshop recipe with a machine-specific MiKTeX path)
 .vscode/
+
+# Lean 4 / Mathlib build artefacts (7 GB; recreated by lake exe cache get)
+lean/.lake/

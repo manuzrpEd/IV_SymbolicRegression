@@ -238,17 +238,18 @@ def identification_report(
     law where it is largest (THEORY.md §3.2, condition (E)).
     cap_factor: inside the weight matrix of each formula's AR statistic, its residuals are winsorized at
     max(cap_factor, sqrt(2 ln n)) robust standard deviations of its own residuals at the two-step fit (never
-    below their 99.5% quantile). A formula that misfits a few observations badly would otherwise inflate its
-    own weight and pass the S test. At the true form the residuals are the errors, so the cap is about five
-    error standard deviations; the cost in validity is the share of the moment variance beyond it: negligible
-    for Gaussian-like errors, a size of 10-15% instead of 5% for t_3 errors (THEORY.md §3.2).
+    below the 99.5% quantile of their absolute values). A formula that misfits a few observations badly would otherwise inflate its
+    own weight and pass the S test. At the true form the residuals are the errors, so the cap is five robust
+    error standard deviations or that quantile, whichever is larger; the cost in validity is the excess of the
+    moment variance beyond it: negligible for Gaussian-like errors, a size of about 9-16% instead of 5% for
+    t_3 errors independent of Z, K from 2 to 13 (THEORY.md §3.2).
     """
     d = X.shape[1]
     envelope = envelope_factor * float(np.max(np.abs(y)))
     keep = int(np.ceil(0.95 * len(y)))  # the distance ignores the 5% largest differences: a pole, or a tail the moments do not see
     floor = 1e-8 * float(np.std(y))
-    # The cap grows slowly with n (it exceeds 5 only beyond n = 270,000), which makes the capped AR statistic exact in
-    # the limit for any error with E[||b||^2 u^2] < inf; at finite n its size is governed by the share of the moment
+    # The cap grows slowly with n (it exceeds 5 only beyond n = 268,000), which makes the capped AR statistic exact in
+    # the limit for any error with E[||b||^2 u^2] < inf; at finite n its size is governed by the excess of the moment
     # variance beyond the cap (THEORY.md §3.2).
     cap_n = max(cap_factor, float(np.sqrt(2 * np.log(len(y)))))
 
